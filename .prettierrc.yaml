@@ -1,0 +1,12 @@
+printWidth: 1000
+useTabs: true
+tabWidth: 2
+semi: false
+singleQuote: true
+quoteProps: 'as-needed'
+trailingComma: 'all'
+bracketSpacing: true
+bracketSameLine: false
+arrowParens: 'always'
+endOfLine: 'crlf'
+
