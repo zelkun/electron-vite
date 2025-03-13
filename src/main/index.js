@@ -2,10 +2,44 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { setupMenu } from './menu'
 import { setupTray } from './tray'
-import { createMenu } from './menu'
 import { setupUpdater } from './updater'
-import { loadBookmarks, saveBookmarks } from './bookmarks'
+
+import fs from 'fs'
+import os from 'os'
+
+// 설정 파일 경로
+const configPath = join(os.homedir(), '.electron-vite.json')
+
+// 기본 설정
+const defaultConfig = {
+	bookmarks: [],
+}
+
+// 설정 로드
+function loadConfig() {
+	try {
+		if (fs.existsSync(configPath)) {
+			const data = fs.readFileSync(configPath, 'utf8')
+			return JSON.parse(data)
+		}
+	} catch (error) {
+		console.error('설정 파일 로드 오류:', error)
+	}
+	return defaultConfig
+}
+
+// 설정 저장
+function saveConfig(config) {
+	try {
+		fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8')
+		return true
+	} catch (error) {
+		console.error('설정 파일 저장 오류:', error)
+		return false
+	}
+}
 
 let mainWindow = null
 
@@ -42,23 +76,16 @@ function createWindow() {
 		mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
 	}
 
-	ipcMain.on('add-bookmark', (event, url, title) => {
-		const bookmarksData = loadBookmarks()
-		bookmarksData.push({ url, title })
-		saveBookmarks(bookmarksData)
+	// 설정 관련 IPC 핸들러 설정
+	ipcMain.handle('get-bookmarks', () => {
+		const config = loadConfig()
+		return config.bookmarks || []
 	})
-	ipcMain.on('load-bookmarks', (event) => {
-		const bookmarksData = loadBookmarks()
-		event.sender.send('bookmarks-loaded', bookmarksData)
-	})
-	ipcMain.on('save-bookmarks', (event, bookmarks) => {
-		saveBookmarks(bookmarks)
-		event.sender.send('bookmarks-updated', bookmarks) // 북마크가 갱신되었음을 렌더러 프로세스에 알림
-	})
-	ipcMain.on('delete-bookmark', (event, index) => {
-		const bookmarksData = loadBookmarks()
-		bookmarksData.splice(index, 1)
-		saveBookmarks(bookmarksData)
+
+	ipcMain.handle('save-bookmarks', (_, bookmarks) => {
+		const config = loadConfig()
+		config.bookmarks = bookmarks
+		return saveConfig(config)
 	})
 }
 
@@ -78,7 +105,7 @@ app.whenReady().then(() => {
 	setupTray(mainWindow)
 
 	// 메뉴 설정
-	createMenu(mainWindow)
+	setupMenu(mainWindow)
 
 	// 업데이터 설정
 	setupUpdater()

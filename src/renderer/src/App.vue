@@ -25,43 +25,54 @@
 
 			<div class="browser-actions">
 				<button @click="addBookmark" class="action-btn">🔖</button>
-				<button @click="toggleBookmarks" class="action-btn">📚</button>
+				<button @click="toggleBookmarkBar" class="action-btn" :class="{ active: showBookmarkBar }">📚</button>
 				<button @click="showSettings" class="action-btn">⚙️</button>
 				<button @click="showMenu" class="action-btn">⋮</button>
 			</div>
 		</div>
 
-		<!-- 북마크 리스트 -->
-		<div v-if="showBookmarksList" class="bookmarks-list">
-			<ul class="chrome-bookmarks-list">
-				<li v-for="(bookmark, index) in bookmarks" :key="index" class="chrome-bookmark-item">
-					<div class="chrome-bookmark-icon"></div>
-					<div class="chrome-bookmark-info">
-						<span class="chrome-bookmark-title">{{ bookmark.title }}</span>
-						<span class="chrome-bookmark-url">{{ bookmark.url }}</span>
+		<!-- 북마크 바 -->
+		<div class="bookmark-bar" v-if="showBookmarkBar">
+			<div class="bookmark-items">
+				<div v-if="bookmarks.length === 0" class="bookmark-empty">
+					<span>북마크가 없습니다.</span>
+					<button @click="addBookmark" class="bookmark-add-btn">북마크 추가</button>
+				</div>
+				<template v-else>
+					<div v-for="(bookmark, index) in bookmarks" :key="index" class="bookmark-item" draggable="true" @dragstart="dragStartBookmark(index, $event)" @dragover.prevent @drop="dropBookmark(index, $event)" @contextmenu.prevent="showBookmarkContextMenu(index, $event)">
+						<button @click="navigateToBookmark(bookmark.url)" class="bookmark-link">
+							<span class="bookmark-favicon">🌐</span>
+							<span class="bookmark-title">{{ bookmark.title }}</span>
+						</button>
 					</div>
-					<div class="chrome-bookmark-actions">
-						<button @click="editBookmark(index)">수정</button>
-						<button @click="deleteBookmark(index)">삭제</button>
-					</div>
-				</li>
-			</ul>
-			<button v-if="!bookmarks.length" @click="addBookmark" class="add-bookmark-btn">북마크 추가</button>
+				</template>
+			</div>
 		</div>
-		<!-- 북마크 에디터 -->
-		<div v-if="editingBookmark" class="edit-bookmark-form chrome-edit-form">
-			<div class="chrome-edit-form-header">
-				<span>수정</span>
-				<button @click="cancelEditing">✕</button>
-			</div>
-			<div class="chrome-edit-form-body">
-				<label for="title">제목:</label>
-				<input v-model="editedBookmark.title" id="title" type="text" />
-				<label for="url">URL:</label>
-				<input v-model="editedBookmark.url" id="url" type="text" />
-			</div>
-			<div class="chrome-edit-form-footer">
-				<button @click="saveEditedBookmark">저장</button>
+
+		<!-- 북마크 편집 모달 -->
+		<div class="bookmark-modal" v-if="showBookmarkEditModal">
+			<div class="bookmark-modal-content">
+				<div class="bookmark-modal-header">
+					<h3>{{ isNewBookmark ? '북마크 추가' : '북마크 편집' }}</h3>
+					<button @click="closeBookmarkModal" class="modal-close-btn">×</button>
+				</div>
+				<div class="bookmark-modal-body">
+					<div class="form-group">
+						<label for="bookmark-title">이름</label>
+						<input type="text" id="bookmark-title" v-model="editingBookmark.title" placeholder="북마크 이름" class="bookmark-input" ref="editTitleInput" />
+					</div>
+					<div class="form-group">
+						<label for="bookmark-url">URL</label>
+						<input type="text" id="bookmark-url" v-model="editingBookmark.url" placeholder="https://example.com" class="bookmark-input" />
+					</div>
+				</div>
+				<div class="bookmark-modal-footer">
+					<button @click="deleteBookmark" v-if="!isNewBookmark" class="bookmark-btn delete-btn">삭제</button>
+					<div class="modal-actions">
+						<button @click="closeBookmarkModal" class="bookmark-btn cancel-btn">취소</button>
+						<button @click="saveBookmark" class="bookmark-btn save-btn">저장</button>
+					</div>
+				</div>
 			</div>
 		</div>
 
@@ -85,34 +96,30 @@
 </template>
 
 <script>
-const electronAPI = window.electronAPI ? window.electronAPI : null
-
 export default {
 	data() {
 		return {
 			tabs: [
 				{
-					url: 'https://www.g2b.go.kr',
-					title: '시작페이지',
+					url: 'https://www.g2b.go.kr/',
+					title: '새 탭',
 					loading: false,
 					color: this.getRandomColor(),
 				},
 			],
 			currentTabIndex: 0,
-			currentUrl: 'https://www.g2b.go.kr',
+			currentUrl: '',
 			canGoBack: false,
 			canGoForward: false,
 			zoomLevel: 100,
 			draggedTabIndex: null,
-			showBookmarksList: false,
 			bookmarks: [],
-			editingBookmark: false,
-			editedBookmarkIndex: null,
-			editedBookmark: {
-				title: '',
-				url: '',
-			},
-			isAddingBookmark: false,
+			showBookmarkBar: false,
+			editingBookmarkIndex: -1,
+			editingBookmark: { title: '', url: '' },
+			showBookmarkEditModal: false,
+			isNewBookmark: false,
+			draggedBookmarkIndex: null,
 		}
 	},
 	methods: {
@@ -210,14 +217,6 @@ export default {
 		updateTitle(event, index) {
 			this.tabs[index].title = event.title === 'about:blank' ? '새 탭' : event.title
 		},
-		showSettings() {
-			// 설정 메뉴 표시 기능 구현
-			console.log('설정 메뉴 표시')
-		},
-		showMenu() {
-			// 추가 메뉴 표시 기능 구현
-			console.log('추가 메뉴 표시')
-		},
 		increaseZoom() {
 			const webview = document.querySelector(`#webview-${this.currentTabIndex}`)
 			if (webview && this.zoomLevel < 200) {
@@ -273,62 +272,218 @@ export default {
 			}
 		},
 
-		addBookmark() {
-			window.electronAPI.send('add-bookmark', this.currentUrl, this.tabs[this.currentTabIndex].title || '새 북마크')
-			this.editedBookmark.title = this.tabs[this.currentTabIndex].title || '새 북마크'
-			this.editedBookmark.url = this.currentUrl
-			this.editingBookmark = true
-			this.toggleBookmarks() // 북마크 리스트 갱신
-		},
-		saveEditedBookmark() {
-			if (!this.editedBookmark) {
-				this.editedBookmark = {
-					title: '',
-					url: '',
-				}
+		// 북마크 관련 기능
+		async loadBookmarks() {
+			try {
+				this.bookmarks = (await window.electronAPI.invoke('get-bookmarks')) || []
+			} catch (error) {
+				console.error('북마크 로드 오류:', error)
+				this.bookmarks = []
 			}
-			if (this.isAddingBookmark) {
-				window.electronAPI.send('add-bookmark', this.editedBookmark.url, this.editedBookmark.title)
-				this.isAddingBookmark = false
+		},
+
+		async saveBookmarks() {
+			try {
+				// 북마크 객체를 직렬화 가능한 형태로 변환
+				const serializableBookmarks = this.bookmarks.map((bookmark) => ({
+					title: bookmark.title,
+					url: bookmark.url,
+				}))
+
+				await window.electronAPI.invoke('save-bookmarks', serializableBookmarks)
+			} catch (error) {
+				console.error('북마크 저장 오류:', error)
+			}
+		},
+
+		toggleBookmarkBar() {
+			this.showBookmarkBar = !this.showBookmarkBar
+		},
+
+		async addBookmark() {
+			// 현재 URL이 비어있거나 about:blank인 경우 추가하지 않음
+			if (!this.currentUrl || this.currentUrl === 'about:blank') {
+				return
+			}
+
+			// 북마크 바가 숨겨져 있으면 표시
+			if (!this.showBookmarkBar) {
+				this.showBookmarkBar = true
+			}
+
+			// 현재 URL이 이미 북마크에 있는지 확인
+			const existingIndex = this.bookmarks.findIndex((b) => b.url === this.currentUrl)
+
+			if (existingIndex !== -1) {
+				// 이미 있는 북마크면 편집 모달 표시
+				this.openEditBookmarkModal(existingIndex)
 			} else {
-				const bookmarks = JSON.parse(JSON.stringify(this.bookmarks))
-				if (this.editedBookmarkIndex !== null) {
-					bookmarks[this.editedBookmarkIndex].title = this.editedBookmark.title
-					bookmarks[this.editedBookmarkIndex].url = this.editedBookmark.url
+				// 새 북마크 추가 모달 표시
+				this.openAddBookmarkModal()
+			}
+		},
+
+		openAddBookmarkModal() {
+			this.isNewBookmark = true
+			this.editingBookmarkIndex = -1
+			this.editingBookmark = {
+				title: this.tabs[this.currentTabIndex].title || '새 북마크',
+				url: this.currentUrl,
+			}
+			this.showBookmarkEditModal = true
+
+			this.$nextTick(() => {
+				if (this.$refs.editTitleInput) {
+					this.$refs.editTitleInput.focus()
+					this.$refs.editTitleInput.select()
 				}
-				window.electronAPI.send('save-bookmarks', bookmarks)
-			}
-			this.editingBookmark = false
-			this.toggleBookmarks() // 북마크 리스트 갱신
-		},
-		toggleBookmarks() {
-			if (!this.showBookmarksList) {
-				window.electronAPI.send('load-bookmarks')
-				window.electronAPI.on('bookmarks-loaded', (bookmarks) => {
-					this.bookmarks = bookmarks
-				})
-			}
-			this.showBookmarksList = !this.showBookmarksList
+			})
 		},
 
-		editBookmark(index) {
-			this.editedBookmarkIndex = index
-			this.editedBookmark.title = this.bookmarks[index].title
-			this.editedBookmark.url = this.bookmarks[index].url
-			this.editingBookmark = true
+		openEditBookmarkModal(index) {
+			this.isNewBookmark = false
+			this.editingBookmarkIndex = index
+			this.editingBookmark = {
+				title: this.bookmarks[index].title,
+				url: this.bookmarks[index].url,
+			}
+			this.showBookmarkEditModal = true
+
+			this.$nextTick(() => {
+				if (this.$refs.editTitleInput) {
+					this.$refs.editTitleInput.focus()
+					this.$refs.editTitleInput.select()
+				}
+			})
 		},
 
-		deleteBookmark(index) {
-			const bookmarks = JSON.parse(JSON.stringify(this.bookmarks)) // 직렬화 가능한 형태로 변환
-			bookmarks.splice(index, 1)
-			window.electronAPI.send('save-bookmarks', bookmarks)
-			this.bookmarks = bookmarks
+		closeBookmarkModal() {
+			this.showBookmarkEditModal = false
+			this.editingBookmarkIndex = -1
+			this.editingBookmark = { title: '', url: '' }
 		},
-		cancelEditing() {
-			this.editingBookmark = false
+
+		async saveBookmark() {
+			// 입력값 검증
+			if (!this.editingBookmark.title.trim()) {
+				this.editingBookmark.title = '제목 없음'
+			}
+
+			if (!this.editingBookmark.url.trim()) {
+				this.editingBookmark.url = 'about:blank'
+			} else if (!this.editingBookmark.url.startsWith('http://') && !this.editingBookmark.url.startsWith('https://') && this.editingBookmark.url !== 'about:blank') {
+				this.editingBookmark.url = 'https://' + this.editingBookmark.url
+			}
+
+			if (this.isNewBookmark) {
+				// 새 북마크 추가
+				this.bookmarks.push({ ...this.editingBookmark })
+			} else {
+				// 기존 북마크 수정
+				this.bookmarks[this.editingBookmarkIndex] = { ...this.editingBookmark }
+			}
+
+			await this.saveBookmarks()
+			this.closeBookmarkModal()
+		},
+
+		async deleteBookmark() {
+			if (this.editingBookmarkIndex >= 0) {
+				this.bookmarks.splice(this.editingBookmarkIndex, 1)
+				await this.saveBookmarks()
+			}
+			this.closeBookmarkModal()
+		},
+
+		navigateToBookmark(url) {
+			this.currentUrl = url
+			this.navigate()
+		},
+
+		// 북마크 드래그 앤 드롭 기능
+		dragStartBookmark(index, event) {
+			this.draggedBookmarkIndex = index
+			event.dataTransfer.effectAllowed = 'move'
+		},
+
+		dropBookmark(index, event) {
+			if (this.draggedBookmarkIndex !== null && this.draggedBookmarkIndex !== index) {
+				// 북마크 순서 변경
+				const draggedBookmark = this.bookmarks[this.draggedBookmarkIndex]
+				this.bookmarks.splice(this.draggedBookmarkIndex, 1)
+				this.bookmarks.splice(index, 0, draggedBookmark)
+
+				// 변경사항 저장
+				this.saveBookmarks()
+				this.draggedBookmarkIndex = null
+			}
+		},
+
+		// 북마크 우클릭 메뉴
+		showBookmarkContextMenu(index, event) {
+			window.electronAPI.send('show-bookmark-context-menu', {
+				x: event.clientX,
+				y: event.clientY,
+				bookmarkIndex: index,
+			})
+		},
+
+		showSettings() {
+			// 설정 메뉴 표시 기능 구현
+			console.log('설정 메뉴 표시')
+		},
+
+		showMenu() {
+			// 추가 메뉴 표시 기능 구현
+			console.log('추가 메뉴 표시')
 		},
 	},
-	mounted() {
+	async mounted() {
+		// 북마크 로드
+		await this.loadBookmarks()
+
+		// 북마크 컨텍스트 메뉴 이벤트 리스너
+		window.electronAPI.on('bookmark-context-menu-action', (action, index) => {
+			switch (action) {
+				case 'edit':
+					this.openEditBookmarkModal(index)
+					break
+				case 'delete':
+					this.editingBookmarkIndex = index
+					this.deleteBookmark()
+					break
+				case 'open-in-new-tab':
+					const url = this.bookmarks[index].url
+					this.addNewTab()
+					this.currentUrl = url
+					this.navigate()
+					break
+			}
+		})
+
+		// 메뉴에서 북마크 관련 이벤트 처리
+		window.electronAPI.on('toggle-bookmark-bar', () => {
+			this.toggleBookmarkBar()
+		})
+
+		window.electronAPI.on('add-bookmark', () => {
+			this.addBookmark()
+		})
+
+		// 탭 관련 이벤트 처리
+		window.electronAPI.on('create-new-tab', (url) => {
+			this.addNewTab()
+			if (url) {
+				this.currentUrl = url
+				this.navigate()
+			}
+		})
+
+		window.electronAPI.on('navigate-to-url', (url) => {
+			this.currentUrl = url
+			this.navigate()
+		})
+
 		// 웹뷰 이벤트 리스너 설정
 		setTimeout(() => {
 			const webview = document.querySelector('#webview-0')
@@ -339,10 +494,6 @@ export default {
 				})
 			}
 		}, 1000)
-
-		window.electronAPI.on('bookmarks-updated', (bookmarks) => {
-			this.bookmarks = bookmarks
-		})
 	},
 }
 </script>
@@ -477,6 +628,11 @@ body {
 	cursor: not-allowed;
 }
 
+.action-btn.active {
+	background-color: #e0e0e0;
+	color: #4285f4;
+}
+
 .address-bar {
 	flex: 1;
 	display: flex;
@@ -515,6 +671,130 @@ body {
 	flex-shrink: 0;
 }
 
+/* 북마크 바 스타일 */
+.bookmark-bar {
+	display: flex;
+	background-color: #f8f8f8;
+	border-bottom: 1px solid #ddd;
+	padding: 6px 8px;
+	overflow-x: auto;
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+}
+
+.bookmark-bar::-webkit-scrollbar {
+	display: none;
+}
+
+.bookmark-items {
+	display: flex;
+	flex-wrap: nowrap;
+	width: 100%;
+}
+
+.bookmark-item {
+	margin: 0 5px;
+	white-space: nowrap;
+	flex-shrink: 0;
+}
+
+.bookmark-view {
+	display: flex;
+	align-items: center;
+}
+
+.bookmark-link {
+	display: flex;
+	align-items: center;
+	padding: 6px 10px;
+	background-color: transparent;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	color: #555;
+	font-size: 13px;
+	max-width: 200px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.bookmark-link:hover {
+	background-color: #e0e0e0;
+}
+
+.bookmark-favicon {
+	margin-right: 5px;
+	font-size: 14px;
+}
+
+.bookmark-title {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.bookmark-edit-btn {
+	background: none;
+	border: none;
+	font-size: 14px;
+	cursor: pointer;
+	padding: 4px;
+	border-radius: 50%;
+	visibility: hidden;
+}
+
+.bookmark-item:hover .bookmark-edit-btn {
+	visibility: visible;
+}
+
+.bookmark-edit {
+	display: flex;
+	flex-direction: column;
+	background-color: white;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	padding: 10px;
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+	position: absolute;
+	z-index: 10;
+	width: 300px;
+}
+
+.bookmark-input {
+	margin-bottom: 8px;
+	padding: 8px;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	font-size: 13px;
+}
+
+.bookmark-edit-actions {
+	display: flex;
+	justify-content: space-between;
+}
+
+.bookmark-btn {
+	padding: 6px 12px;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 13px;
+}
+
+.save-btn {
+	background-color: #4285f4;
+	color: white;
+}
+
+.cancel-btn {
+	background-color: #f0f0f0;
+	color: #555;
+}
+
+.delete-btn {
+	background-color: #ea4335;
+	color: white;
+}
+
 .webview-container {
 	flex: 1;
 	background-color: #fff;
@@ -549,132 +829,189 @@ body {
 	gap: 5px;
 }
 
-<style scoped > .chrome-bookmarks-list {
-	list-style: none;
-	padding: 0;
-	margin: 0;
-}
-
-.chrome-bookmark-item {
+/* 북마크 바 스타일 수정 */
+.bookmark-bar {
 	display: flex;
-	align-items: center;
-	padding: 8px;
+	background-color: #f8f8f8;
 	border-bottom: 1px solid #ddd;
+	padding: 6px 8px;
+	overflow-x: auto;
+	scrollbar-width: none;
+	-ms-overflow-style: none;
 }
 
-.chrome-bookmark-icon {
-	width: 16px;
-	height: 16px;
-	background-color: #ccc;
-	border-radius: 50%;
-	margin-right: 8px;
+.bookmark-bar::-webkit-scrollbar {
+	display: none;
 }
 
-.chrome-bookmark-info {
-	flex: 1;
-}
-
-.chrome-bookmark-title {
-	font-weight: bold;
-	font-size: 14px;
-}
-
-.chrome-bookmark-url {
-	font-size: 12px;
-	color: #666;
-}
-
-.chrome-bookmark-actions {
-	margin-left: 8px;
-}
-
-.chrome-bookmark-actions button {
-	padding: 4px 8px;
-	border: none;
-	border-radius: 4px;
-	background-color: #f0f0f0;
-	cursor: pointer;
-}
-
-.chrome-bookmark-actions button:hover {
-	background-color: #e0e0e0;
-}
-
-<style scoped > .chrome-edit-form {
-	position: fixed;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	background-color: #fff;
-	padding: 20px;
-	border: 1px solid #ddd;
-	border-radius: 10px;
-	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-	width: 400px;
-}
-
-.chrome-edit-form-header {
+.bookmark-items {
 	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-bottom: 10px;
-}
-
-.chrome-edit-form-header span {
-	font-weight: bold;
-}
-
-.chrome-edit-form-header button {
-	background: none;
-	border: none;
-	font-size: 18px;
-	cursor: pointer;
-}
-
-.chrome-edit-form-body {
-	margin-bottom: 20px;
-}
-
-.chrome-edit-form-body label {
-	display: block;
-	margin-bottom: 5px;
-}
-
-.chrome-edit-form-body input {
+	flex-wrap: nowrap;
 	width: 100%;
-	padding: 10px;
-	margin-bottom: 15px;
-	border: 1px solid #ccc;
-	border-radius: 5px;
 }
 
-.chrome-edit-form-footer {
-	text-align: right;
+.bookmark-item {
+	margin: 0 2px;
+	white-space: nowrap;
+	flex-shrink: 0;
 }
 
-.chrome-edit-form-footer button {
-	padding: 10px 20px;
+.bookmark-empty {
+	display: flex;
+	align-items: center;
+	color: #666;
+	font-size: 13px;
+	padding: 0 10px;
+}
+
+.bookmark-add-btn {
+	margin-left: 10px;
+	padding: 4px 8px;
 	background-color: #4285f4;
 	color: white;
 	border: none;
-	border-radius: 5px;
+	border-radius: 4px;
 	cursor: pointer;
+	font-size: 12px;
 }
 
-.chrome-edit-form-footer button:hover {
-	background-color: #3b7bff;
-}
-
-.add-bookmark-btn {
-	padding: 10px;
+.bookmark-link {
+	display: flex;
+	align-items: center;
+	padding: 6px 10px;
+	background-color: transparent;
 	border: none;
-	border-radius: 5px;
-	background-color: #f0f0f0;
+	border-radius: 4px;
 	cursor: pointer;
+	color: #555;
+	font-size: 13px;
+	max-width: 200px;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
-.add-bookmark-btn:hover {
+.bookmark-link:hover {
 	background-color: #e0e0e0;
+}
+
+.bookmark-favicon {
+	margin-right: 5px;
+	font-size: 14px;
+}
+
+.bookmark-title {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* 북마크 모달 스타일 */
+.bookmark-modal {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(0, 0, 0, 0.5);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 1000;
+}
+
+.bookmark-modal-content {
+	background-color: white;
+	border-radius: 8px;
+	width: 400px;
+	max-width: 90%;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	overflow: hidden;
+}
+
+.bookmark-modal-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 16px;
+	border-bottom: 1px solid #eee;
+}
+
+.bookmark-modal-header h3 {
+	margin: 0;
+	font-size: 18px;
+	color: #333;
+}
+
+.modal-close-btn {
+	background: none;
+	border: none;
+	font-size: 20px;
+	cursor: pointer;
+	color: #666;
+}
+
+.bookmark-modal-body {
+	padding: 16px;
+}
+
+.form-group {
+	margin-bottom: 16px;
+}
+
+.form-group label {
+	display: block;
+	margin-bottom: 8px;
+	font-size: 14px;
+	color: #555;
+}
+
+.bookmark-input {
+	width: 100%;
+	padding: 8px 12px;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	font-size: 14px;
+	box-sizing: border-box;
+}
+
+.bookmark-input:focus {
+	border-color: #4285f4;
+	outline: none;
+	box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+}
+
+.bookmark-modal-footer {
+	display: flex;
+	justify-content: space-between;
+	padding: 16px;
+	border-top: 1px solid #eee;
+}
+
+.modal-actions {
+	display: flex;
+	gap: 8px;
+}
+
+.bookmark-btn {
+	padding: 8px 16px;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 14px;
+}
+
+.save-btn {
+	background-color: #4285f4;
+	color: white;
+}
+
+.cancel-btn {
+	background-color: #f0f0f0;
+	color: #555;
+}
+
+.delete-btn {
+	background-color: #ea4335;
+	color: white;
 }
 </style>
 
