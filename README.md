@@ -2,6 +2,8 @@
 
 An Electron application with Vue
 
+perplexity.ai 가 만드는 웹브라우져 프로젝트
+
 ## Project Tree
 
 ```
