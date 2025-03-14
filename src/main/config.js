@@ -8,6 +8,12 @@ const configPath = join(os.homedir(), '.electron-vite.json')
 // 기본 설정
 const defaultConfig = {
 	bookmarks: [],
+	settings: {
+		defaultHomePage: 'about:blank',
+		searchEngine: 'google',
+		showBookmarkBar: true,
+		theme: 'light',
+	},
 }
 
 // 설정 로드
@@ -20,7 +26,7 @@ export function loadConfig() {
 	} catch (error) {
 		console.error('설정 파일 로드 오류:', error)
 	}
-	return defaultConfig
+	return { ...defaultConfig }
 }
 
 // 설정 저장
@@ -34,15 +40,31 @@ export function saveConfig(config) {
 	}
 }
 
-// 특정 설정 가져오기
-export function getConfigValue(key) {
+// 특정 설정 섹션 가져오기
+export function getConfigSection(section) {
 	const config = loadConfig()
-	return config[key]
+	return config[section] || (defaultConfig[section] ? { ...defaultConfig[section] } : {})
 }
 
-// 특정 설정 저장하기
-export function setConfigValue(key, value) {
+// 특정 설정 섹션 저장하기
+export function saveConfigSection(section, data) {
 	const config = loadConfig()
-	config[key] = value
+	config[section] = data
+	return saveConfig(config)
+}
+
+// 특정 설정값 가져오기
+export function getConfigValue(section, key) {
+	const sectionData = getConfigSection(section)
+	return sectionData[key]
+}
+
+// 특정 설정값 저장하기
+export function setConfigValue(section, key, value) {
+	const config = loadConfig()
+	if (!config[section]) {
+		config[section] = {}
+	}
+	config[section][key] = value
 	return saveConfig(config)
 }

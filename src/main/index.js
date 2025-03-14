@@ -5,41 +5,7 @@ import icon from '../../resources/icon.png?asset'
 import { setupMenu } from './menu'
 import { setupTray } from './tray'
 import { setupUpdater } from './updater'
-
-import fs from 'fs'
-import os from 'os'
-
-// 설정 파일 경로
-const configPath = join(os.homedir(), '.electron-vite.json')
-
-// 기본 설정
-const defaultConfig = {
-	bookmarks: [],
-}
-
-// 설정 로드
-function loadConfig() {
-	try {
-		if (fs.existsSync(configPath)) {
-			const data = fs.readFileSync(configPath, 'utf8')
-			return JSON.parse(data)
-		}
-	} catch (error) {
-		console.error('설정 파일 로드 오류:', error)
-	}
-	return defaultConfig
-}
-
-// 설정 저장
-function saveConfig(config) {
-	try {
-		fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8')
-		return true
-	} catch (error) {
-		console.error('설정 파일 저장 오류:', error)
-		return false
-	}
-}
+import { getConfigSection, saveConfigSection, getConfigValue, setConfigValue } from './config'
 
 let mainWindow = null
 
@@ -59,6 +25,8 @@ function createWindow() {
 			contextIsolation: true, // contextBridge 사용을 위해 true로 설정
 		},
 	})
+	// webview-preload.js 경로 설정
+	const webviewPreloadPath = join(__dirname, '../preload/webview-preload.js')
 
 	mainWindow.on('ready-to-show', () => {
 		mainWindow.show()
@@ -77,15 +45,40 @@ function createWindow() {
 	}
 
 	// 설정 관련 IPC 핸들러 설정
+	ipcMain.handle('get-config-section', (_, section) => {
+		return getConfigSection(section)
+	})
+
+	ipcMain.handle('save-config-section', (_, section, data) => {
+		return saveConfigSection(section, data)
+	})
+
+	ipcMain.handle('get-config-value', (_, section, key) => {
+		return getConfigValue(section, key)
+	})
+
+	ipcMain.handle('set-config-value', (_, section, key, value) => {
+		return setConfigValue(section, key, value)
+	})
+
+	// 북마크 관련 IPC 핸들러 (이전 방식과 호환성 유지)
 	ipcMain.handle('get-bookmarks', () => {
-		const config = loadConfig()
-		return config.bookmarks || []
+		return getConfigSection('bookmarks')
 	})
 
 	ipcMain.handle('save-bookmarks', (_, bookmarks) => {
-		const config = loadConfig()
-		config.bookmarks = bookmarks
-		return saveConfig(config)
+		return saveConfigSection('bookmarks', bookmarks)
+	})
+
+	// webview preload 경로 전달
+	ipcMain.handle('get-webview-preload-path', () => {
+		return webviewPreloadPath
+	})
+
+	// webview ping-pong 테스트
+	ipcMain.on('webview-ping', (event) => {
+		console.log('Received ping from webview')
+		event.sender.send('webview-pong', 'pong from main process')
 	})
 }
 
@@ -129,5 +122,9 @@ ipcMain.on('new-tab', (_, url) => {
 
 ipcMain.on('navigate', (_, url) => {
 	mainWindow.webContents.send('navigate-to-url', url)
+})
+
+ipcMain.on('webview-ping', (event) => {
+	event.sender.send('webview-pong', 'pong from main process')
 })
 

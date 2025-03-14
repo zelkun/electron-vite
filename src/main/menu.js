@@ -18,6 +18,32 @@ export function setupMenu(mainWindow) {
 					accelerator: 'CmdOrCtrl+N',
 					click: () => {
 						// 새 창 생성 로직
+						const { BrowserWindow } = require('electron')
+						const path = require('path')
+						const newWindow = new BrowserWindow({
+							width: 1200,
+							height: 800,
+							webPreferences: {
+								preload: path.join(__dirname, '../preload/index.js'),
+								sandbox: false,
+								webviewTag: true,
+								nodeIntegration: false,
+								contextIsolation: true,
+							},
+						})
+
+						if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+							newWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
+						} else {
+							newWindow.loadFile(path.join(__dirname, '../renderer/index.html'))
+						}
+					},
+				},
+				{
+					label: '탭 닫기',
+					accelerator: 'CmdOrCtrl+W',
+					click: () => {
+						mainWindow.webContents.send('close-current-tab')
 					},
 				},
 				{ type: 'separator' },
@@ -32,7 +58,25 @@ export function setupMenu(mainWindow) {
 		},
 		{
 			label: '편집',
-			submenu: [{ role: 'undo' }, { role: 'redo' }, { type: 'separator' }, { role: 'cut' }, { role: 'copy' }, { role: 'paste' }, { role: 'delete' }, { type: 'separator' }, { role: 'selectAll' }],
+			submenu: [
+				{ role: 'undo' },
+				{ role: 'redo' },
+				{ type: 'separator' },
+				{ role: 'cut' },
+				{ role: 'copy' },
+				{ role: 'paste' },
+				{ role: 'delete' },
+				{ type: 'separator' },
+				{ role: 'selectAll' },
+				{ type: 'separator' },
+				{
+					label: '페이지 내 검색',
+					accelerator: 'CmdOrCtrl+F',
+					click: () => {
+						mainWindow.webContents.send('show-page-search')
+					},
+				},
+			],
 		},
 		{
 			label: '보기',

@@ -76,9 +76,17 @@
 			</div>
 		</div>
 
+		<!-- 페이지 검색 UI -->
+		<div class="search-bar" v-if="showSearch">
+			<input type="text" v-model="searchText" @keyup.enter="findInPage" @keyup.esc="closeSearch" placeholder="페이지 내 검색" ref="searchInput" class="search-input" />
+			<button @click="findNext" class="search-btn">다음</button>
+			<button @click="findPrevious" class="search-btn">이전</button>
+			<button @click="closeSearch" class="search-btn close-btn">×</button>
+		</div>
+
 		<!-- 웹뷰 영역 -->
 		<div class="webview-container">
-			<webview v-for="(tab, index) in tabs" :key="index" :id="`webview-${index}`" :src="tab.url" :style="{ display: currentTabIndex === index ? 'flex' : 'none' }" class="webview" webpreferences="nodeIntegration=false, contextIsolation=true" @did-start-loading="startLoading(index)" @did-stop-loading="stopLoading(index)" @did-navigate="updateUrl($event, index)" @page-title-updated="updateTitle($event, index)"></webview>
+			<webview v-for="(tab, index) in tabs" :key="index" :id="`webview-${index}`" :src="tab.url" :style="{ display: currentTabIndex === index ? 'flex' : 'none' }" class="webview" :preload="webviewPreloadPath" webpreferences="nodeIntegration=false, contextIsolation=true, allowpopups=true" @did-start-loading="startLoading(index)" @did-stop-loading="stopLoading(index)" @did-navigate="updateUrl($event, index)" @page-title-updated="updateTitle($event, index)"></webview>
 		</div>
 
 		<!-- 상태 표시줄 -->
@@ -120,6 +128,10 @@ export default {
 			showBookmarkEditModal: false,
 			isNewBookmark: false,
 			draggedBookmarkIndex: null,
+			showSearch: false,
+			searchText: '',
+			searchResults: { activeMatchOrdinal: 0, matches: 0 },
+			webviewPreloadPath: '',
 		}
 	},
 	methods: {
@@ -428,6 +440,82 @@ export default {
 			})
 		},
 
+		// 검색 관련 메서드
+		showPageSearch() {
+			this.showSearch = true
+			this.$nextTick(() => {
+				this.$refs.searchInput.focus()
+			})
+		},
+
+		closeSearch() {
+			this.showSearch = false
+			this.searchText = ''
+			// 검색 하이라이트 제거
+			const webview = document.querySelector(`#webview-${this.currentTabIndex}`)
+			if (webview) {
+				webview.stopFindInPage('clearSelection')
+			}
+		},
+
+		findInPage() {
+			if (!this.searchText) return
+
+			const webview = document.querySelector(`#webview-${this.currentTabIndex}`)
+			if (webview) {
+				webview.findInPage(this.searchText)
+
+				// 검색 결과 이벤트 리스너
+				webview.addEventListener('found-in-page', (e) => {
+					this.searchResults = e.result
+				})
+			}
+		},
+
+		findNext() {
+			if (!this.searchText) return
+
+			const webview = document.querySelector(`#webview-${this.currentTabIndex}`)
+			if (webview) {
+				webview.findInPage(this.searchText, { forward: true, findNext: true })
+			}
+		},
+
+		findPrevious() {
+			if (!this.searchText) return
+
+			const webview = document.querySelector(`#webview-${this.currentTabIndex}`)
+			if (webview) {
+				webview.findInPage(this.searchText, { forward: false, findNext: true })
+			}
+		},
+
+		// 핑퐁 테스트 메서드 추가
+		testPingPong() {
+			const webview = document.querySelector(`#webview-${this.currentTabIndex}`)
+			if (webview) {
+				// 웹뷰가 로드된 후에 실행
+				webview.addEventListener('dom-ready', () => {
+					// 웹뷰에 자바스크립트 실행
+					webview.executeJavaScript(`
+						if (window.webviewAPI) {
+							console.log('Sending ping from webview');
+							const result = window.webviewAPI.ping();
+							console.log(result);
+
+							// pong 응답 리스너
+							window.webviewAPI.on('webview-pong', (message) => {
+							console.log('Received from main process:', message);
+							alert('Ping-Pong 테스트 성공: ' + message);
+							});
+						} else {
+							console.error('webviewAPI is not available');
+							alert('webviewAPI is not available');
+						}`)
+				})
+			}
+		},
+
 		showSettings() {
 			// 설정 메뉴 표시 기능 구현
 			console.log('설정 메뉴 표시')
@@ -437,8 +525,50 @@ export default {
 			// 추가 메뉴 표시 기능 구현
 			console.log('추가 메뉴 표시')
 		},
+
+		// 설정 로드 메서드
+		async loadSettings() {
+			try {
+				const settings = await window.electronAPI.getConfigSection('settings')
+				// 설정 적용
+				this.showBookmarkBar = settings.showBookmarkBar
+				// 기타 설정 적용...
+			} catch (error) {
+				console.error('설정 로드 오류:', error)
+			}
+		},
+
+		// 설정 저장 메서드
+		async saveSettings() {
+			try {
+				const settings = {
+					showBookmarkBar: this.showBookmarkBar,
+					// 기타 설정...
+				}
+				await window.electronAPI.saveConfigSection('settings', settings)
+			} catch (error) {
+				console.error('설정 저장 오류:', error)
+			}
+		},
+
+		// 북마크 바 토글 메서드 수정
+		async toggleBookmarkBar() {
+			this.showBookmarkBar = !this.showBookmarkBar
+			// 설정 저장
+			await window.electronAPI.setConfigValue('settings', 'showBookmarkBar', this.showBookmarkBar)
+		},
 	},
 	async mounted() {
+		// 웹뷰 preload 경로 가져오기
+		try {
+			const preloadPath = await window.electronAPI.getWebviewPreloadPath()
+			// file: 프로토콜 추가 (Windows에서는 file:/// 형식 필요)
+			this.webviewPreloadPath = `file://${preloadPath}`
+			console.log('Webview preload path:', this.webviewPreloadPath)
+		} catch (error) {
+			console.error('Failed to get webview preload path:', error)
+		}
+
 		// 북마크 로드
 		await this.loadBookmarks()
 
@@ -484,6 +614,14 @@ export default {
 			this.navigate()
 		})
 
+		window.electronAPI.on('close-current-tab', () => {
+			this.closeTab(this.currentTabIndex)
+		})
+
+		window.electronAPI.on('show-page-search', () => {
+			this.showPageSearch()
+		})
+
 		// 웹뷰 이벤트 리스너 설정
 		setTimeout(() => {
 			const webview = document.querySelector('#webview-0')
@@ -491,6 +629,8 @@ export default {
 				webview.addEventListener('dom-ready', () => {
 					this.canGoBack = webview.canGoBack()
 					this.canGoForward = webview.canGoForward()
+					// 핑퐁 테스트 실행 (테스트 목적으로 주석 해제)
+					this.testPingPong()
 				})
 			}
 		}, 1000)
@@ -1012,6 +1152,52 @@ body {
 .delete-btn {
 	background-color: #ea4335;
 	color: white;
+}
+
+/* 페이지 검색 UI 스타일 */
+.search-bar {
+	position: fixed;
+	top: 10px;
+	right: 10px;
+	display: flex;
+	align-items: center;
+	background-color: white;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	padding: 5px;
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+	z-index: 100;
+}
+
+.search-input {
+	padding: 6px 10px;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	font-size: 14px;
+	width: 200px;
+	margin-right: 5px;
+}
+
+.search-btn {
+	padding: 6px 10px;
+	background-color: #f0f0f0;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	cursor: pointer;
+	margin-left: 2px;
+}
+
+.search-btn:hover {
+	background-color: #e0e0e0;
+}
+
+.close-btn {
+	background-color: transparent;
+	border: none;
+	font-size: 16px;
+	cursor: pointer;
+	padding: 0 5px;
+	margin-left: 5px;
 }
 </style>
 
