@@ -2,7 +2,7 @@
 	<div class="browser-container">
 		<!-- 탭 영역 -->
 		<div class="browser-tabs">
-			<div v-for="(tab, index) in tabs" :key="index" @click="switchTab(index)" :class="['tab', { active: currentTabIndex === index }]" :style="{ borderTop: `3px solid ${tab.color}` }" draggable="true" @dragstart="dragStart(index, $event)" @dragover.prevent @drop="drop(index, $event)">
+			<div v-for="(tab, index) in tabs" :key="index" @click="switchTab(index)" :class="['tab', { active: currentTabIndex === index }]" :style="{ borderTop: `3px solid ${tab.color}` }" draggable="true" @dragstart="dragStart(index, $event)" @dragover.prevent @drop="drop(index, $event)" @contextmenu.prevent="showTabContextMenu(index, $event)">
 				<span class="tab-title">{{ tab.title || '새 탭' }}</span>
 				<button @click.stop="closeTab(index)" class="close-tab">×</button>
 			</div>
@@ -86,7 +86,7 @@
 
 		<!-- 웹뷰 영역 -->
 		<div class="webview-container">
-			<webview v-for="(tab, index) in tabs" :key="index" :id="`webview-${index}`" :src="tab.url" :style="{ display: currentTabIndex === index ? 'flex' : 'none' }" class="webview" :preload="webviewPreloadPath" webpreferences="nodeIntegration=false, contextIsolation=true, allowpopups=true" @did-start-loading="startLoading(index)" @did-stop-loading="stopLoading(index)" @did-navigate="updateUrl($event, index)" @page-title-updated="updateTitle($event, index)"></webview>
+			<webview v-for="(tab, index) in tabs" :key="index" :id="`webview-${index}`" :src="tab.url" :style="{ display: currentTabIndex === index ? 'flex' : 'none' }" class="webview" webpreferences="nativeWindowOption=true" allowpopups nodeIntegration @did-start-loading="startLoading(index)" @did-stop-loading="stopLoading(index)" @did-navigate="updateUrl($event, index)" @page-title-updated="updateTitle($event, index)"></webview>
 		</div>
 
 		<!-- 상태 표시줄 -->
@@ -109,7 +109,7 @@ export default {
 		return {
 			tabs: [
 				{
-					url: 'https://www.g2b.go.kr/',
+					url: 'https://www.naver.com/',
 					title: '새 탭',
 					loading: false,
 					color: this.getRandomColor(),
@@ -131,7 +131,6 @@ export default {
 			showSearch: false,
 			searchText: '',
 			searchResults: { activeMatchOrdinal: 0, matches: 0 },
-			webviewPreloadPath: '',
 		}
 	},
 	methods: {
@@ -283,6 +282,30 @@ export default {
 				this.draggedTabIndex = null
 			}
 		},
+		// 웹뷰 개발자 도구 토글 메서드
+		toggleWebviewDevTools() {
+			const webview = document.querySelector(`#webview-${this.currentTabIndex}`)
+			if (webview) {
+				if (webview.isDevToolsOpened()) {
+					webview.closeDevTools()
+				} else {
+					webview.openDevTools()
+				}
+			}
+		},
+		// 설정 로드 메서드
+		async loadSettings() {
+			try {
+				// 설정에서 북마크 바 표시 여부 가져오기
+				const showBookmarkBar = await window.electronAPI.getConfigValue('settings', 'showBookmarkBar')
+				// null이나 undefined가 아니면 설정값 적용
+				if (showBookmarkBar !== null && showBookmarkBar !== undefined) {
+					this.showBookmarkBar = showBookmarkBar
+				}
+			} catch (error) {
+				console.error('설정 로드 오류:', error)
+			}
+		},
 
 		// 북마크 관련 기능
 		async loadBookmarks() {
@@ -308,8 +331,14 @@ export default {
 			}
 		},
 
-		toggleBookmarkBar() {
+		async toggleBookmarkBar() {
 			this.showBookmarkBar = !this.showBookmarkBar
+			// 설정 저장
+			try {
+				await window.electronAPI.setConfigValue('settings', 'showBookmarkBar', this.showBookmarkBar)
+			} catch (error) {
+				console.error('북마크 바 설정 저장 오류:', error)
+			}
 		},
 
 		async addBookmark() {
@@ -440,6 +469,14 @@ export default {
 			})
 		},
 
+		showTabContextMenu(index, event) {
+			window.electronAPI.send('show-tab-context-menu', {
+				x: event.clientX,
+				y: event.clientY,
+				tabIndex: index,
+			})
+		},
+
 		// 검색 관련 메서드
 		showPageSearch() {
 			this.showSearch = true
@@ -490,32 +527,6 @@ export default {
 			}
 		},
 
-		// 핑퐁 테스트 메서드 추가
-		testPingPong() {
-			const webview = document.querySelector(`#webview-${this.currentTabIndex}`)
-			if (webview) {
-				// 웹뷰가 로드된 후에 실행
-				webview.addEventListener('dom-ready', () => {
-					// 웹뷰에 자바스크립트 실행
-					webview.executeJavaScript(`
-						if (window.webviewAPI) {
-							console.log('Sending ping from webview');
-							const result = window.webviewAPI.ping();
-							console.log(result);
-
-							// pong 응답 리스너
-							window.webviewAPI.on('webview-pong', (message) => {
-							console.log('Received from main process:', message);
-							alert('Ping-Pong 테스트 성공: ' + message);
-							});
-						} else {
-							console.error('webviewAPI is not available');
-							alert('webviewAPI is not available');
-						}`)
-				})
-			}
-		},
-
 		showSettings() {
 			// 설정 메뉴 표시 기능 구현
 			console.log('설정 메뉴 표시')
@@ -559,18 +570,21 @@ export default {
 		},
 	},
 	async mounted() {
-		// 웹뷰 preload 경로 가져오기
-		try {
-			const preloadPath = await window.electronAPI.getWebviewPreloadPath()
-			// file: 프로토콜 추가 (Windows에서는 file:/// 형식 필요)
-			this.webviewPreloadPath = `file://${preloadPath}`
-			console.log('Webview preload path:', this.webviewPreloadPath)
-		} catch (error) {
-			console.error('Failed to get webview preload path:', error)
-		}
+		// 설정 로드
+		await this.loadSettings()
 
 		// 북마크 로드
 		await this.loadBookmarks()
+
+		// 북마크 컨텍스트 메뉴 이벤트 리스너
+		window.electronAPI.on('toggle-bookmark-bar', () => {
+			this.toggleBookmarkBar()
+		})
+
+		// 웹뷰 개발자 도구 이벤트 리스너
+		window.electronAPI.on('toggle-webview-devtools', () => {
+			this.toggleWebviewDevTools()
+		})
 
 		// 북마크 컨텍스트 메뉴 이벤트 리스너
 		window.electronAPI.on('bookmark-context-menu-action', (action, index) => {
@@ -589,11 +603,6 @@ export default {
 					this.navigate()
 					break
 			}
-		})
-
-		// 메뉴에서 북마크 관련 이벤트 처리
-		window.electronAPI.on('toggle-bookmark-bar', () => {
-			this.toggleBookmarkBar()
 		})
 
 		window.electronAPI.on('add-bookmark', () => {
@@ -629,11 +638,36 @@ export default {
 				webview.addEventListener('dom-ready', () => {
 					this.canGoBack = webview.canGoBack()
 					this.canGoForward = webview.canGoForward()
-					// 핑퐁 테스트 실행 (테스트 목적으로 주석 해제)
-					this.testPingPong()
 				})
 			}
 		}, 1000)
+
+		// 탭 컨텍스트 메뉴 이벤트 리스너
+		window.electronAPI.on('refresh-tab', (index) => {
+			if (index === this.currentTabIndex) {
+				this.refresh()
+			} else {
+				const webview = document.querySelector(`#webview-${index}`)
+				if (webview) {
+					webview.reload()
+				}
+			}
+		})
+
+		window.electronAPI.on('close-tab', (index) => {
+			this.closeTab(index)
+		})
+
+		window.electronAPI.on('open-tab-devtools', (index) => {
+			const webview = document.querySelector(`#webview-${index}`)
+			if (webview) {
+				if (webview.isDevToolsOpened()) {
+					webview.closeDevTools()
+				} else {
+					webview.openDevTools()
+				}
+			}
+		})
 	},
 }
 </script>

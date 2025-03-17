@@ -1,4 +1,5 @@
 import { Menu, ipcMain } from 'electron'
+import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 
 export function setupMenu(mainWindow) {
 	// 애플리케이션 메인 메뉴 설정
@@ -80,13 +81,31 @@ export function setupMenu(mainWindow) {
 		},
 		{
 			label: '보기',
-			submenu: [{ role: 'reload' }, { role: 'forceReload' }, { role: 'toggleDevTools' }, { type: 'separator' }, { role: 'resetZoom' }, { role: 'zoomIn' }, { role: 'zoomOut' }, { type: 'separator' }, { role: 'togglefullscreen' }],
+			submenu: [
+				{ role: 'reload' },
+				{ role: 'forceReload' },
+				{ role: 'toggleDevTools', accelerator: 'F12' },
+				{
+					label: '웹뷰 개발자 도구',
+					accelerator: 'CmdOrCtrl+F12',
+					click: () => {
+						mainWindow.webContents.send('toggle-webview-devtools')
+					},
+				},
+				{ type: 'separator' },
+				{ role: 'resetZoom' },
+				{ role: 'zoomIn' },
+				{ role: 'zoomOut' },
+				{ type: 'separator' },
+				{ role: 'togglefullscreen' },
+			],
 		},
 		{
 			label: '북마크',
 			submenu: [
 				{
 					label: '북마크 표시줄 보기',
+					accelerator: 'CmdOrCtrl+B',
 					type: 'checkbox',
 					checked: true,
 					click: () => {
@@ -145,5 +164,41 @@ export function setupMenu(mainWindow) {
 		])
 
 		bookmarkContextMenu.popup({ window: mainWindow, x, y })
+	})
+
+	// 탭 컨텍스트 메뉴 설정
+	ipcMain.on('show-tab-context-menu', (event, data) => {
+		const { x, y, tabIndex } = data
+
+		const tabContextMenu = Menu.buildFromTemplate([
+			{
+				label: '새 탭',
+				click: () => {
+					mainWindow.webContents.send('create-new-tab')
+				},
+			},
+			{ type: 'separator' },
+			{
+				label: '탭 새로고침',
+				click: () => {
+					mainWindow.webContents.send('refresh-tab', tabIndex)
+				},
+			},
+			{
+				label: '탭 닫기',
+				click: () => {
+					mainWindow.webContents.send('close-tab', tabIndex)
+				},
+			},
+			{ type: 'separator' },
+			{
+				label: '개발자 도구 열기',
+				click: () => {
+					mainWindow.webContents.send('open-tab-devtools', tabIndex)
+				},
+			},
+		])
+
+		tabContextMenu.popup({ window: mainWindow, x, y })
 	})
 }

@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, session } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -9,24 +9,56 @@ import { getConfigSection, saveConfigSection, getConfigValue, setConfigValue } f
 
 let mainWindow = null
 
+// webview-preload.js 경로 설정 - 빌드 환경에 따라 경로 조정
+const webviewPreloadPath = join(__dirname, is.dev ? '../../src/preload/webviewPreload.js' : '../preload/webviewPreload.js')
+
+console.log(`webviewPreloadPath: ${webviewPreloadPath}`)
+
 function createWindow() {
 	// 메인 브라우저 윈도우 생성
 	mainWindow = new BrowserWindow({
+		kiosk: false,
+		fullscreen: false,
+		resizable: true,
+		center: true,
+		alwaysOnTop: false,
 		width: 1200,
 		height: 800,
+		minWidth: 800,
+		minHeight: 600,
 		show: false,
-		autoHideMenuBar: false,
-		...(process.platform === 'linux' ? { icon } : {}),
+		movable: true,
+		focusable: true,
+		icon: join(__dirname, '../../resources/icon.png?asset'),
+		titleBarStyle: 'hiddenInset',
+		autoHideMenuBar: true,
+		backgroundColor: 'white',
+		//		...(process.platform === 'linux' ? { icon } : {}),
 		webPreferences: {
 			preload: join(__dirname, '../preload/index.js'),
-			sandbox: false,
 			webviewTag: true, // 웹뷰 태그 활성화
-			nodeIntegration: false,
+			nodeIntegration: true, // 노드 통합 활성화
 			contextIsolation: true, // contextBridge 사용을 위해 true로 설정
+			nodeIntegrationInWorker: false,
+			nodeIntegrationInSubFrames: false,
+			sandbox: false,
+			javascript: true,
+			webSecurity: false,
+			textAreasAreResizable: true,
+			plugins: true,
 		},
 	})
-	// webview-preload.js 경로 설정
-	const webviewPreloadPath = join(__dirname, '../preload/webview-preload.js')
+
+	/*
+	session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+		callback({
+			responseHeaders: {
+				...details.responseHeaders,
+				'Content-Security-Policy': ["default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"],
+			},
+		})
+	})
+	*/
 
 	mainWindow.on('ready-to-show', () => {
 		mainWindow.show()
@@ -43,6 +75,12 @@ function createWindow() {
 	} else {
 		mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
 	}
+
+	// 웹뷰 생성 시 preload 스크립트 설정
+	// will-attach-webview 에서 webview preload 관리함으로 주석처리
+	// mainWindow.webContents.on('will-attach-webview', (e, webPreferences) => {
+	// 	webPreferences.preload = webviewPreloadPath
+	// })
 
 	// 설정 관련 IPC 핸들러 설정
 	ipcMain.handle('get-config-section', (_, section) => {
@@ -68,17 +106,6 @@ function createWindow() {
 
 	ipcMain.handle('save-bookmarks', (_, bookmarks) => {
 		return saveConfigSection('bookmarks', bookmarks)
-	})
-
-	// webview preload 경로 전달
-	ipcMain.handle('get-webview-preload-path', () => {
-		return webviewPreloadPath
-	})
-
-	// webview ping-pong 테스트
-	ipcMain.on('webview-ping', (event) => {
-		console.log('Received ping from webview')
-		event.sender.send('webview-pong', 'pong from main process')
 	})
 }
 
@@ -108,6 +135,63 @@ app.whenReady().then(() => {
 	})
 })
 
+// 웹뷰 생성 시 preload 스크립트 설정
+app.on('web-contents-created', (_, contents) => {
+	// console.log(`## Web contents created`, contents.getType())
+
+	// popup 창을 띄울 때의 설정
+	/*
+		contents.setWindowOpenHandler((details) => {
+			shell.openExternal(details.url)
+
+			return {
+				action: 'allow',
+				overrideBrowserWindowOptions: {
+					resizable: true,
+					center: true,
+					alwaysOnTop: false,
+					show: true,
+					movable: true,
+					focusable: true,
+					autoHideMenuBar: true,
+					webPreferences: {
+						preload: webviewPreloadPath,
+						webviewTag: true,
+						contextIsolation: true,
+						nodeIntegration: false,
+						sandbox: true,
+					},
+					modal: true,
+					parent: details.parent,
+				},
+			}
+
+			return { action: 'deny' }
+		})
+	*/
+
+	contents.on('will-attach-webview', (event, webPreferences, params) => {
+		// console.log(`#### will-attach-webview`)
+		// preload 스크립트 설정
+		webPreferences.preload = webviewPreloadPath
+
+		// 웹뷰의 CSP 설정
+		// params.csp = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+
+		// 보안 설정
+		webPreferences.nodeIntegration = false
+		webPreferences.contextIsolation = true
+
+		console.log('Webview attached with preload:', webviewPreloadPath)
+	})
+
+	// 웹뷰 디버깅을 위한 콘솔 로그 캡처
+	contents.on('console-message', (_, level, message, line, sourceId) => {
+		const levels = ['verbose', 'info', 'warning', 'error']
+		console.log(`[Webview ${levels[level]}]: ${message}`)
+	})
+})
+
 // 모든 윈도우가 닫히면 앱 종료 (macOS 제외)
 app.on('window-all-closed', () => {
 	if (process.platform !== 'darwin') {
@@ -122,9 +206,5 @@ ipcMain.on('new-tab', (_, url) => {
 
 ipcMain.on('navigate', (_, url) => {
 	mainWindow.webContents.send('navigate-to-url', url)
-})
-
-ipcMain.on('webview-ping', (event) => {
-	event.sender.send('webview-pong', 'pong from main process')
 })
 

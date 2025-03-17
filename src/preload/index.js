@@ -1,5 +1,8 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
+console.log(`preload script loaded successfully!`)
+// alert(`preload script loaded successfully!`)
+
 contextBridge.exposeInMainWorld('electronAPI', {
 	send: (channel, ...args) => {
 		ipcRenderer.send(channel, ...args)
@@ -18,9 +21,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
 	},
 	once: (channel, func) => {
 		ipcRenderer.once(channel, (_event, ...args) => func(...args))
-	},
-	getWebviewPreloadPath: () => {
-		return ipcRenderer.invoke('get-webview-preload-path')
 	},
 
 	// 설정 관련 메서드 추가
