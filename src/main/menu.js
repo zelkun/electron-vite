@@ -211,17 +211,18 @@ export function setupMenu(mainWindow) {
 
 		// 링크가 있는 경우
 		if (linkURL) {
-			console.log('linkURL', linkURL)
 			menuItems.push(
 				{
 					label: '새 탭에서 링크 열기',
 					click: () => {
+						console.log('open-link-in-new-tab', linkURL)
 						mainWindow.webContents.send('open-link-in-new-tab', linkURL)
 					},
 				},
 				{
 					label: '링크 주소 복사',
 					click: () => {
+						console.log('copy-to-clipboard', linkURL)
 						mainWindow.webContents.send('copy-to-clipboard', linkURL)
 					},
 				},
