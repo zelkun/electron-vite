@@ -36,5 +36,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
 	setConfigValue: (section, key, value) => {
 		return ipcRenderer.invoke('set-config-value', section, key, value)
 	},
+
+	// 클립보드 관련 메서드
+	writeToClipboard: (text) => {
+		return ipcRenderer.invoke('write-to-clipboard', text)
+	},
+
+	// 파일 저장 관련 메서드
+	saveFile: (options) => {
+		return ipcRenderer.invoke('save-file', options)
+	},
 })
 

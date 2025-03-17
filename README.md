@@ -7,11 +7,11 @@ perplexity.ai 가 만드는 웹브라우져 프로젝트
 ## Project Tree
 
 ```
-electron-vite/
+electron-vite
 ├─ .editorconfig
 ├─ .prettierignore
 ├─ .prettierrc.yaml
-├─ build/
+├─ build
 │  ├─ entitlements.mac.plist
 │  ├─ icon.icns
 │  ├─ icon.ico
@@ -20,29 +20,41 @@ electron-vite/
 ├─ electron-builder.yml
 ├─ electron.vite.config.mjs
 ├─ eslint.config.mjs
+├─ package-lock.json
 ├─ package.json
 ├─ README.md
-├─ resources/
-│  └─ icon.png
+├─ resources
+│  ├─ icon.png
+│  ├─ icon.png_bk
+│  └─ icon.png_bk2
 ├─ src
-│  ├─ main/
+│  ├─ main
+│  │  ├─ config.js
 │  │  ├─ index.js
 │  │  ├─ menu.js
 │  │  ├─ tray.js
 │  │  └─ updater.js
-│  ├─ preload/
-│  │  └─ index.js
-│  └─ renderer/
+│  ├─ preload
+│  │  ├─ index.js
+│  │  └─ webviewPreload.js
+│  └─ renderer
 │     ├─ index.html
-│     └─ src/
+│     └─ src
 │        ├─ App.vue
-│        ├─ assets/
-│        ├─ components/
+│        ├─ assets
+│        │  ├─ base.css
+│        │  ├─ css
+│        │  │  └─ styles.css
+│        │  ├─ electron.svg
+│        │  ├─ main.css
+│        │  └─ wavy-lines.svg
+│        ├─ components
 │        └─ main.js
 └─ tools
    ├─ nsis-3.0.4.1.7z
    ├─ nsis-resources-3.4.1.7z
    └─ winCodeSign-2.6.0.7z
+
 ```
 
 ## Recommended IDE Setup

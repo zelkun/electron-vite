@@ -1,6 +1,5 @@
 import { Tray, Menu, nativeImage, app } from 'electron'
 import { join } from 'path'
-import path from 'path'
 
 let tray = null
 

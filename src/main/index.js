@@ -1,11 +1,12 @@
-import { app, shell, BrowserWindow, ipcMain, session } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, session, clipboard, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import icon from '../../resources/icon.png?asset'
+// import icon from '../../resources/icon.png?asset'
 import { setupMenu } from './menu'
 import { setupTray } from './tray'
 import { setupUpdater } from './updater'
 import { getConfigSection, saveConfigSection, getConfigValue, setConfigValue } from './config'
+import fs from 'fs'
 
 let mainWindow = null
 
@@ -30,14 +31,14 @@ function createWindow() {
 		movable: true,
 		focusable: true,
 		icon: join(__dirname, '../../resources/icon.png?asset'),
-		titleBarStyle: 'hiddenInset',
+		titleBarStyle: is.dev ? 'hiddenInset' : 'hidden',
 		autoHideMenuBar: true,
 		backgroundColor: 'white',
 		//		...(process.platform === 'linux' ? { icon } : {}),
 		webPreferences: {
 			preload: join(__dirname, '../preload/index.js'),
 			webviewTag: true, // 웹뷰 태그 활성화
-			nodeIntegration: true, // 노드 통합 활성화
+			nodeIntegration: false, // 노드 통합 활성화
 			contextIsolation: true, // contextBridge 사용을 위해 true로 설정
 			nodeIntegrationInWorker: false,
 			nodeIntegrationInSubFrames: false,
@@ -46,10 +47,11 @@ function createWindow() {
 			webSecurity: false,
 			textAreasAreResizable: true,
 			plugins: true,
+			allowRunningInsecureContent: false,
 		},
 	})
 
-	/*
+	/* CSP 설정 예시
 	session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
 		callback({
 			responseHeaders: {
@@ -208,3 +210,36 @@ ipcMain.on('navigate', (_, url) => {
 	mainWindow.webContents.send('navigate-to-url', url)
 })
 
+// 클립보드 관련 IPC 핸들러
+ipcMain.handle('write-to-clipboard', (_, text) => {
+	clipboard.writeText(text)
+	return true
+})
+
+// 파일 저장 관련 IPC 핸들러
+ipcMain.handle('save-file', async (_, options) => {
+	const { url, defaultPath } = options
+
+	try {
+		const { filePath } = await dialog.showSaveDialog(mainWindow, {
+			defaultPath: defaultPath || 'image.jpg',
+			filters: [
+				{ name: 'Images', extensions: ['jpg', 'png', 'gif'] },
+				{ name: 'All Files', extensions: ['*'] },
+			],
+		})
+
+		if (filePath) {
+			// 파일 다운로드 로직
+			const response = await fetch(url)
+			const buffer = await response.arrayBuffer()
+			fs.writeFileSync(filePath, Buffer.from(buffer))
+			return { success: true, path: filePath }
+		}
+
+		return { success: false, reason: 'User cancelled' }
+	} catch (error) {
+		console.error('Error saving file:', error)
+		return { success: false, reason: error.message }
+	}
+})

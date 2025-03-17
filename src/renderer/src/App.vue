@@ -180,6 +180,33 @@ export default {
 			})
 			this.currentTabIndex = this.tabs.length - 1
 			this.currentUrl = ''
+
+			// 새 탭의 웹뷰에 컨텍스트 메뉴 이벤트 등록
+			this.$nextTick(() => {
+				const index = this.tabs.length - 1
+				const webview = document.querySelector(`#webview-${index}`)
+				if (webview) {
+					webview.addEventListener('dom-ready', () => {
+						webview
+							.getWebContents()
+							.then((webContents) => {
+								webContents.on('context-menu', (e, params) => {
+									window.electronAPI.send('show-webview-context-menu', {
+										x: params.x,
+										y: params.y,
+										linkURL: params.linkURL,
+										srcURL: params.srcURL,
+										isEditable: params.isEditable,
+										selectionText: params.selectionText,
+									})
+								})
+							})
+							.catch((err) => {
+								console.error('Failed to get webContents:', err)
+							})
+					})
+				}
+			})
 		},
 		closeTab(index) {
 			if (this.tabs.length > 1) {
@@ -469,12 +496,52 @@ export default {
 			})
 		},
 
+		// 탭 컨텍스트 메뉴
 		showTabContextMenu(index, event) {
 			window.electronAPI.send('show-tab-context-menu', {
 				x: event.clientX,
 				y: event.clientY,
 				tabIndex: index,
 			})
+		},
+
+		// 클립보드에 복사
+		copyToClipboard(text) {
+			navigator.clipboard
+				.writeText(text)
+				.then(() => {
+					console.log('Text copied to clipboard')
+				})
+				.catch((err) => {
+					console.error('Failed to copy text: ', err)
+				})
+		},
+
+		// 이미지 저장
+		saveImage(url) {
+			// 이미지 저장 로직 구현
+			console.log('Save image:', url)
+		},
+
+		// 텍스트 검색
+		searchGoogle(text) {
+			// 검색 엔진으로 검색
+			const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(text)}`
+			this.addNewTab()
+			this.currentUrl = searchUrl
+			this.navigate()
+		},
+
+		// 페이지 소스 보기
+		viewPageSource() {
+			const webview = document.querySelector(`#webview-${this.currentTabIndex}`)
+			if (webview) {
+				webview.getWebContents().then((webContents) => {
+					webContents.executeJavaScript(`fetch(window.location.href).then(response => response.text()).then(html => {
+                		const sourceUrl = 'view-source:' + window.location.href;
+                		window.open(sourceUrl, '_blank');});`)
+				})
+			}
 		},
 
 		// 검색 관련 메서드
@@ -668,6 +735,53 @@ export default {
 				}
 			}
 		})
+
+		// 컨텍스트 메뉴 액션 이벤트 리스너
+		window.electronAPI.on('copy-to-clipboard', (text) => {
+			this.copyToClipboard(text)
+		})
+
+		window.electronAPI.on('open-link-in-new-tab', (url) => {
+			this.addNewTab()
+			this.currentUrl = url
+			this.navigate()
+		})
+
+		window.electronAPI.on('save-image', (url) => {
+			this.saveImage(url)
+		})
+
+		window.electronAPI.on('search-text', (text) => {
+			this.searchGoogle(text)
+		})
+
+		window.electronAPI.on('go-back', () => {
+			this.goBack()
+		})
+
+		window.electronAPI.on('go-forward', () => {
+			this.goForward()
+		})
+
+		window.electronAPI.on('refresh-page', () => {
+			this.refresh()
+		})
+
+		window.electronAPI.on('view-page-source', () => {
+			this.viewPageSource()
+		})
+
+		// 마우스 특수 키 이벤트 리스너 (앞/뒤로 가기)
+		window.addEventListener('mouseup', (e) => {
+			// 마우스 뒤로 가기 버튼 (일반적으로 버튼 3 또는 4)
+			if (e.button === 3 || e.button === 8) {
+				this.goBack()
+			}
+			// 마우스 앞으로 가기 버튼 (일반적으로 버튼 4 또는 5)
+			else if (e.button === 4 || e.button === 9) {
+				this.goForward()
+			}
+		})
 	},
 }
 </script>
@@ -699,6 +813,13 @@ body {
 	overflow-x: auto;
 	scrollbar-width: none; /* Firefox */
 	-ms-overflow-style: none; /* IE and Edge */
+	-webkit-app-region: drag; /* 드래그 가능하도록 설정 */
+}
+
+/* 탭 자체와 추가 버튼은 드래그 불가능하게 설정 (클릭 가능하도록) */
+.tab,
+.add-tab {
+	-webkit-app-region: no-drag;
 }
 
 .browser-tabs::-webkit-scrollbar {

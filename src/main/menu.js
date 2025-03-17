@@ -201,4 +201,121 @@ export function setupMenu(mainWindow) {
 
 		tabContextMenu.popup({ window: mainWindow, x, y })
 	})
+
+	// 웹뷰 컨텍스트 메뉴 설정
+	ipcMain.on('show-webview-context-menu', (event, data) => {
+		console.log('show-webview-context-menu', data)
+		const { x, y, linkURL, srcURL, isEditable, selectionText } = data
+
+		const menuItems = []
+
+		// 링크가 있는 경우
+		if (linkURL) {
+			console.log('linkURL', linkURL)
+			menuItems.push(
+				{
+					label: '새 탭에서 링크 열기',
+					click: () => {
+						mainWindow.webContents.send('open-link-in-new-tab', linkURL)
+					},
+				},
+				{
+					label: '링크 주소 복사',
+					click: () => {
+						mainWindow.webContents.send('copy-to-clipboard', linkURL)
+					},
+				},
+				{ type: 'separator' },
+			)
+		}
+
+		// 이미지가 있는 경우
+		if (srcURL) {
+			menuItems.push(
+				{
+					label: '이미지 새 탭에서 열기',
+					click: () => {
+						mainWindow.webContents.send('open-link-in-new-tab', srcURL)
+					},
+				},
+				{
+					label: '이미지 주소 복사',
+					click: () => {
+						mainWindow.webContents.send('copy-to-clipboard', srcURL)
+					},
+				},
+				{
+					label: '이미지 저장',
+					click: () => {
+						mainWindow.webContents.send('save-image', srcURL)
+					},
+				},
+				{ type: 'separator' },
+			)
+		}
+
+		// 텍스트 선택이 있는 경우
+		if (selectionText) {
+			menuItems.push(
+				{
+					label: '복사',
+					click: () => {
+						mainWindow.webContents.send('copy-to-clipboard', selectionText)
+					},
+				},
+				{
+					label: '검색',
+					click: () => {
+						mainWindow.webContents.send('search-text', selectionText)
+					},
+				},
+				{ type: 'separator' },
+			)
+		}
+
+		// 편집 가능한 요소인 경우
+		if (isEditable) {
+			menuItems.push({ label: '실행 취소', role: 'undo' }, { label: '다시 실행', role: 'redo' }, { type: 'separator' }, { label: '잘라내기', role: 'cut' }, { label: '복사', role: 'copy' }, { label: '붙여넣기', role: 'paste' }, { label: '모두 선택', role: 'selectAll' }, { type: 'separator' })
+		}
+
+		// 기본 메뉴 항목
+		menuItems.push(
+			{
+				label: '뒤로 가기',
+				enabled: mainWindow.webContents.canGoBack(),
+				click: () => {
+					mainWindow.webContents.send('go-back')
+				},
+			},
+			{
+				label: '앞으로 가기',
+				enabled: mainWindow.webContents.canGoForward(),
+				click: () => {
+					mainWindow.webContents.send('go-forward')
+				},
+			},
+			{
+				label: '새로고침',
+				click: () => {
+					mainWindow.webContents.send('refresh-page')
+				},
+			},
+			{ type: 'separator' },
+			{
+				label: '페이지 소스 보기',
+				click: () => {
+					mainWindow.webContents.send('view-page-source')
+				},
+			},
+			{
+				label: '개발자 도구',
+				click: () => {
+					mainWindow.webContents.send('toggle-webview-devtools')
+				},
+			},
+		)
+
+		const contextMenu = Menu.buildFromTemplate(menuItems)
+		contextMenu.popup({ window: mainWindow, x, y })
+	})
 }
