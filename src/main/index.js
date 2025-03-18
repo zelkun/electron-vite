@@ -243,3 +243,27 @@ ipcMain.handle('save-file', async (_, options) => {
 		return { success: false, reason: error.message }
 	}
 })
+
+// 창 제어 이벤트 핸들러
+ipcMain.on('close-window', () => {
+	if (mainWindow) mainWindow.close()
+})
+
+ipcMain.on('minimize-window', () => {
+	if (mainWindow) mainWindow.minimize()
+})
+
+ipcMain.on('maximize-window', () => {
+	if (mainWindow) {
+		if (mainWindow.isMaximized()) {
+			mainWindow.unmaximize()
+		} else {
+			mainWindow.maximize()
+		}
+	}
+})
+
+ipcMain.on('quit-app', () => {
+	app.quit()
+})
+

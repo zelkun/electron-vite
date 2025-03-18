@@ -13,8 +13,6 @@ electron-vite
 ├─ .prettierrc.yaml
 ├─ build
 │  ├─ entitlements.mac.plist
-│  ├─ icon.icns
-│  ├─ icon.ico
 │  └─ icon.png
 ├─ dev-app-update.yml
 ├─ electron-builder.yml
@@ -25,8 +23,6 @@ electron-vite
 ├─ README.md
 ├─ resources
 │  ├─ icon.png
-│  ├─ icon.png_bk
-│  └─ icon.png_bk2
 ├─ src
 │  ├─ main
 │  │  ├─ config.js
@@ -50,10 +46,6 @@ electron-vite
 │        │  └─ wavy-lines.svg
 │        ├─ components
 │        └─ main.js
-└─ tools
-   ├─ nsis-3.0.4.1.7z
-   ├─ nsis-resources-3.4.1.7z
-   └─ winCodeSign-2.6.0.7z
 
 ```
 

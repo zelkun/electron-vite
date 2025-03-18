@@ -2,11 +2,12 @@
 	<div class="browser-container">
 		<!-- 탭 영역 -->
 		<div class="browser-tabs">
-			<div v-for="(tab, index) in tabs" :key="index" @click="switchTab(index)" :class="['tab', { active: currentTabIndex === index }]" :style="{ borderTop: `3px solid ${tab.color}` }" draggable="true" @dragstart="dragStart(index, $event)" @dragover.prevent @drop="drop(index, $event)" @contextmenu.prevent="showTabContextMenu(index, $event)">
+			<div v-for="(tab, index) in tabs" :key="index" @click="switchTab(index)" :class="['tab', { active: currentTabIndex === index }]" :style="{ borderTop: `3px solid ${tab.color}`, width: tabWidth }" draggable="true" @dragstart="dragStart(index, $event)" @dragover.prevent @drop="drop(index, $event)" @contextmenu.prevent="showTabContextMenu(index, $event)">
 				<span class="tab-title">{{ tab.title || '새 탭' }}</span>
 				<button @click.stop="closeTab(index)" class="close-tab">×</button>
 			</div>
 			<button @click="addNewTab" class="add-tab">+</button>
+			<button @click="quitApp" class="quit-app-btn">⏻</button>
 		</div>
 
 		<!-- 주소창 및 네비게이션 영역 -->
@@ -78,10 +79,21 @@
 
 		<!-- 페이지 검색 UI -->
 		<div class="search-bar" v-if="showSearch">
-			<input type="text" v-model="searchText" @keyup.enter="findInPage" @keyup.esc="closeSearch" placeholder="페이지 내 검색" ref="searchInput" class="search-input" />
-			<button @click="findNext" class="search-btn">다음</button>
-			<button @click="findPrevious" class="search-btn">이전</button>
-			<button @click="closeSearch" class="search-btn close-btn">×</button>
+			<div class="search-input-container">
+				<input id="search-input" type="text" v-model="searchText" @keyup.enter="findInPage" @keyup.esc="closeSearch" placeholder="페이지 내 검색" ref="searchInput" class="search-input" />
+				<div class="search-counter" v-if="searchResults.matches > 0">{{ searchResults.activeMatchOrdinal }}/{{ searchResults.matches }}</div>
+			</div>
+			<div class="search-buttons">
+				<button @click="findPrevious" class="search-btn" title="이전">
+					<span class="nav-icon">▲</span>
+				</button>
+				<button @click="findNext" class="search-btn" title="다음">
+					<span class="nav-icon">▼</span>
+				</button>
+				<button @click="closeSearch" class="search-btn close-btn" title="닫기">
+					<span>×</span>
+				</button>
+			</div>
 		</div>
 
 		<!-- 웹뷰 영역 -->
@@ -131,9 +143,13 @@ export default {
 			showSearch: false,
 			searchText: '',
 			searchResults: { activeMatchOrdinal: 0, matches: 0 },
+			foundInPageListener: null,
 		}
 	},
 	methods: {
+		quitApp() {
+			window.electronAPI.send('quit-app')
+		},
 		navigate() {
 			let url = this.currentUrl
 			if (url && !url.startsWith('http://') && !url.startsWith('https://') && url !== 'about:blank') {
@@ -204,6 +220,15 @@ export default {
 							.catch((err) => {
 								console.error('Failed to get webContents:', err)
 							})
+					})
+
+					// did-fail-load 이벤트 리스너 추가
+					webview.addEventListener('did-fail-load', (e) => {
+						if (e.errorCode === -3) {
+							console.log('Navigation aborted, probably due to a redirect')
+						} else {
+							console.error('Failed to load:', e.errorDescription)
+						}
 					})
 				}
 			})
@@ -324,7 +349,7 @@ export default {
 		async loadSettings() {
 			try {
 				// 설정에서 북마크 바 표시 여부 가져오기
-				const showBookmarkBar = await window.electronAPI.getConfigValue('settings', 'showBookmarkBar')
+				const showBookmarkBar = await window.electronAPI.invoke('get-config-value', 'settings', 'showBookmarkBar')
 				// null이나 undefined가 아니면 설정값 적용
 				if (showBookmarkBar !== null && showBookmarkBar !== undefined) {
 					this.showBookmarkBar = showBookmarkBar
@@ -358,11 +383,12 @@ export default {
 			}
 		},
 
+		// 북마크 바 토글 메서드 수정
 		async toggleBookmarkBar() {
 			this.showBookmarkBar = !this.showBookmarkBar
 			// 설정 저장
 			try {
-				await window.electronAPI.setConfigValue('settings', 'showBookmarkBar', this.showBookmarkBar)
+				await window.electronAPI.invoke('set-config-value', 'settings', 'showBookmarkBar', this.showBookmarkBar)
 			} catch (error) {
 				console.error('북마크 바 설정 저장 오류:', error)
 			}
@@ -507,20 +533,29 @@ export default {
 
 		// 클립보드에 복사
 		copyToClipboard(text) {
-			navigator.clipboard
-				.writeText(text)
-				.then(() => {
-					console.log('Text copied to clipboard')
-				})
-				.catch((err) => {
-					console.error('Failed to copy text: ', err)
-				})
+			try {
+				window.electronAPI.invoke('write-to-clipboard', text)
+				console.log('Text copied to clipboard')
+			} catch (err) {
+				console.error('Failed to copy text: ', err)
+			}
 		},
 
 		// 이미지 저장
-		saveImage(url) {
-			// 이미지 저장 로직 구현
-			console.log('Save image:', url)
+		async saveImage(url) {
+			try {
+				const result = await window.electronAPI.invoke('save-file', {
+					url: url,
+					defaultPath: 'image.jpg',
+				})
+				if (result.success) {
+					console.log('Image saved to:', result.path)
+				} else {
+					console.error('Failed to save image:', result.reason)
+				}
+			} catch (error) {
+				console.error('Error saving image:', error)
+			}
 		},
 
 		// 텍스트 검색
@@ -548,13 +583,16 @@ export default {
 		showPageSearch() {
 			this.showSearch = true
 			this.$nextTick(() => {
-				this.$refs.searchInput.focus()
+				if (this.$refs.searchInput) {
+					this.$refs.searchInput.focus()
+				}
 			})
 		},
-
 		closeSearch() {
 			this.showSearch = false
 			this.searchText = ''
+			this.searchResults = { activeMatchOrdinal: 0, matches: 0 }
+
 			// 검색 하이라이트 제거
 			const webview = document.querySelector(`#webview-${this.currentTabIndex}`)
 			if (webview) {
@@ -567,15 +605,26 @@ export default {
 
 			const webview = document.querySelector(`#webview-${this.currentTabIndex}`)
 			if (webview) {
-				webview.findInPage(this.searchText)
+				// 이전에 등록된 이벤트 리스너가 있다면 제거
+				if (this.foundInPageListener) {
+					webview.removeEventListener('found-in-page', this.foundInPageListener)
+				}
 
-				// 검색 결과 이벤트 리스너
-				webview.addEventListener('found-in-page', (e) => {
-					this.searchResults = e.result
-				})
+				// 새 이벤트 리스너 생성 및 저장
+				this.foundInPageListener = (e) => {
+					this.searchResults = {
+						activeMatchOrdinal: e.result.activeMatchOrdinal,
+						matches: e.result.matches,
+					}
+				}
+
+				// 이벤트 리스너 등록
+				webview.addEventListener('found-in-page', this.foundInPageListener)
+
+				// 검색 시작
+				webview.findInPage(this.searchText)
 			}
 		},
-
 		findNext() {
 			if (!this.searchText) return
 
@@ -607,9 +656,11 @@ export default {
 		// 설정 로드 메서드
 		async loadSettings() {
 			try {
-				const settings = await window.electronAPI.getConfigSection('settings')
+				const settings = await window.electronAPI.invoke('get-config-section', 'settings')
 				// 설정 적용
-				this.showBookmarkBar = settings.showBookmarkBar
+				if (settings) {
+					this.showBookmarkBar = settings.showBookmarkBar || false
+				}
 				// 기타 설정 적용...
 			} catch (error) {
 				console.error('설정 로드 오류:', error)
@@ -623,17 +674,16 @@ export default {
 					showBookmarkBar: this.showBookmarkBar,
 					// 기타 설정...
 				}
-				await window.electronAPI.saveConfigSection('settings', settings)
+				// await window.electronAPI.saveConfigSection('settings', settings)
+				await window.electronAPI.invoke('save-config-section', 'settings', settings)
 			} catch (error) {
 				console.error('설정 저장 오류:', error)
 			}
 		},
 
-		// 북마크 바 토글 메서드 수정
-		async toggleBookmarkBar() {
-			this.showBookmarkBar = !this.showBookmarkBar
-			// 설정 저장
-			await window.electronAPI.setConfigValue('settings', 'showBookmarkBar', this.showBookmarkBar)
+		handleResize() {
+			// 창 크기 변경 시 필요한 업데이트 수행
+			// tabWidth computed 속성이 자동으로 재계산됨
 		},
 	},
 	async mounted() {
@@ -642,6 +692,20 @@ export default {
 
 		// 북마크 로드
 		await this.loadBookmarks()
+
+		// 초기 웹뷰에 did-fail-load 이벤트 리스너 추가
+		this.$nextTick(() => {
+			const webview = document.querySelector('#webview-0')
+			if (webview) {
+				webview.addEventListener('did-fail-load', (e) => {
+					if (e.errorCode === -3) {
+						console.log('Navigation aborted, probably due to a redirect')
+					} else {
+						console.error('Failed to load:', e.errorDescription)
+					}
+				})
+			}
+		})
 
 		// 북마크 컨텍스트 메뉴 이벤트 리스너
 		window.electronAPI.on('toggle-bookmark-bar', () => {
@@ -697,17 +761,6 @@ export default {
 		window.electronAPI.on('show-page-search', () => {
 			this.showPageSearch()
 		})
-
-		// 웹뷰 이벤트 리스너 설정
-		setTimeout(() => {
-			const webview = document.querySelector('#webview-0')
-			if (webview) {
-				webview.addEventListener('dom-ready', () => {
-					this.canGoBack = webview.canGoBack()
-					this.canGoForward = webview.canGoForward()
-				})
-			}
-		}, 1000)
 
 		// 탭 컨텍스트 메뉴 이벤트 리스너
 		window.electronAPI.on('refresh-tab', (index) => {
@@ -771,6 +824,17 @@ export default {
 			this.viewPageSource()
 		})
 
+		// 웹뷰 이벤트 리스너 설정
+		setTimeout(() => {
+			const webview = document.querySelector('#webview-0')
+			if (webview) {
+				webview.addEventListener('dom-ready', () => {
+					this.canGoBack = webview.canGoBack()
+					this.canGoForward = webview.canGoForward()
+				})
+			}
+		}, 1000)
+
 		// 마우스 특수 키 이벤트 리스너 (앞/뒤로 가기)
 		window.addEventListener('mouseup', (e) => {
 			// 마우스 뒤로 가기 버튼 (일반적으로 버튼 3 또는 4)
@@ -782,6 +846,25 @@ export default {
 				this.goForward()
 			}
 		})
+
+		// 창 크기 변경 감지
+		window.addEventListener('resize', this.handleResize)
+	},
+	beforeDestroy() {
+		window.removeEventListener('resize', this.handleResize)
+	},
+	computed: {
+		// 현재 탭의 URL
+		currentTabUrl() {
+			return this.tabs[this.currentTabIndex]?.url || ''
+		},
+		tabWidth() {
+			// 브라우저 너비에서 추가 버튼과 종료 버튼 너비를 제외한 공간
+			const availableWidth = window.innerWidth - 100 // 100px는 추가 버튼과 종료 버튼 공간
+			// 최소 100px, 최대 200px 사이에서 탭 너비 계산
+			const calculatedWidth = Math.min(200, Math.max(100, availableWidth / this.tabs.length))
+			return `${calculatedWidth}px`
+		},
 	},
 }
 </script>
@@ -830,7 +913,7 @@ body {
 	display: flex;
 	align-items: center;
 	padding: 0 15px;
-	min-width: 120px;
+	min-width: 100px; /* 최소 너비 설정 */
 	max-width: 200px;
 	background-color: #fff;
 	margin: 5px 2px 0;
@@ -843,7 +926,7 @@ body {
 	white-space: nowrap;
 	text-overflow: ellipsis;
 	height: 35px;
-	flex-shrink: 0;
+	flex: 0 1 auto; /* flex-grow: 0, flex-shrink: 1, flex-basis: auto */
 }
 
 .tab.active {
@@ -1311,48 +1394,100 @@ body {
 
 /* 페이지 검색 UI 스타일 */
 .search-bar {
-	position: fixed;
-	top: 10px;
+	position: absolute;
+	top: 90px; /* 주소창 아래 위치하도록 조정 */
 	right: 10px;
 	display: flex;
 	align-items: center;
 	background-color: white;
-	border: 1px solid #ddd;
-	border-radius: 4px;
-	padding: 5px;
-	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+	border-radius: 8px;
+	padding: 4px;
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
 	z-index: 100;
+	border: 1px solid #ddd;
+}
+
+.search-input-container {
+	position: relative;
+	display: flex;
+	align-items: center;
 }
 
 .search-input {
-	padding: 6px 10px;
-	border: 1px solid #ddd;
+	padding: 8px 12px;
+	border: none;
 	border-radius: 4px;
 	font-size: 14px;
-	width: 200px;
-	margin-right: 5px;
+	width: 220px;
+	outline: none;
+	background-color: #f1f3f4;
+}
+
+.search-input:focus {
+	background-color: white;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) inset;
+}
+
+.search-counter {
+	position: absolute;
+	right: 10px;
+	font-size: 12px;
+	color: #5f6368;
+	pointer-events: none;
+}
+
+.search-buttons {
+	display: flex;
+	align-items: center;
+	margin-left: 4px;
 }
 
 .search-btn {
-	padding: 6px 10px;
-	background-color: #f0f0f0;
-	border: 1px solid #ddd;
-	border-radius: 4px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	background-color: transparent;
+	border: none;
+	border-radius: 50%;
 	cursor: pointer;
-	margin-left: 2px;
+	color: #5f6368;
+	font-size: 14px;
+	transition: background-color 0.2s;
 }
 
 .search-btn:hover {
-	background-color: #e0e0e0;
+	background-color: #f1f3f4;
+}
+
+.nav-icon {
+	font-size: 12px;
 }
 
 .close-btn {
+	font-size: 18px;
+	margin-left: 2px;
+}
+
+.close-btn:hover {
+	background-color: #f1f3f4;
+}
+.quit-app-btn {
+	padding: 8px 12px;
 	background-color: transparent;
 	border: none;
-	font-size: 16px;
+	margin: 5px 0 0 auto; /* auto margin-left로 오른쪽 정렬 */
 	cursor: pointer;
-	padding: 0 5px;
-	margin-left: 5px;
+	font-size: 18px;
+	color: #fff;
+	flex-shrink: 0;
+	-webkit-app-region: no-drag;
+}
+
+.quit-app-btn:hover {
+	background-color: rgba(255, 255, 255, 0.1);
+	border-radius: 4px;
 }
 </style>
 

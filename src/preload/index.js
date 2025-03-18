@@ -1,50 +1,32 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
 console.log(`preload script loaded successfully!`)
-// alert(`preload script loaded successfully!`)
+// alert('preload script loaded successfully!')
 
+// 메인 윈도우에서 사용할 API 노출 - 직접 호출 방식으로 간소화
 contextBridge.exposeInMainWorld('electronAPI', {
+	// 단방향 메시지 전송
 	send: (channel, ...args) => {
 		ipcRenderer.send(channel, ...args)
 	},
+
+	// 양방향 통신 (Promise 반환)
 	invoke: (channel, ...args) => {
 		return ipcRenderer.invoke(channel, ...args)
 	},
-	on: (channel, func) => {
-		const subscription = (_event, ...args) => func(...args)
+
+	// 이벤트 리스너 등록
+	on: (channel, callback) => {
+		const subscription = (event, ...args) => callback(...args)
 		ipcRenderer.on(channel, subscription)
-		/*
-    return () => {
-      ipcRenderer.removeListener(channel, subscription)
-    }
-    */
-	},
-	once: (channel, func) => {
-		ipcRenderer.once(channel, (_event, ...args) => func(...args))
+		return () => {
+			ipcRenderer.removeListener(channel, subscription)
+		}
 	},
 
-	// 설정 관련 메서드 추가
-	getConfigSection: (section) => {
-		return ipcRenderer.invoke('get-config-section', section)
-	},
-	saveConfigSection: (section, data) => {
-		return ipcRenderer.invoke('save-config-section', section, data)
-	},
-	getConfigValue: (section, key) => {
-		return ipcRenderer.invoke('get-config-value', section, key)
-	},
-	setConfigValue: (section, key, value) => {
-		return ipcRenderer.invoke('set-config-value', section, key, value)
-	},
-
-	// 클립보드 관련 메서드
-	writeToClipboard: (text) => {
-		return ipcRenderer.invoke('write-to-clipboard', text)
-	},
-
-	// 파일 저장 관련 메서드
-	saveFile: (options) => {
-		return ipcRenderer.invoke('save-file', options)
+	// 일회성 이벤트 리스너
+	once: (channel, callback) => {
+		ipcRenderer.once(channel, (event, ...args) => callback(...args))
 	},
 })
 
