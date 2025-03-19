@@ -9,14 +9,14 @@ export function setupMenu(mainWindow) {
 			submenu: [
 				{
 					label: '새 탭',
-					accelerator: 'CmdOrCtrl+T',
+					accelerator: 'CommandOrControl+T',
 					click: () => {
 						mainWindow.webContents.send('create-new-tab')
 					},
 				},
 				{
 					label: '새 창',
-					accelerator: 'CmdOrCtrl+N',
+					accelerator: 'CommandOrControl+N',
 					click: () => {
 						// 새 창 생성 로직
 						const { BrowserWindow } = require('electron')
@@ -42,7 +42,7 @@ export function setupMenu(mainWindow) {
 				},
 				{
 					label: '탭 닫기',
-					accelerator: 'CmdOrCtrl+W',
+					accelerator: 'CommandOrControl+W',
 					click: () => {
 						mainWindow.webContents.send('close-current-tab')
 					},
@@ -50,7 +50,7 @@ export function setupMenu(mainWindow) {
 				{ type: 'separator' },
 				{
 					label: '종료',
-					accelerator: 'CmdOrCtrl+Q',
+					accelerator: 'CommandOrControl+Q',
 					click: () => {
 						mainWindow.close()
 					},
@@ -72,7 +72,7 @@ export function setupMenu(mainWindow) {
 				{ type: 'separator' },
 				{
 					label: '페이지 내 검색',
-					accelerator: 'CmdOrCtrl+F',
+					accelerator: 'CommandOrControl+F',
 					click: () => {
 						mainWindow.webContents.send('show-page-search')
 					},
@@ -84,14 +84,19 @@ export function setupMenu(mainWindow) {
 			submenu: [
 				{ role: 'reload' },
 				{ role: 'forceReload' },
-				{ role: 'toggleDevTools', accelerator: 'F12' },
-				{
-					label: '웹뷰 개발자 도구',
-					accelerator: 'CmdOrCtrl+F12',
-					click: () => {
-						mainWindow.webContents.send('toggle-webview-devtools')
-					},
-				},
+				// 개발 환경에서만 개발자 도구 메뉴 표시
+				...(is.dev
+					? [
+							{ role: 'toggleDevTools', accelerator: 'F12' },
+							{
+								label: '웹뷰 개발자 도구',
+								role: 'toggleWebviewDevTools',
+								accelerator: 'CommandOrControl+F12',
+								click: () => mainWindow.webContents.send('toggle-webview-devtools'),
+							},
+							{ type: 'separator' },
+						]
+					: []),
 				{ type: 'separator' },
 				{ role: 'resetZoom' },
 				{ role: 'zoomIn' },
@@ -105,7 +110,7 @@ export function setupMenu(mainWindow) {
 			submenu: [
 				{
 					label: '북마크 표시줄 보기',
-					accelerator: 'CmdOrCtrl+B',
+					accelerator: 'CommandOrControl+B',
 					type: 'checkbox',
 					checked: true,
 					click: () => {
@@ -114,7 +119,7 @@ export function setupMenu(mainWindow) {
 				},
 				{
 					label: '현재 페이지 북마크에 추가',
-					accelerator: 'CmdOrCtrl+D',
+					accelerator: 'CommandOrControl+D',
 					click: () => {
 						mainWindow.webContents.send('add-bookmark')
 					},
@@ -169,8 +174,7 @@ export function setupMenu(mainWindow) {
 	// 탭 컨텍스트 메뉴 설정
 	ipcMain.on('show-tab-context-menu', (event, data) => {
 		const { x, y, tabIndex } = data
-
-		const tabContextMenu = Menu.buildFromTemplate([
+		const menuItems = [
 			{
 				label: '새 탭',
 				click: () => {
@@ -190,15 +194,22 @@ export function setupMenu(mainWindow) {
 					mainWindow.webContents.send('close-tab', tabIndex)
 				},
 			},
-			{ type: 'separator' },
-			{
-				label: '개발자 도구 열기',
-				click: () => {
-					mainWindow.webContents.send('open-tab-devtools', tabIndex)
-				},
-			},
-		])
 
+			,
+		]
+		if (is.dev) {
+			menuItems.push(
+				{ type: 'separator' },
+				{
+					label: '개발자 도구 열기',
+					click: () => {
+						mainWindow.webContents.send('toggle-webview-devtools', tabIndex)
+					},
+				},
+			)
+		}
+
+		const tabContextMenu = Menu.buildFromTemplate(menuItems)
 		tabContextMenu.popup({ window: mainWindow, x, y })
 	})
 
@@ -301,21 +312,18 @@ export function setupMenu(mainWindow) {
 					mainWindow.webContents.send('refresh-page')
 				},
 			},
-			{ type: 'separator' },
-			{
-				label: '페이지 소스 보기',
-				click: () => {
-					mainWindow.webContents.send('view-page-source')
-				},
-			},
-			{
-				label: '개발자 도구',
-				click: () => {
-					mainWindow.webContents.send('toggle-webview-devtools')
-				},
-			},
 		)
-
+		if (is.dev) {
+			menuItems.push(
+				{ type: 'separator' },
+				{
+					label: '개발자 도구',
+					click: () => {
+						mainWindow.webContents.send('toggle-webview-devtools')
+					},
+				},
+			)
+		}
 		const contextMenu = Menu.buildFromTemplate(menuItems)
 		contextMenu.popup({ window: mainWindow, x, y })
 	})

@@ -203,23 +203,16 @@ export default {
 				const webview = document.querySelector(`#webview-${index}`)
 				if (webview) {
 					webview.addEventListener('dom-ready', () => {
-						webview
-							.getWebContents()
-							.then((webContents) => {
-								webContents.on('context-menu', (e, params) => {
-									window.electronAPI.send('show-webview-context-menu', {
-										x: params.x,
-										y: params.y,
-										linkURL: params.linkURL,
-										srcURL: params.srcURL,
-										isEditable: params.isEditable,
-										selectionText: params.selectionText,
-									})
-								})
+						webview.addEventListener('context-menu', (e, params) => {
+							window.electronAPI.send('show-webview-context-menu', {
+								x: e.clientX,
+								y: e.clientY,
+								linkURL: params.linkURL,
+								srcURL: params.srcURL,
+								isEditable: params.isEditable,
+								selectionText: params.selectionText,
 							})
-							.catch((err) => {
-								console.error('Failed to get webContents:', err)
-							})
+						})
 					})
 
 					// did-fail-load 이벤트 리스너 추가
@@ -234,8 +227,10 @@ export default {
 			})
 		},
 		closeTab(index) {
-			if (this.tabs.length > 1) {
-				this.tabs.splice(index, 1)
+			this.tabs.splice(index, 1)
+			if (this.tabs.length === 0) {
+				window.electronAPI.send('quit-app')
+			} else {
 				if (this.currentTabIndex >= index) {
 					this.currentTabIndex = Math.max(0, this.currentTabIndex - 1)
 				}
@@ -334,17 +329,7 @@ export default {
 				this.draggedTabIndex = null
 			}
 		},
-		// 웹뷰 개발자 도구 토글 메서드
-		toggleWebviewDevTools() {
-			const webview = document.querySelector(`#webview-${this.currentTabIndex}`)
-			if (webview) {
-				if (webview.isDevToolsOpened()) {
-					webview.closeDevTools()
-				} else {
-					webview.openDevTools()
-				}
-			}
-		},
+
 		// 설정 로드 메서드
 		async loadSettings() {
 			try {
@@ -567,18 +552,6 @@ export default {
 			this.navigate()
 		},
 
-		// 페이지 소스 보기
-		viewPageSource() {
-			const webview = document.querySelector(`#webview-${this.currentTabIndex}`)
-			if (webview) {
-				webview.getWebContents().then((webContents) => {
-					webContents.executeJavaScript(`fetch(window.location.href).then(response => response.text()).then(html => {
-                		const sourceUrl = 'view-source:' + window.location.href;
-                		window.open(sourceUrl, '_blank');});`)
-				})
-			}
-		},
-
 		// 검색 관련 메서드
 		showPageSearch() {
 			this.showSearch = true
@@ -713,8 +686,17 @@ export default {
 		})
 
 		// 웹뷰 개발자 도구 이벤트 리스너
-		window.electronAPI.on('toggle-webview-devtools', () => {
-			this.toggleWebviewDevTools()
+		window.electronAPI.on('toggle-webview-devtools', (tabIndex) => {
+			// tabIndex가 제공되면 해당 탭의 웹뷰 사용, 아니면 현재 탭 사용
+			const index = typeof tabIndex === 'number' ? tabIndex : this.currentTabIndex
+			const webview = document.querySelector(`#webview-${index}`)
+			if (webview) {
+				if (webview.isDevToolsOpened()) {
+					webview.closeDevTools()
+				} else {
+					webview.openDevTools()
+				}
+			}
 		})
 
 		// 북마크 컨텍스트 메뉴 이벤트 리스너
@@ -778,17 +760,6 @@ export default {
 			this.closeTab(index)
 		})
 
-		window.electronAPI.on('open-tab-devtools', (index) => {
-			const webview = document.querySelector(`#webview-${index}`)
-			if (webview) {
-				if (webview.isDevToolsOpened()) {
-					webview.closeDevTools()
-				} else {
-					webview.openDevTools()
-				}
-			}
-		})
-
 		// 컨텍스트 메뉴 액션 이벤트 리스너
 		window.electronAPI.on('copy-to-clipboard', (text) => {
 			this.copyToClipboard(text)
@@ -818,10 +789,6 @@ export default {
 
 		window.electronAPI.on('refresh-page', () => {
 			this.refresh()
-		})
-
-		window.electronAPI.on('view-page-source', () => {
-			this.viewPageSource()
 		})
 
 		// 웹뷰 이벤트 리스너 설정
@@ -860,9 +827,9 @@ export default {
 		},
 		tabWidth() {
 			// 브라우저 너비에서 추가 버튼과 종료 버튼 너비를 제외한 공간
-			const availableWidth = window.innerWidth - 100 // 100px는 추가 버튼과 종료 버튼 공간
-			// 최소 100px, 최대 200px 사이에서 탭 너비 계산
-			const calculatedWidth = Math.min(200, Math.max(100, availableWidth / this.tabs.length))
+			const availableWidth = window.innerWidth - 100
+			// 최소 60px, 최대 150px 사이에서 탭 너비 계산 (기존 100px, 200px에서 축소)
+			const calculatedWidth = Math.min(150, Math.max(60, availableWidth / this.tabs.length))
 			return `${calculatedWidth}px`
 		},
 	},
@@ -890,13 +857,14 @@ body {
 .browser-tabs {
 	display: flex;
 	background-color: #4285f4; /* 구글 파란색으로 변경 */
-	padding: 0 8px;
+	padding: 0 1px;
 	height: 40px;
 	flex-wrap: nowrap;
 	overflow-x: auto;
 	scrollbar-width: none; /* Firefox */
 	-ms-overflow-style: none; /* IE and Edge */
 	-webkit-app-region: drag; /* 드래그 가능하도록 설정 */
+	width: 100%;
 }
 
 /* 탭 자체와 추가 버튼은 드래그 불가능하게 설정 (클릭 가능하도록) */
@@ -913,9 +881,9 @@ body {
 	display: flex;
 	align-items: center;
 	padding: 0 15px;
-	min-width: 100px; /* 최소 너비 설정 */
-	max-width: 200px;
-	background-color: #fff;
+	min-width: 60px;
+	max-width: 150px;
+	background-color: #e0e2e4; /* 비활성 탭 배경색을 탭 영역과 비슷한 색으로 변경 */
 	margin: 5px 2px 0;
 	border-radius: 8px 8px 0 0;
 	cursor: pointer;
@@ -927,12 +895,15 @@ body {
 	text-overflow: ellipsis;
 	height: 35px;
 	flex: 0 1 auto; /* flex-grow: 0, flex-shrink: 1, flex-basis: auto */
+	opacity: 0.8; /* 비활성 탭은 약간 투명하게 */
 }
 
 .tab.active {
-	background-color: #fff;
+	background-color: #fff; /* 활성 탭은 흰색 배경 유지 */
 	z-index: 1;
 	font-weight: 500;
+	opacity: 1; /* 활성 탭은 완전 불투명 */
+	box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05); /* 활성 탭에 약간의 그림자 추가 */
 }
 
 .tab-title {
@@ -941,6 +912,11 @@ body {
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	font-size: 13px;
+	color: #5f6368; /* 비활성 탭 텍스트 색상 */
+}
+
+.tab.active .tab-title {
+	color: #202124; /* 활성 탭 텍스트 색상 진하게 */
 }
 
 .close-tab {

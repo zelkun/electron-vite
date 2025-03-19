@@ -4,6 +4,33 @@ An Electron application with Vue
 
 perplexity.ai 가 만드는 웹브라우져 프로젝트
 
+## AI 지시사항
+
+```
+지시사항 학습하고 대답해
+
+명확한 금지사항 지시
+
+다음 사항들은 절대 하지 마세요:
+- 사실이 아닌 내용 생성
+- 근거 없는 추측
+- 질문 회피
+- 같은 내용 반복
+
+필수 행동 지시
+답변 시 반드시:
+- 확실한 사실만 답변
+- 모르는 것은 '모른다'고 명시
+- 추측인경우 '추측' 이라고 명시
+- 질문에 직접 답변
+- 새로운 정보만 제시
+- 질문에는 항상 최신정보로 확인할것
+- 최신정보가 없는경우, 참고자료 명시하고 안내할것
+
+모든 답변은 한국어로 답변해
+알겠지?
+```
+
 ## Project Tree
 
 ```
@@ -13,16 +40,21 @@ electron-vite
 ├─ .prettierrc.yaml
 ├─ build
 │  ├─ entitlements.mac.plist
+│  ├─ icon.icns
+│  ├─ icon.ico
 │  └─ icon.png
 ├─ dev-app-update.yml
 ├─ electron-builder.yml
 ├─ electron.vite.config.mjs
 ├─ eslint.config.mjs
+├─ kill_electron.bat
 ├─ package-lock.json
 ├─ package.json
 ├─ README.md
 ├─ resources
 │  ├─ icon.png
+│  ├─ icon.png_bk
+│  └─ icon.png_bk2
 ├─ src
 │  ├─ main
 │  │  ├─ config.js
@@ -42,10 +74,13 @@ electron-vite
 │        │  ├─ css
 │        │  │  └─ styles.css
 │        │  ├─ electron.svg
-│        │  ├─ main.css
-│        │  └─ wavy-lines.svg
+│        │  └─ main.css
 │        ├─ components
 │        └─ main.js
+└─ tools
+   ├─ nsis-3.0.4.1.7z
+   ├─ nsis-resources-3.4.1.7z
+   └─ winCodeSign-2.6.0.7z
 
 ```
 

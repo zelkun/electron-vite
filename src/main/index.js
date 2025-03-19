@@ -1,12 +1,12 @@
 import { app, shell, BrowserWindow, ipcMain, session, clipboard, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-// import icon from '../../resources/icon.png?asset'
 import { setupMenu } from './menu'
 import { setupTray } from './tray'
 import { setupUpdater } from './updater'
 import { getConfigSection, saveConfigSection, getConfigValue, setConfigValue } from './config'
 import fs from 'fs'
+import icon from '../../resources/icon.png?asset'
 
 let mainWindow = null
 
@@ -30,11 +30,11 @@ function createWindow() {
 		show: false,
 		movable: true,
 		focusable: true,
-		icon: join(__dirname, '../../resources/icon.png?asset'),
 		titleBarStyle: is.dev ? 'hiddenInset' : 'hidden',
 		autoHideMenuBar: true,
 		backgroundColor: 'white',
-		//		...(process.platform === 'linux' ? { icon } : {}),
+		...(process.platform === 'linux' ? { icon } : {}),
+		// icon: join(__dirname, '../../resources/icon.png?asset'),
 		webPreferences: {
 			preload: join(__dirname, '../preload/index.js'),
 			webviewTag: true, // 웹뷰 태그 활성화
