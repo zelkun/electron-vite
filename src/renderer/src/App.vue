@@ -7,7 +7,12 @@
 				<button @click.stop="closeTab(index)" class="close-tab">×</button>
 			</div>
 			<button @click="addNewTab" class="add-tab">+</button>
-			<button @click="quitApp" class="quit-app-btn">⏻</button>
+
+			<div class="window-controls">
+				<button @click="minimizeWindow" class="window-control minimize-btn" title="최소화">─</button>
+				<button @click="maximizeWindow" class="window-control maximize-btn" title="최대화">□</button>
+				<button @click="closeWindow" class="window-control close-btn" title="닫기">×</button>
+			</div>
 		</div>
 
 		<!-- 주소창 및 네비게이션 영역 -->
@@ -147,8 +152,15 @@ export default {
 		}
 	},
 	methods: {
-		quitApp() {
-			window.electronAPI.send('quit-app')
+		minimizeWindow() {
+			window.electronAPI.send('minimize-window')
+		},
+
+		maximizeWindow() {
+			window.electronAPI.send('maximize-window')
+		},
+		closeWindow() {
+			window.electronAPI.send('close-window')
 		},
 		navigate() {
 			let url = this.currentUrl
@@ -179,12 +191,14 @@ export default {
 				webview.reload()
 			}
 		},
-		goHome() {
-			this.currentUrl = ''
-			this.tabs[this.currentTabIndex].url = 'about:blank'
+		async goHome() {
+			// 설정에서 홈페이지 URL 가져오기
+			const homePage = (await window.electronAPI.invoke('get-config-value', 'settings', 'defaultHomePage')) || 'about:blank'
+			this.currentUrl = homePage
+			this.tabs[this.currentTabIndex].url = homePage
 			const webview = document.querySelector(`#webview-${this.currentTabIndex}`)
 			if (webview) {
-				webview.src = 'about:blank'
+				webview.src = homePage
 			}
 		},
 		addNewTab() {
@@ -229,7 +243,7 @@ export default {
 		closeTab(index) {
 			this.tabs.splice(index, 1)
 			if (this.tabs.length === 0) {
-				window.electronAPI.send('quit-app')
+				window.electronAPI.send('close-window')
 			} else {
 				if (this.currentTabIndex >= index) {
 					this.currentTabIndex = Math.max(0, this.currentTabIndex - 1)
@@ -835,3 +849,4 @@ export default {
 	},
 }
 </script>
+

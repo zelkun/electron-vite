@@ -1,12 +1,16 @@
 import { Tray, Menu, nativeImage, app } from 'electron'
 import { join } from 'path'
 
+import { getConfigValue } from './config'
+
 let tray = null
 
 export function setupTray(mainWindow) {
 	// 트레이 아이콘 경로 설정
 	const iconPath = join(__dirname, '../../resources/icon.png')
 	const icon = nativeImage.createFromPath(iconPath)
+
+	const homePage = getConfigValue('settings', 'defaultHomePage') || 'about:blank'
 
 	// 트레이 생성
 	tray = new Tray(icon)
@@ -22,7 +26,7 @@ export function setupTray(mainWindow) {
 		{
 			label: '새 창',
 			click: () => {
-				mainWindow.webContents.send('create-new-tab', 'https://www.google.com')
+				mainWindow.webContents.send('create-new-tab', homePage)
 			},
 		},
 		{ type: 'separator' },

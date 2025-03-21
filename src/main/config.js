@@ -10,7 +10,6 @@ const defaultConfig = {
 	bookmarks: [],
 	settings: {
 		defaultHomePage: 'about:blank',
-		searchEngine: 'google',
 		showBookmarkBar: true,
 		theme: 'light',
 	},

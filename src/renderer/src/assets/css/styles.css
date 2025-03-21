@@ -42,7 +42,7 @@ body {
 	display: flex;
 	align-items: center;
 	padding: 0 15px;
-	min-width: 60px;
+	min-width: 10px;
 	max-width: 150px;
 	background-color: #e0e2e4; /* 비활성 탭 배경색을 탭 영역과 비슷한 색으로 변경 */
 	margin: 5px 2px 0;
@@ -610,19 +610,35 @@ body {
 .close-btn:hover {
 	background-color: #f1f3f4;
 }
-.quit-app-btn {
-	padding: 8px 12px;
-	background-color: transparent;
-	border: none;
-	margin: 5px 0 0 auto; /* auto margin-left로 오른쪽 정렬 */
-	cursor: pointer;
-	font-size: 18px;
-	color: #fff;
-	flex-shrink: 0;
+
+.window-controls {
+	display: flex;
+	margin-left: auto; /* 오른쪽 정렬 */
 	-webkit-app-region: no-drag;
 }
 
-.quit-app-btn:hover {
+.window-control {
+	width: 46px;
+	height: 40px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: transparent;
+	border: none;
+	color: #fff;
+	font-size: 14px;
+	cursor: pointer;
+	-webkit-app-region: no-drag;
+}
+
+.minimize-btn:hover {
 	background-color: rgba(255, 255, 255, 0.1);
-	border-radius: 4px;
+}
+
+.maximize-btn:hover {
+	background-color: rgba(255, 255, 255, 0.1);
+}
+
+.close-btn:hover {
+	background-color: #e81123;
 }

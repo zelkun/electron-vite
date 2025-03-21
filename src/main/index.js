@@ -33,8 +33,9 @@ function createWindow() {
 		titleBarStyle: is.dev ? 'hiddenInset' : 'hidden',
 		autoHideMenuBar: true,
 		backgroundColor: 'white',
-		...(process.platform === 'linux' ? { icon } : {}),
+		// ...(process.platform === 'linux' ? { icon } : {}),
 		// icon: join(__dirname, '../../resources/icon.png?asset'),
+		icon: icon,
 		webPreferences: {
 			preload: join(__dirname, '../preload/index.js'),
 			webviewTag: true, // 웹뷰 태그 활성화
@@ -77,12 +78,6 @@ function createWindow() {
 	} else {
 		mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
 	}
-
-	// 웹뷰 생성 시 preload 스크립트 설정
-	// will-attach-webview 에서 webview preload 관리함으로 주석처리
-	// mainWindow.webContents.on('will-attach-webview', (e, webPreferences) => {
-	// 	webPreferences.preload = webviewPreloadPath
-	// })
 
 	// 설정 관련 IPC 핸들러 설정
 	ipcMain.handle('get-config-section', (_, section) => {
@@ -261,9 +256,5 @@ ipcMain.on('maximize-window', () => {
 			mainWindow.maximize()
 		}
 	}
-})
-
-ipcMain.on('quit-app', () => {
-	app.quit()
 })
 
