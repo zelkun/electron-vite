@@ -45,3 +45,26 @@ window.addEventListener('contextmenu', (e) => {
 		console.error('Failed to send IPC message:', error)
 	}
 })
+
+window.addEventListener('mouseup', (e) => {
+	console.log('Mouse button pressed:', e.button) // 실제 버튼 번호 확인용
+
+	// 마우스 뒤로 가기 버튼 (일반적으로 버튼 3 또는 8)
+	if (e.button === 3 || e.button === 8) {
+		e.preventDefault()
+		e.stopPropagation()
+		// 웹뷰 호스트(렌더러 프로세스)에 직접 메시지 전송
+		if (window.ipcRenderer && window.ipcRenderer.sendToHost) {
+			window.ipcRenderer.sendToHost('webview-navigation', 'back')
+		}
+	}
+	// 마우스 앞으로 가기 버튼 (일반적으로 버튼 4 또는 9)
+	else if (e.button === 4 || e.button === 9) {
+		e.preventDefault()
+		e.stopPropagation()
+		// 웹뷰 호스트(렌더러 프로세스)에 직접 메시지 전송
+		if (window.ipcRenderer && window.ipcRenderer.sendToHost) {
+			window.ipcRenderer.sendToHost('webview-navigation', 'forward')
+		}
+	}
+})

@@ -229,6 +229,21 @@ export default {
 						})
 					})
 
+					// 웹뷰 네비게이션 이벤트 리스너 추가
+					webview.addEventListener('ipc-message', (event) => {
+						console.log('Webview IPC message:', event.channel, event.args)
+						if (event.channel === 'webview-navigation') {
+							const direction = event.args[0]
+							if (direction === 'back') {
+								console.log('Go back')
+								this.goBack()
+							} else if (direction === 'forward') {
+								console.log('Go forward')
+								this.goForward()
+							}
+						}
+					})
+
 					// did-fail-load 이벤트 리스너 추가
 					webview.addEventListener('did-fail-load', (e) => {
 						if (e.errorCode === -3) {
@@ -691,6 +706,21 @@ export default {
 						console.error('Failed to load:', e.errorDescription)
 					}
 				})
+
+				// 웹뷰 네비게이션 이벤트 리스너 추가
+				webview.addEventListener('ipc-message', (event) => {
+					console.log('Webview IPC message:', event.channel, event.args)
+					if (event.channel === 'webview-navigation') {
+						const direction = event.args[0]
+						if (direction === 'back') {
+							console.log('Go back')
+							this.goBack()
+						} else if (direction === 'forward') {
+							console.log('Go forward')
+							this.goForward()
+						}
+					}
+				})
 			}
 		})
 
@@ -815,18 +845,6 @@ export default {
 				})
 			}
 		}, 1000)
-
-		// 마우스 특수 키 이벤트 리스너 (앞/뒤로 가기)
-		window.addEventListener('mouseup', (e) => {
-			// 마우스 뒤로 가기 버튼 (일반적으로 버튼 3 또는 4)
-			if (e.button === 3 || e.button === 8) {
-				this.goBack()
-			}
-			// 마우스 앞으로 가기 버튼 (일반적으로 버튼 4 또는 5)
-			else if (e.button === 4 || e.button === 9) {
-				this.goForward()
-			}
-		})
 
 		// 창 크기 변경 감지
 		window.addEventListener('resize', this.handleResize)
