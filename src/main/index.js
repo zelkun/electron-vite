@@ -12,45 +12,46 @@ let mainWindow = null
 
 // webview-preload.js 경로 설정 - 빌드 환경에 따라 경로 조정
 const webviewPreloadPath = join(__dirname, is.dev ? '../../src/preload/webviewPreload.js' : '../preload/webviewPreload.js')
+// console.log(`webviewPreloadPath: ${webviewPreloadPath}`)
 
-console.log(`webviewPreloadPath: ${webviewPreloadPath}`)
+const BrowserWindowOptions = {
+	kiosk: false,
+	fullscreen: false,
+	resizable: true,
+	center: true,
+	alwaysOnTop: false,
+	width: 1200,
+	height: 800,
+	minWidth: 800,
+	minHeight: 600,
+	show: false,
+	movable: true,
+	focusable: true,
+	titleBarStyle: is.dev ? 'hiddenInset' : 'hidden',
+	autoHideMenuBar: true,
+	backgroundColor: 'white',
+	// ...(process.platform === 'linux' ? { icon } : {}),
+	// icon: join(__dirname, '../../resources/icon.png?asset'),
+	icon: icon,
+	webPreferences: {
+		preload: join(__dirname, '../preload/index.js'),
+		webviewTag: true, // 웹뷰 태그 활성화
+		nodeIntegration: false, // 노드 통합 활성화
+		contextIsolation: true, // contextBridge 사용을 위해 true로 설정
+		nodeIntegrationInWorker: false,
+		nodeIntegrationInSubFrames: false,
+		sandbox: false,
+		javascript: true,
+		webSecurity: false,
+		textAreasAreResizable: true,
+		plugins: true,
+		allowRunningInsecureContent: false,
+	},
+}
 
 function createWindow() {
 	// 메인 브라우저 윈도우 생성
-	mainWindow = new BrowserWindow({
-		kiosk: false,
-		fullscreen: false,
-		resizable: true,
-		center: true,
-		alwaysOnTop: false,
-		width: 1200,
-		height: 800,
-		minWidth: 800,
-		minHeight: 600,
-		show: false,
-		movable: true,
-		focusable: true,
-		titleBarStyle: is.dev ? 'hiddenInset' : 'hidden',
-		autoHideMenuBar: true,
-		backgroundColor: 'white',
-		// ...(process.platform === 'linux' ? { icon } : {}),
-		// icon: join(__dirname, '../../resources/icon.png?asset'),
-		icon: icon,
-		webPreferences: {
-			preload: join(__dirname, '../preload/index.js'),
-			webviewTag: true, // 웹뷰 태그 활성화
-			nodeIntegration: false, // 노드 통합 활성화
-			contextIsolation: true, // contextBridge 사용을 위해 true로 설정
-			nodeIntegrationInWorker: false,
-			nodeIntegrationInSubFrames: false,
-			sandbox: false,
-			javascript: true,
-			webSecurity: false,
-			textAreasAreResizable: true,
-			plugins: true,
-			allowRunningInsecureContent: false,
-		},
-	})
+	mainWindow = new BrowserWindow(BrowserWindowOptions)
 
 	/* CSP 설정 예시
 	session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
@@ -189,11 +190,11 @@ app.on('web-contents-created', (_, contents) => {
 	})
 })
 
-// 모든 윈도우가 닫히면 앱 종료 (macOS 제외)
 app.on('window-all-closed', () => {
-	if (process.platform !== 'darwin') {
-		app.quit()
-	}
+	// 모든 윈도우가 닫히면 앱 종료 (macOS 제외)
+	// if (process.platform !== 'darwin') {
+	app.quit()
+	// }
 })
 
 // 탭 관련 IPC 핸들러

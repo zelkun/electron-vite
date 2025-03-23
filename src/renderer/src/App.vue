@@ -124,14 +124,7 @@
 export default {
 	data() {
 		return {
-			tabs: [
-				{
-					url: 'https://www.naver.com/',
-					title: '새 탭',
-					loading: false,
-					color: this.getRandomColor(),
-				},
-			],
+			tabs: [],
 			currentTabIndex: 0,
 			currentUrl: '',
 			canGoBack: false,
@@ -201,15 +194,20 @@ export default {
 				webview.src = homePage
 			}
 		},
-		addNewTab() {
+		addNewTab(url = 'about:blank') {
+			console.log(`url ${typeof url}`)
+			if (typeof url !== 'string') url = 'about:blank'
+
 			this.tabs.push({
-				url: 'about:blank',
+				url: url,
 				title: '새 탭',
 				loading: false,
 				color: this.getRandomColor(),
 			})
 			this.currentTabIndex = this.tabs.length - 1
-			this.currentUrl = ''
+			this.currentUrl = url
+
+			console.log(`url ${typeof url}`)
 
 			// 새 탭의 웹뷰에 컨텍스트 메뉴 이벤트 등록
 			this.$nextTick(() => {
@@ -694,6 +692,10 @@ export default {
 
 		// 북마크 로드
 		await this.loadBookmarks()
+
+		// 첫 번째 탭 생성
+		const homePage = (await window.electronAPI.invoke('get-config-value', 'settings', 'defaultHomePage')) || 'about:blank'
+		this.addNewTab(homePage)
 
 		// 초기 웹뷰에 did-fail-load 이벤트 리스너 추가
 		this.$nextTick(() => {

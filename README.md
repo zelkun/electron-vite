@@ -38,6 +38,7 @@ electron-vite
 ├─ .editorconfig
 ├─ .prettierignore
 ├─ .prettierrc.yaml
+├─ README.md
 ├─ build
 │  ├─ entitlements.mac.plist
 │  ├─ icon.icns
@@ -50,11 +51,10 @@ electron-vite
 ├─ kill_electron.bat
 ├─ package-lock.json
 ├─ package.json
-├─ README.md
 ├─ resources
+│  ├─ icon.ico
 │  ├─ icon.png
-│  ├─ icon.png_bk
-│  └─ icon.png_bk2
+│  └─ icon.png.org
 ├─ src
 │  ├─ main
 │  │  ├─ config.js
@@ -70,12 +70,8 @@ electron-vite
 │     └─ src
 │        ├─ App.vue
 │        ├─ assets
-│        │  ├─ base.css
-│        │  ├─ css
-│        │  │  └─ styles.css
-│        │  ├─ electron.svg
-│        │  └─ main.css
-│        ├─ components
+│        │  └─ css
+│        │     └─ styles.css
 │        └─ main.js
 └─ tools
    ├─ nsis-3.0.4.1.7z
