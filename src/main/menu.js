@@ -23,7 +23,7 @@ export function setupMenu(mainWindow) {
 				},
 				{
 					label: '새 창',
-					accelerator: 'CommandOrControl+N',
+					accelerator: 'CommandOrControl+Shift+N',
 					click: () => {
 						const newWindow = new BrowserWindow({
 							width: 1200,
@@ -90,7 +90,8 @@ export function setupMenu(mainWindow) {
 		{
 			label: '보기',
 			submenu: [
-				{ role: 'reload' },
+				// { role: 'reload' },
+				{ label: '새로고침', accelerator: 'CommandOrControl+R', click: () => fnIpcCall('refresh-page') },
 				{ role: 'forceReload' },
 				// 개발 환경에서만 개발자 도구 메뉴 표시
 				...(is.dev
@@ -158,13 +159,16 @@ export function setupMenu(mainWindow) {
 	// 북마크 컨텍스트 메뉴 설정
 	ipcMain.on('show-bookmark-context-menu', (evt, data) => {
 		const { x, y, bookmarkIndex } = data
+		const sender = evt.sender
+		const currentWindow = BrowserWindow.fromWebContents(sender)
 
 		const bookmarkContextMenu = Menu.buildFromTemplate([
 			{
 				label: '새 탭에서 열기',
 				click: () => {
 					// mainWindow.webContents.send('bookmark-context-menu-action', 'open-in-new-tab', bookmarkIndex)
-					fnIpcCall('bookmark-context-menu-action', 'open-in-new-tab', bookmarkIndex)
+					// fnIpcCall('bookmark-context-menu-action', 'open-in-new-tab', bookmarkIndex)
+					sender.send('bookmark-context-menu-action', 'open-in-new-tab', bookmarkIndex)
 				},
 			},
 			{ type: 'separator' },
@@ -172,25 +176,31 @@ export function setupMenu(mainWindow) {
 				label: '편집',
 				click: () => {
 					// mainWindow.webContents.send('bookmark-context-menu-action', 'edit', bookmarkIndex)
-					fnIpcCall('bookmark-context-menu-action', 'edit', bookmarkIndex)
+					// fnIpcCall('bookmark-context-menu-action', 'edit', bookmarkIndex)
+					sender.send('bookmark-context-menu-action', 'edit', bookmarkIndex)
 				},
 			},
 			{
 				label: '삭제',
 				click: () => {
 					// mainWindow.webContents.send('bookmark-context-menu-action', 'delete', bookmarkIndex)
-					fnIpcCall('bookmark-context-menu-action', 'delete', bookmarkIndex)
+					// fnIpcCall('bookmark-context-menu-action', 'delete', bookmarkIndex)
+					sender.send('bookmark-context-menu-action', 'delete', bookmarkIndex)
 				},
 			},
 		])
 
-		bookmarkContextMenu.popup({ window: mainWindow, x, y })
+		// bookmarkContextMenu.popup({ window: mainWindow, x, y })
+		bookmarkContextMenu.popup({ window: currentWindow, x, y })
 	})
 
 	// 탭 컨텍스트 메뉴 설정
 	ipcMain.on('show-tab-context-menu', (evt, data) => {
 		console.log('%csrc/main/menu.js:192 evt', 'color: #007acc;', evt)
 		const { x, y, tabIndex } = data
+		const sender = evt.sender
+		const currentWindow = BrowserWindow.fromWebContents(sender)
+
 		const menuItems = [
 			{
 				label: '새 탭',
@@ -231,7 +241,8 @@ export function setupMenu(mainWindow) {
 		}
 
 		const tabContextMenu = Menu.buildFromTemplate(menuItems)
-		tabContextMenu.popup({ window: mainWindow, x, y })
+		// tabContextMenu.popup({ window: mainWindow, x, y })
+		tabContextMenu.popup({ window: currentWindow, x, y })
 	})
 
 	// 웹뷰 컨텍스트 메뉴 설정
@@ -240,6 +251,8 @@ export function setupMenu(mainWindow) {
 		const { x, y, linkURL, srcURL, isEditable, selectionText } = data
 
 		const menuItems = []
+		const sender = evt.sender
+		const currentWindow = BrowserWindow.fromWebContents(sender)
 
 		// 링크가 있는 경우
 		if (linkURL) {
@@ -247,7 +260,6 @@ export function setupMenu(mainWindow) {
 				{
 					label: '새 탭에서 링크 열기',
 					click: () => {
-						console.log('open-link-in-new-tab', linkURL)
 						// mainWindow.webContents.send('open-link-in-new-tab', linkURL)
 						fnIpcCall('open-link-in-new-tab', linkURL)
 					},
@@ -255,7 +267,6 @@ export function setupMenu(mainWindow) {
 				{
 					label: '링크 주소 복사',
 					click: () => {
-						console.log('copy-to-clipboard', linkURL)
 						// mainWindow.webContents.send('copy-to-clipboard', linkURL)
 						fnIpcCall('copy-to-clipboard', linkURL)
 					},
@@ -357,7 +368,7 @@ export function setupMenu(mainWindow) {
 			)
 		}
 		const contextMenu = Menu.buildFromTemplate(menuItems)
-		contextMenu.popup({ window: mainWindow, x, y })
+		// contextMenu.popup({ window: mainWindow, x, y })
+		contextMenu.popup({ window: currentWindow, x, y })
 	})
 }
-
