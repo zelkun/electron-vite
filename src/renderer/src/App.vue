@@ -277,7 +277,7 @@ export default {
 			// 웹뷰 상태 업데이트
 			const webview = document.querySelector(`#webview-${index}`)
 			if (webview) {
-				this.canGoBack = webview.canGoBack()
+				this.canGoBack = webview.getURL() != '' && webview.getURL() != 'about:blank' && webview.canGoBack()
 				this.canGoForward = webview.canGoForward()
 			}
 		},
@@ -289,7 +289,7 @@ export default {
 
 			const webview = document.querySelector(`#webview-${index}`)
 			if (webview && index === this.currentTabIndex) {
-				this.canGoBack = webview.canGoBack()
+				this.canGoBack = webview.getURL() != '' && webview.getURL() != 'about:blank' && webview.canGoBack()
 				this.canGoForward = webview.canGoForward()
 			}
 		},
@@ -842,7 +842,7 @@ export default {
 			const webview = document.querySelector('#webview-0')
 			if (webview) {
 				webview.addEventListener('dom-ready', () => {
-					this.canGoBack = webview.canGoBack()
+					this.canGoBack = webview.getURL() != '' && webview.getURL() != 'about:blank' && webview.canGoBack()
 					this.canGoForward = webview.canGoForward()
 				})
 			}
@@ -869,4 +869,3 @@ export default {
 	},
 }
 </script>
-

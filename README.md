@@ -113,7 +113,7 @@ $ npm run build:linux
 
 # REF
 
-- https://tinydew4.github.io/electron-ko/
+- [https://tinydew4.github.io/electron-ko/][2]
 - https://github.com/alex8088/quick-start/tree/master/packages/create-electron
 
 # TLS Error
@@ -143,6 +143,90 @@ git config --global http.sslVerify false
 "nsis-resources-path": "%USERPROFILE%/AppData/Local/electron-builder/Cache/nsis/nsis-resources-3.4.1.7z",
 "nsis-resources-3.4.1.7z": "https://github.com/electron-userland/electron-builder-binaries/releases/download/nsis-resources-3.4.1/nsis-resources-3.4.1.7z",
 "winCodeSign": "%USERPROFILE%/AppData/Local/electron-builder/Cache/winCodeSign/winCodeSign-2.6.0.7z"
+```
+
+## Electron
+
+### 문서
+
+1. [공식][doc_en]
+2. [한글][doc_ko]
+
+### [ipcMain][ipc_en] [한글][ipc_ko]
+
+#### [Exam][ipc_exam]
+
+##### [Optional_chaining(?.)][Optional_chaining]
+
+```JAVASCRIPT
+// MAin Process
+ipcMain.handle('my-invokable-ipc', async (event, ...args) => {
+	const result = await somePromise(...args)
+	return result
+})
+
+// Renderer Process
+async () => {
+	const result = await ipcRenderer.invoke('my-invokable-ipc', arg1, arg2)
+	// ...
+}
+
+```
+
+```JAVASCRIPT
+// main.js
+import { ipcMain } from 'electron'
+
+// # IPC 핸들러 샘플
+function listener(evt, ...args) {
+	console.log(evt) // ipcMainEvent
+	console.log(args) // ...args: any[]
+
+	evt.type // 이벤트 타입
+	evt.processId // 원격 웹컨텐츠의 프로세스 ID
+	evt.frameId // 원격 웹컨텐츠의 프레임
+	evt.returnValue // 응답 값
+	evt.returnValue = 'pong' // 동기 응답 (any), 비권장
+	evt.sender // 원격 웹컨텐츠, WebContents
+	evt.senderFrame // 원격 웹컨텐츠의 프레임, WebFrameMain
+	evt.ports // 원격 웹컨텐츠의 포트, MessagePortMain[]
+	evt.reply('channel', args) // 비동기 응답
+
+	// 원격 웹컨텐츠 정보(공식문서에 없음)
+	evt.senderType // 원격 웹컨텐츠의 타입
+	evt.senderId // 원격 웹컨텐츠의 식별자
+	evt.sourceId // 원격 웹컨텐츠의 식별자
+	evt.defaultPrevented // 이벤트가 기본 동작을 막았는지 여부
+	evt.preventDefault() // 기본 동작을 막음
+	evt.stopPropagation() // 이벤트 전파 중지
+	evt.stopImmediatePropagation() // 이벤트 전파 즉시 중지
+}
+
+// channel: 이벤트 이름, String
+// listener: 이벤트 핸들러, Function
+ipcMain.on('channel', listener) // 이벤트 핸들러 등록
+ipcMain.off('channel', listener) // 이벤트 리스너 제거
+ipcMain.once('channel', listener) // 이벤트 핸들러 제거
+// ipcMain.addListener('channel', listener) // ipcMain.on
+// ipcMain.removeListener('channel', listener) // ipcMain.off
+ipcMain.removeAllListeners() // 모든 이벤트 핸들러 제거 channel(optional)
+
+function handleListener(evt, ...args) {
+	console.log(evt) // IpcMainInvokeEvent
+	console.log(args) // ...args: any[]
+
+	evt.type // 이벤트 타입
+	evt.processId // 원격 웹컨텐츠의 프로세스 ID
+	evt.frameId // 원격 웹컨텐츠의 프레임
+	evt.sender // 원격 웹컨텐츠, WebContents
+	evt.senderFrame // 원격 웹컨텐츠의 프레임, WebFrameMain (Readonly)
+}
+// channel: 이벤트 이름, String
+// listener: 이벤트 핸들러, Function
+ipcMain.handle(channel, handleListener)
+ipcMain.handleOnce(channel, handleListener)
+ipcMain.removeHandler(channel)
+
 ```
 
 # JAVASCRIPT
@@ -189,3 +273,11 @@ jQuery 선택자
 :focus - 포커스된 요소
 ```
 
+[doc_git_en]: https://github.com/mdn/content/tree/main/files/en-us/web/javascript
+[doc_git_ko]: https://github.com/mdn/translated-content/tree/main/files/ko/web/javascript
+[doc_en]: https://www.electronjs.org/docs/latest/
+[doc_ko]: https://tinydew4.github.io/electron-ko/docs/
+[ipc_en]: https://www.electronjs.org/docs/latest/api/ipc-main/
+[ipc_ko]: https://tinydew4.github.io/electron-ko/docs/api/ipc-main/
+[ipc_exam]: https://www.electronjs.org/docs/latest/tutorial/ipc
+[Optional_chaining]: https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Operators/Optional_chaining

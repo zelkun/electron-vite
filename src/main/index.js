@@ -241,15 +241,19 @@ ipcMain.handle('save-file', async (_, options) => {
 })
 
 // 창 제어 이벤트 핸들러
-ipcMain.on('close-window', () => {
-	if (mainWindow) mainWindow.close()
+ipcMain.on('close-window', (evt, payload) => {
+	console.log('Close window', evt, payload)
+	BrowserWindow.fromWebContents(evt.sender)?.close()
+	// if (mainWindow) mainWindow.close()
 })
 
-ipcMain.on('minimize-window', () => {
+ipcMain.on('minimize-window', (evt, payload) => {
+	console.log('Minimize window', evt, payload)
 	if (mainWindow) mainWindow.minimize()
 })
 
-ipcMain.on('maximize-window', () => {
+ipcMain.on('maximize-window', (evt, payload) => {
+	console.log('Maximize window', evt, payload)
 	if (mainWindow) {
 		if (mainWindow.isMaximized()) {
 			mainWindow.unmaximize()
@@ -258,4 +262,3 @@ ipcMain.on('maximize-window', () => {
 		}
 	}
 })
-
