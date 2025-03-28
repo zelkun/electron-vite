@@ -190,11 +190,10 @@ app.on('web-contents-created', (_, contents) => {
 	})
 })
 
+// 모든 윈도우가 닫히면 앱 종료 (macOS 제외)
 app.on('window-all-closed', () => {
-	// 모든 윈도우가 닫히면 앱 종료 (macOS 제외)
-	// if (process.platform !== 'darwin') {
+	// if (process.platform !== 'darwin')
 	app.quit()
-	// }
 })
 
 // 탭 관련 IPC 핸들러
@@ -242,23 +241,21 @@ ipcMain.handle('save-file', async (_, options) => {
 
 // 창 제어 이벤트 핸들러
 ipcMain.on('close-window', (evt, payload) => {
-	console.log('Close window', evt, payload)
+	// console.log('Close window', evt, payload)
 	BrowserWindow.fromWebContents(evt.sender)?.close()
-	// if (mainWindow) mainWindow.close()
 })
 
 ipcMain.on('minimize-window', (evt, payload) => {
-	console.log('Minimize window', evt, payload)
-	if (mainWindow) mainWindow.minimize()
+	// console.log('Minimize window', evt, payload)
+	BrowserWindow.fromWebContents(evt.sender)?.minimize()
 })
 
 ipcMain.on('maximize-window', (evt, payload) => {
-	console.log('Maximize window', evt, payload)
-	if (mainWindow) {
-		if (mainWindow.isMaximized()) {
-			mainWindow.unmaximize()
-		} else {
-			mainWindow.maximize()
-		}
+	// console.log('Maximize window', evt, payload)
+	if (BrowserWindow.fromWebContents(evt.sender)?.isMaximized()) {
+		BrowserWindow.fromWebContents(evt.sender)?.unmaximize()
+	} else {
+		BrowserWindow.fromWebContents(evt.sender)?.maximize()
 	}
 })
+
