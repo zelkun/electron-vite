@@ -320,14 +320,14 @@ export function setupMenu(mainWindow) {
 		menuItems.push(
 			{
 				label: '뒤로 가기',
-				enabled: mainWindow.webContents.canGoBack(),
+				enabled: mainWindow.webContents.navigationHistory.canGoBack(),
 				click: (menuItem, focusedWindow, keyEvt) => {
 					if (focusedWindow) focusedWindow.webContents.send('go-back')
 				},
 			},
 			{
 				label: '앞으로 가기',
-				enabled: mainWindow.webContents.canGoForward(),
+				enabled: mainWindow.webContents.navigationHistory.canGoForward(),
 				click: (menuItem, focusedWindow, keyEvt) => {
 					if (focusedWindow) focusedWindow.webContents.send('go-forward')
 				},

@@ -20,19 +20,19 @@
 			<button @click="addNewTab" class="add-tab">+</button>
 
 			<div class="window-controls">
-				<button @click="minimizeWindow" class="window-control minimize-btn" title="최소화">─</button>
-				<button @click="maximizeWindow" class="window-control maximize-btn" title="최대화">□</button>
-				<button @click="closeWindow" class="window-control close-btn" title="닫기">×</button>
+				<button @click="windowCtrlBtnClick('minimize-window')" class="window-control minimize-btn" title="최소화">─</button>
+				<button @click="windowCtrlBtnClick('maximize-window')" class="window-control maximize-btn" title="최대화">□</button>
+				<button @click="windowCtrlBtnClick('close-window')" class="window-control close-btn" title="닫기">×</button>
 			</div>
 		</div>
 
 		<!-- 주소창 및 네비게이션 영역 -->
 		<div class="browser-toolbar">
 			<div class="navigation-buttons">
-				<button @click="goBack" :disabled="!canGoBack" class="nav-btn">◀</button>
-				<button @click="goForward" :disabled="!canGoForward" class="nav-btn">▶</button>
-				<button @click="refresh" class="nav-btn">↻</button>
-				<button @click="goHome" class="nav-btn">🏠</button>
+				<button @click="navigatorBtnClick('goBack')" :disabled="!canGoBack" class="nav-btn">◀</button>
+				<button @click="navigatorBtnClick('goForward')" :disabled="!canGoForward" class="nav-btn">▶</button>
+				<button @click="navigatorBtnClick('refresh')" class="nav-btn">↻</button>
+				<button @click="navigatorBtnClick('goHome')" class="nav-btn">🏠</button>
 			</div>
 
 			<div class="address-bar">
@@ -179,55 +179,92 @@ export default {
 		}
 	},
 	methods: {
-		minimizeWindow() {
-			window.electronAPI.send('minimize-window')
+		getWebview(index) {
+			return document.querySelector(`#webview-${index !== undefined ? index : this.currentTabIndex}`)
+		},
+		// 탭 전환 메서드
+		windowCtrlBtnClick(action) {
+			window.electronAPI.send('window-control-action', action)
 		},
 
-		maximizeWindow() {
-			window.electronAPI.send('maximize-window')
+		// 탭의 웹뷰 상태 업데이트
+		setNavigationButtonsState(webview) {
+			if (!webview) return
+			this.canGoBack = webview.getURL() != '' && webview.getURL() != 'about:blank' && webview.canGoBack()
+			this.canGoForward = webview.canGoForward()
 		},
-		closeWindow() {
-			window.electronAPI.send('close-window')
+
+		async goHome() {
+			// 설정에서 홈페이지 URL 가져오기
+			const homePage = (await window.electronAPI.invoke('get-config-value', 'settings', 'defaultHomePage')) || 'about:blank'
+			this.currentUrl = homePage
+			this.tabs[this.currentTabIndex].url = homePage
+			const webview = this.getWebview()
+			if (webview) {
+				webview.src = homePage
+			}
 		},
+
+		// 웹뷰 네비게이션 버튼 클릭 메서드
+		navigatorBtnClick(direction) {
+			const webview = this.getWebview()
+			if (webview) {
+				if (direction === 'goBack' && webview.canGoBack()) webview.goBack()
+				if (direction === 'goForward' && webview.canGoForward()) webview.goForward()
+				if (direction === 'refresh') webview.reload()
+				if (direction === 'goHome') this.goHome()
+			}
+		},
+
+		// 웹뷰 이벤트 리스너 설정
+		setupWebviewEventListeners(webview, index) {
+			// 웹뷰 로딩 시작 및 중지 이벤트 리스너 추가
+			webview.addEventListener('dom-ready', () => {
+				webview.addEventListener('context-menu', (e, params) => {
+					window.electronAPI.send('show-webview-context-menu', {
+						x: e.clientX,
+						y: e.clientY,
+						linkURL: params.linkURL,
+						srcURL: params.srcURL,
+						isEditable: params.isEditable,
+						selectionText: params.selectionText,
+					})
+				})
+				this.setNavigationButtonsState(webview)
+			})
+
+			// 웹뷰 로딩 시작 및 중지 이벤트 리스너 추가
+			webview.addEventListener('did-fail-load', (e) => {
+				if (e.errorCode === -3) {
+					console.log('Navigation aborted, probably due to a redirect')
+				} else {
+					console.error('Failed to load:', e.errorDescription)
+				}
+			})
+
+			// 웹뷰 네비게이션 이벤트 리스너 추가
+			webview.addEventListener('ipc-message', (event) => {
+				console.log('Webview IPC message:', event.channel, event.args)
+				if (event.channel === 'webview-navigation') {
+					const direction = event.args[0]
+					if (direction === 'back') navigatorBtnClick('goBack')
+					if (direction === 'forward') navigatorBtnClick('goForward')
+				}
+			})
+		},
+
 		navigate() {
 			let url = this.currentUrl
 			if (url && !url.startsWith('http://') && !url.startsWith('https://') && url !== 'about:blank') {
 				url = 'https://' + url
 			}
 			this.tabs[this.currentTabIndex].url = url
-			const webview = document.querySelector(`#webview-${this.currentTabIndex}`)
+			const webview = this.getWebview()
 			if (webview) {
 				webview.src = url
 			}
 		},
-		goBack() {
-			const webview = document.querySelector(`#webview-${this.currentTabIndex}`)
-			if (webview && webview.canGoBack()) {
-				webview.goBack()
-			}
-		},
-		goForward() {
-			const webview = document.querySelector(`#webview-${this.currentTabIndex}`)
-			if (webview && webview.canGoForward()) {
-				webview.goForward()
-			}
-		},
-		refresh() {
-			const webview = document.querySelector(`#webview-${this.currentTabIndex}`)
-			if (webview) {
-				webview.reload()
-			}
-		},
-		async goHome() {
-			// 설정에서 홈페이지 URL 가져오기
-			const homePage = (await window.electronAPI.invoke('get-config-value', 'settings', 'defaultHomePage')) || 'about:blank'
-			this.currentUrl = homePage
-			this.tabs[this.currentTabIndex].url = homePage
-			const webview = document.querySelector(`#webview-${this.currentTabIndex}`)
-			if (webview) {
-				webview.src = homePage
-			}
-		},
+
 		addNewTab(url = 'about:blank') {
 			console.log(`url ${typeof url}`)
 			if (typeof url !== 'string') url = 'about:blank'
@@ -241,56 +278,19 @@ export default {
 			this.currentTabIndex = this.tabs.length - 1
 			this.currentUrl = url
 
-			console.log(`url ${typeof url}`)
-
 			// 새 탭의 웹뷰에 컨텍스트 메뉴 이벤트 등록
 			this.$nextTick(() => {
 				const index = this.tabs.length - 1
-				const webview = document.querySelector(`#webview-${index}`)
+				const webview = this.getWebview(index)
 				if (webview) {
-					webview.addEventListener('dom-ready', () => {
-						webview.addEventListener('context-menu', (e, params) => {
-							window.electronAPI.send('show-webview-context-menu', {
-								x: e.clientX,
-								y: e.clientY,
-								linkURL: params.linkURL,
-								srcURL: params.srcURL,
-								isEditable: params.isEditable,
-								selectionText: params.selectionText,
-							})
-						})
-					})
-
-					// 웹뷰 네비게이션 이벤트 리스너 추가
-					webview.addEventListener('ipc-message', (event) => {
-						console.log('Webview IPC message:', event.channel, event.args)
-						if (event.channel === 'webview-navigation') {
-							const direction = event.args[0]
-							if (direction === 'back') {
-								console.log('Go back')
-								this.goBack()
-							} else if (direction === 'forward') {
-								console.log('Go forward')
-								this.goForward()
-							}
-						}
-					})
-
-					// did-fail-load 이벤트 리스너 추가
-					webview.addEventListener('did-fail-load', (e) => {
-						if (e.errorCode === -3) {
-							console.log('Navigation aborted, probably due to a redirect')
-						} else {
-							console.error('Failed to load:', e.errorDescription)
-						}
-					})
+					this.setupWebviewEventListeners(webview, index)
 				}
 			})
 		},
 		closeTab(index) {
 			this.tabs.splice(index, 1)
 			if (this.tabs.length === 0) {
-				window.electronAPI.send('close-window')
+				window.electronAPI.send('window-control-action', 'close-window')
 			} else {
 				if (this.currentTabIndex >= index) {
 					this.currentTabIndex = Math.max(0, this.currentTabIndex - 1)
@@ -309,23 +309,14 @@ export default {
 			}
 
 			// 웹뷰 상태 업데이트
-			const webview = document.querySelector(`#webview-${index}`)
-			if (webview) {
-				this.canGoBack = webview.getURL() != '' && webview.getURL() != 'about:blank' && webview.canGoBack()
-				this.canGoForward = webview.canGoForward()
-			}
+			this.setNavigationButtonsState(this.getWebview(index))
 		},
 		startLoading(index) {
 			this.tabs[index].loading = true
 		},
 		stopLoading(index) {
 			this.tabs[index].loading = false
-
-			const webview = document.querySelector(`#webview-${index}`)
-			if (webview && index === this.currentTabIndex) {
-				this.canGoBack = webview.getURL() != '' && webview.getURL() != 'about:blank' && webview.canGoBack()
-				this.canGoForward = webview.canGoForward()
-			}
+			this.setNavigationButtonsState(this.getWebview(index))
 		},
 		updateUrl(event, index) {
 			if (index === this.currentTabIndex) {
@@ -337,14 +328,14 @@ export default {
 			this.tabs[index].title = event.title === 'about:blank' ? '새 탭' : event.title
 		},
 		increaseZoom() {
-			const webview = document.querySelector(`#webview-${this.currentTabIndex}`)
+			const webview = this.getWebview()
 			if (webview && this.zoomLevel < 200) {
 				this.zoomLevel += 10
 				webview.setZoomFactor(this.zoomLevel / 100)
 			}
 		},
 		decreaseZoom() {
-			const webview = document.querySelector(`#webview-${this.currentTabIndex}`)
+			const webview = this.getWebview()
 			if (webview && this.zoomLevel > 50) {
 				this.zoomLevel -= 10
 				webview.setZoomFactor(this.zoomLevel / 100)
@@ -442,9 +433,7 @@ export default {
 
 		async addBookmark() {
 			// 현재 URL이 비어있거나 about:blank인 경우 추가하지 않음
-			if (!this.currentUrl || this.currentUrl === 'about:blank') {
-				return
-			}
+			if (!this.currentUrl || this.currentUrl === 'about:blank') return
 
 			// 북마크 바가 숨겨져 있으면 표시
 			if (!this.showBookmarkBar) {
@@ -628,7 +617,7 @@ export default {
 			this.searchResults = { activeMatchOrdinal: 0, matches: 0 }
 
 			// 검색 하이라이트 제거
-			const webview = document.querySelector(`#webview-${this.currentTabIndex}`)
+			const webview = this.getWebview()
 			if (webview) {
 				webview.stopFindInPage('clearSelection')
 			}
@@ -637,7 +626,7 @@ export default {
 		findInPage() {
 			if (!this.searchText) return
 
-			const webview = document.querySelector(`#webview-${this.currentTabIndex}`)
+			const webview = this.getWebview()
 			if (webview) {
 				// 이전에 등록된 이벤트 리스너가 있다면 제거
 				if (this.foundInPageListener) {
@@ -662,7 +651,7 @@ export default {
 		findNext() {
 			if (!this.searchText) return
 
-			const webview = document.querySelector(`#webview-${this.currentTabIndex}`)
+			const webview = this.getWebview()
 			if (webview) {
 				webview.findInPage(this.searchText, { forward: true, findNext: true })
 			}
@@ -671,7 +660,7 @@ export default {
 		findPrevious() {
 			if (!this.searchText) return
 
-			const webview = document.querySelector(`#webview-${this.currentTabIndex}`)
+			const webview = this.getWebview()
 			if (webview) {
 				webview.findInPage(this.searchText, { forward: false, findNext: true })
 			}
@@ -731,51 +720,17 @@ export default {
 		const homePage = (await window.electronAPI.invoke('get-config-value', 'settings', 'defaultHomePage')) || 'about:blank'
 		this.addNewTab(homePage)
 
-		// 초기 웹뷰에 did-fail-load 이벤트 리스너 추가
-		this.$nextTick(() => {
-			const webview = document.querySelector('#webview-0')
-			if (webview) {
-				webview.addEventListener('did-fail-load', (e) => {
-					if (e.errorCode === -3) {
-						console.log('Navigation aborted, probably due to a redirect')
-					} else {
-						console.error('Failed to load:', e.errorDescription)
-					}
-				})
-
-				// 웹뷰 네비게이션 이벤트 리스너 추가
-				webview.addEventListener('ipc-message', (event) => {
-					console.log('Webview IPC message:', event.channel, event.args)
-					if (event.channel === 'webview-navigation') {
-						const direction = event.args[0]
-						if (direction === 'back') {
-							console.log('Go back')
-							this.goBack()
-						} else if (direction === 'forward') {
-							console.log('Go forward')
-							this.goForward()
-						}
-					}
-				})
-			}
-		})
-
 		// 북마크 컨텍스트 메뉴 이벤트 리스너
-		window.electronAPI.on('toggle-bookmark-bar', () => {
-			this.toggleBookmarkBar()
-		})
+		window.electronAPI.on('toggle-bookmark-bar', this.toggleBookmarkBar)
 
 		// 웹뷰 개발자 도구 이벤트 리스너
 		window.electronAPI.on('toggle-webview-devtools', (tabIndex) => {
 			// tabIndex가 제공되면 해당 탭의 웹뷰 사용, 아니면 현재 탭 사용
 			const index = typeof tabIndex === 'number' ? tabIndex : this.currentTabIndex
-			const webview = document.querySelector(`#webview-${index}`)
+			const webview = this.getWebview(index)
 			if (webview) {
-				if (webview.isDevToolsOpened()) {
-					webview.closeDevTools()
-				} else {
-					webview.openDevTools()
-				}
+				if (webview.isDevToolsOpened()) webview.closeDevTools()
+				else webview.openDevTools()
 			}
 		})
 
@@ -798,9 +753,7 @@ export default {
 			}
 		})
 
-		window.electronAPI.on('add-bookmark', () => {
-			this.addBookmark()
-		})
+		window.electronAPI.on('add-bookmark', this.addBookmark)
 
 		// 탭 관련 이벤트 처리
 		window.electronAPI.on('create-new-tab', (url) => {
@@ -820,16 +773,15 @@ export default {
 			this.closeTab(this.currentTabIndex)
 		})
 
-		window.electronAPI.on('show-page-search', () => {
-			this.showPageSearch()
-		})
+		// 탭 드래그 앤 드롭 이벤트 리스너
+		window.electronAPI.on('show-page-search', this.showPageSearch())
 
 		// 탭 컨텍스트 메뉴 이벤트 리스너
 		window.electronAPI.on('refresh-tab', (index) => {
 			if (index === this.currentTabIndex) {
-				this.refresh()
+				this.navigatorBtnClick('refresh')
 			} else {
-				const webview = document.querySelector(`#webview-${index}`)
+				const webview = this.getWebview(index)
 				if (webview) {
 					webview.reload()
 				}
@@ -854,33 +806,21 @@ export default {
 		window.electronAPI.on('save-image', (url) => {
 			this.saveImage(url)
 		})
-
 		window.electronAPI.on('search-text', (text) => {
 			this.searchGoogle(text)
 		})
-
+		// 탭 뒤로 가기 이벤트 리스너
 		window.electronAPI.on('go-back', () => {
-			this.goBack()
+			this.navigatorBtnClick('goBack')
 		})
-
+		// 탭 앞으로 가기 이벤트 리스너
 		window.electronAPI.on('go-forward', () => {
-			this.goForward()
+			this.navigatorBtnClick('goForward')
 		})
-
+		// 탭 새로고침 이벤트 리스너
 		window.electronAPI.on('refresh-page', () => {
-			this.refresh()
+			this.navigatorBtnClick('refresh')
 		})
-
-		// 웹뷰 이벤트 리스너 설정
-		setTimeout(() => {
-			const webview = document.querySelector('#webview-0')
-			if (webview) {
-				webview.addEventListener('dom-ready', () => {
-					this.canGoBack = webview.getURL() != '' && webview.getURL() != 'about:blank' && webview.canGoBack()
-					this.canGoForward = webview.canGoForward()
-				})
-			}
-		}, 1000)
 
 		// 창 크기 변경 감지
 		window.addEventListener('resize', this.handleResize)

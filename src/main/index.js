@@ -179,14 +179,13 @@ app.on('web-contents-created', (_, contents) => {
 		// 보안 설정
 		webPreferences.nodeIntegration = false
 		webPreferences.contextIsolation = true
-
-		console.log('Webview attached with preload:', webviewPreloadPath)
+		// console.log('Webview attached with preload:', webviewPreloadPath)
 	})
 
 	// 웹뷰 디버깅을 위한 콘솔 로그 캡처
-	contents.on('console-message', (_, level, message, line, sourceId) => {
+	contents.on('console-message', (evt, level, message, line, sourceId) => {
 		const levels = ['verbose', 'info', 'warning', 'error']
-		console.log(`[Webview ${levels[level]}]: ${message}`)
+		console.log(`[${contents.getType()} ${levels[level]}:${line}:${sourceId}]: ${message}`)
 	})
 })
 
@@ -194,15 +193,6 @@ app.on('web-contents-created', (_, contents) => {
 app.on('window-all-closed', () => {
 	// if (process.platform !== 'darwin')
 	app.quit()
-})
-
-// 탭 관련 IPC 핸들러
-ipcMain.on('new-tab', (_, url) => {
-	mainWindow.webContents.send('create-new-tab', url)
-})
-
-ipcMain.on('navigate', (_, url) => {
-	mainWindow.webContents.send('navigate-to-url', url)
 })
 
 // 클립보드 관련 IPC 핸들러
@@ -240,22 +230,22 @@ ipcMain.handle('save-file', async (_, options) => {
 })
 
 // 창 제어 이벤트 핸들러
-ipcMain.on('close-window', (evt, payload) => {
-	// console.log('Close window', evt, payload)
-	BrowserWindow.fromWebContents(evt.sender)?.close()
-})
-
-ipcMain.on('minimize-window', (evt, payload) => {
-	// console.log('Minimize window', evt, payload)
-	BrowserWindow.fromWebContents(evt.sender)?.minimize()
-})
-
-ipcMain.on('maximize-window', (evt, payload) => {
-	// console.log('Maximize window', evt, payload)
-	if (BrowserWindow.fromWebContents(evt.sender)?.isMaximized()) {
-		BrowserWindow.fromWebContents(evt.sender)?.unmaximize()
-	} else {
-		BrowserWindow.fromWebContents(evt.sender)?.maximize()
+ipcMain.on('window-control-action', (evt, payload) => {
+	const currentWindow = BrowserWindow.fromWebContents(evt.sender)
+	if (payload.action === 'close-window') currentWindow?.close()
+	if (payload.action === 'minimize-window') currentWindow?.minimize()
+	if (payload.action === 'maximize-window') {
+		if (currentWindow?.isMaximized()) {
+			currentWindow.unmaximize()
+		} else {
+			currentWindow.maximize()
+		}
+	}
+	if (payload.action === 'fullscreen') {
+		if (currentWindow?.isFullScreen()) {
+			currentWindow.setFullScreen(false)
+		} else {
+			currentWindow.setFullScreen(true)
+		}
 	}
 })
-
