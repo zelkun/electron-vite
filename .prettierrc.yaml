@@ -1,4 +1,4 @@
-printWidth: 1000
+printWidth: 200
 useTabs: true
 tabWidth: 2
 semi: false
@@ -10,4 +10,3 @@ bracketSameLine: false
 arrowParens: 'always'
 endOfLine: 'crlf'
 jsxBracketSameLine: true
-

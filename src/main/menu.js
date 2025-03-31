@@ -186,7 +186,7 @@ export function setupMenu(mainWindow) {
 
 	// 탭 컨텍스트 메뉴 설정
 	ipcMain.on('show-tab-context-menu', (evt, data) => {
-		console.log('%csrc/main/menu.js:192 evt', 'color: #007acc;', evt)
+		console.log('%csrc\main\menu.js:189 {show-tab-context-menu} data', 'color: #007acc;', data)
 		const { x, y, tabIndex } = data
 		const sender = evt.sender
 		const currentWindow = BrowserWindow.fromWebContents(sender)
@@ -232,7 +232,7 @@ export function setupMenu(mainWindow) {
 
 	// 웹뷰 컨텍스트 메뉴 설정
 	ipcMain.on('show-webview-context-menu', (evt, data) => {
-		console.log('show-webview-context-menu', data)
+		console.log('%csrc\main\menu.js:235 {show-webview-context-menu} data', 'color: #007acc;', data)
 		const { x, y, linkURL, srcURL, isEditable, selectionText } = data
 
 		const menuItems = []
@@ -304,7 +304,16 @@ export function setupMenu(mainWindow) {
 
 		// 편집 가능한 요소인 경우
 		if (isEditable) {
-			menuItems.push({ label: '실행 취소', role: 'undo' }, { label: '다시 실행', role: 'redo' }, { type: 'separator' }, { label: '잘라내기', role: 'cut' }, { label: '복사', role: 'copy' }, { label: '붙여넣기', role: 'paste' }, { label: '모두 선택', role: 'selectAll' }, { type: 'separator' })
+			menuItems.push(
+				{ label: '실행 취소', role: 'undo' },
+				{ label: '다시 실행', role: 'redo' },
+				{ type: 'separator' },
+				{ label: '잘라내기', role: 'cut' },
+				{ label: '복사', role: 'copy' },
+				{ label: '붙여넣기', role: 'paste' },
+				{ label: '모두 선택', role: 'selectAll' },
+				{ type: 'separator' },
+			)
 		}
 
 		// 기본 메뉴 항목
@@ -345,4 +354,3 @@ export function setupMenu(mainWindow) {
 		contextMenu.popup({ window: currentWindow, x, y })
 	})
 }
-

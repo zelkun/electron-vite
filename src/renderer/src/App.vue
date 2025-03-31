@@ -2,7 +2,18 @@
 	<div class="browser-container">
 		<!-- 탭 영역 -->
 		<div class="browser-tabs">
-			<div v-for="(tab, index) in tabs" :key="index" @click="switchTab(index)" :class="['tab', { active: currentTabIndex === index }]" :style="{ borderTop: `3px solid ${tab.color}`, width: tabWidth }" draggable="true" @dragstart="dragStart(index, $event)" @dragover.prevent @drop="drop(index, $event)" @contextmenu.prevent="showTabContextMenu(index, $event)">
+			<div
+				v-for="(tab, index) in tabs"
+				:key="index"
+				@click="switchTab(index)"
+				:class="['tab', { active: currentTabIndex === index }]"
+				:style="{ borderTop: `3px solid ${tab.color}`, width: tabWidth }"
+				draggable="true"
+				@dragstart="dragStart(index, $event)"
+				@dragover.prevent
+				@drop="drop(index, $event)"
+				@contextmenu.prevent="showTabContextMenu(index, $event)"
+			>
 				<span class="tab-title">{{ tab.title || '새 탭' }}</span>
 				<button @click.stop="closeTab(index)" class="close-tab">×</button>
 			</div>
@@ -45,7 +56,16 @@
 					<button @click="addBookmark" class="bookmark-add-btn">북마크 추가</button>
 				</div>
 				<template v-else>
-					<div v-for="(bookmark, index) in bookmarks" :key="index" class="bookmark-item" draggable="true" @dragstart="dragStartBookmark(index, $event)" @dragover.prevent @drop="dropBookmark(index, $event)" @contextmenu.prevent="showBookmarkContextMenu(index, $event)">
+					<div
+						v-for="(bookmark, index) in bookmarks"
+						:key="index"
+						class="bookmark-item"
+						draggable="true"
+						@dragstart="dragStartBookmark(index, $event)"
+						@dragover.prevent
+						@drop="dropBookmark(index, $event)"
+						@contextmenu.prevent="showBookmarkContextMenu(index, $event)"
+					>
 						<button @click="navigateToBookmark(bookmark.url)" class="bookmark-link">
 							<span class="bookmark-favicon">🌐</span>
 							<span class="bookmark-title">{{ bookmark.title }}</span>
@@ -103,7 +123,21 @@
 
 		<!-- 웹뷰 영역 -->
 		<div class="webview-container">
-			<webview v-for="(tab, index) in tabs" :key="index" :id="`webview-${index}`" :src="tab.url" :style="{ display: currentTabIndex === index ? 'flex' : 'none' }" class="webview" webpreferences="nativeWindowOption=true" allowpopups nodeIntegration @did-start-loading="startLoading(index)" @did-stop-loading="stopLoading(index)" @did-navigate="updateUrl($event, index)" @page-title-updated="updateTitle($event, index)"></webview>
+			<webview
+				v-for="(tab, index) in tabs"
+				:key="index"
+				:id="`webview-${index}`"
+				:src="tab.url"
+				:style="{ display: currentTabIndex === index ? 'flex' : 'none' }"
+				class="webview"
+				webpreferences="nativeWindowOption=true"
+				allowpopups
+				nodeIntegration
+				@did-start-loading="startLoading(index)"
+				@did-stop-loading="stopLoading(index)"
+				@did-navigate="updateUrl($event, index)"
+				@page-title-updated="updateTitle($event, index)"
+			></webview>
 		</div>
 
 		<!-- 상태 표시줄 -->
@@ -869,4 +903,3 @@ export default {
 	},
 }
 </script>
-
