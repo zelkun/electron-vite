@@ -29,10 +29,10 @@
 		<!-- 주소창 및 네비게이션 영역 -->
 		<div class="browser-toolbar">
 			<div class="navigation-buttons">
-				<button @click="navigatorBtnClick('goBack')" :disabled="!canGoBack" class="nav-btn">◀</button>
-				<button @click="navigatorBtnClick('goForward')" :disabled="!canGoForward" class="nav-btn">▶</button>
-				<button @click="navigatorBtnClick('refresh')" class="nav-btn">↻</button>
-				<button @click="navigatorBtnClick('goHome')" class="nav-btn">🏠</button>
+				<button @click="navigatorCtrl('goBack')" :disabled="!canGoBack" class="nav-btn">◀</button>
+				<button @click="navigatorCtrl('goForward')" :disabled="!canGoForward" class="nav-btn">▶</button>
+				<button @click="navigatorCtrl('refresh')" class="nav-btn">↻</button>
+				<button @click="navigatorCtrl('goHome')" class="nav-btn">🏠</button>
 			</div>
 
 			<div class="address-bar">
@@ -206,7 +206,7 @@ export default {
 		},
 
 		// 웹뷰 네비게이션 버튼 클릭 메서드
-		navigatorBtnClick(direction) {
+		navigatorCtrl(direction) {
 			const webview = this.getWebview()
 			if (webview) {
 				if (direction === 'goBack' && webview.canGoBack()) webview.goBack()
@@ -247,8 +247,8 @@ export default {
 				console.log('Webview IPC message:', event.channel, event.args)
 				if (event.channel === 'webview-navigation') {
 					const direction = event.args[0]
-					if (direction === 'back') navigatorBtnClick('goBack')
-					if (direction === 'forward') navigatorBtnClick('goForward')
+					if (direction === 'goBack') navigatorCtrl('goBack')
+					if (direction === 'goForward') navigatorCtrl('goForward')
 				}
 			})
 		},
@@ -423,7 +423,6 @@ export default {
 		// 북마크 바 토글 메서드 수정
 		async toggleBookmarkBar() {
 			this.showBookmarkBar = !this.showBookmarkBar
-			// 설정 저장
 			try {
 				await window.electronAPI.invoke('set-config-value', 'settings', 'showBookmarkBar', this.showBookmarkBar)
 			} catch (error) {
@@ -442,12 +441,9 @@ export default {
 
 			// 현재 URL이 이미 북마크에 있는지 확인
 			const existingIndex = this.bookmarks.findIndex((b) => b.url === this.currentUrl)
-
 			if (existingIndex !== -1) {
-				// 이미 있는 북마크면 편집 모달 표시
 				this.openEditBookmarkModal(existingIndex)
 			} else {
-				// 새 북마크 추가 모달 표시
 				this.openAddBookmarkModal()
 			}
 		},
@@ -494,9 +490,7 @@ export default {
 
 		async saveBookmark() {
 			// 입력값 검증
-			if (!this.editingBookmark.title.trim()) {
-				this.editingBookmark.title = '제목 없음'
-			}
+			if (!this.editingBookmark.title.trim()) this.editingBookmark.title = '제목 없음'
 
 			if (!this.editingBookmark.url.trim()) {
 				this.editingBookmark.url = 'about:blank'
@@ -505,10 +499,8 @@ export default {
 			}
 
 			if (this.isNewBookmark) {
-				// 새 북마크 추가
 				this.bookmarks.push({ ...this.editingBookmark })
 			} else {
-				// 기존 북마크 수정
 				this.bookmarks[this.editingBookmarkIndex] = { ...this.editingBookmark }
 			}
 
@@ -616,11 +608,8 @@ export default {
 			this.searchText = ''
 			this.searchResults = { activeMatchOrdinal: 0, matches: 0 }
 
-			// 검색 하이라이트 제거
 			const webview = this.getWebview()
-			if (webview) {
-				webview.stopFindInPage('clearSelection')
-			}
+			if (webview) webview.stopFindInPage('clearSelection')
 		},
 
 		findInPage() {
@@ -629,9 +618,7 @@ export default {
 			const webview = this.getWebview()
 			if (webview) {
 				// 이전에 등록된 이벤트 리스너가 있다면 제거
-				if (this.foundInPageListener) {
-					webview.removeEventListener('found-in-page', this.foundInPageListener)
-				}
+				if (this.foundInPageListener) webview.removeEventListener('found-in-page', this.foundInPageListener)
 
 				// 새 이벤트 리스너 생성 및 저장
 				this.foundInPageListener = (e) => {
@@ -641,38 +628,27 @@ export default {
 					}
 				}
 
-				// 이벤트 리스너 등록
 				webview.addEventListener('found-in-page', this.foundInPageListener)
-
-				// 검색 시작
 				webview.findInPage(this.searchText)
 			}
 		},
 		findNext() {
 			if (!this.searchText) return
-
 			const webview = this.getWebview()
-			if (webview) {
-				webview.findInPage(this.searchText, { forward: true, findNext: true })
-			}
+			if (webview) webview.findInPage(this.searchText, { forward: true, findNext: true })
 		},
 
 		findPrevious() {
 			if (!this.searchText) return
-
 			const webview = this.getWebview()
-			if (webview) {
-				webview.findInPage(this.searchText, { forward: false, findNext: true })
-			}
+			if (webview) webview.findInPage(this.searchText, { forward: false, findNext: true })
 		},
 
 		showSettings() {
-			// 설정 메뉴 표시 기능 구현
 			console.log('설정 메뉴 표시')
 		},
 
 		showMenu() {
-			// 추가 메뉴 표시 기능 구현
 			console.log('추가 메뉴 표시')
 		},
 
@@ -680,11 +656,7 @@ export default {
 		async loadSettings() {
 			try {
 				const settings = await window.electronAPI.invoke('get-config-section', 'settings')
-				// 설정 적용
-				if (settings) {
-					this.showBookmarkBar = settings.showBookmarkBar || false
-				}
-				// 기타 설정 적용...
+				if (settings) this.showBookmarkBar = settings.showBookmarkBar || false
 			} catch (error) {
 				console.error('설정 로드 오류:', error)
 			}
@@ -695,9 +667,7 @@ export default {
 			try {
 				const settings = {
 					showBookmarkBar: this.showBookmarkBar,
-					// 기타 설정...
 				}
-				// await window.electronAPI.saveConfigSection('settings', settings)
 				await window.electronAPI.invoke('save-config-section', 'settings', settings)
 			} catch (error) {
 				console.error('설정 저장 오류:', error)
@@ -779,7 +749,7 @@ export default {
 		// 탭 컨텍스트 메뉴 이벤트 리스너
 		window.electronAPI.on('refresh-tab', (index) => {
 			if (index === this.currentTabIndex) {
-				this.navigatorBtnClick('refresh')
+				this.navigatorCtrl('refresh')
 			} else {
 				const webview = this.getWebview(index)
 				if (webview) {
@@ -809,17 +779,11 @@ export default {
 		window.electronAPI.on('search-text', (text) => {
 			this.searchGoogle(text)
 		})
-		// 탭 뒤로 가기 이벤트 리스너
-		window.electronAPI.on('go-back', () => {
-			this.navigatorBtnClick('goBack')
-		})
-		// 탭 앞으로 가기 이벤트 리스너
-		window.electronAPI.on('go-forward', () => {
-			this.navigatorBtnClick('goForward')
-		})
-		// 탭 새로고침 이벤트 리스너
-		window.electronAPI.on('refresh-page', () => {
-			this.navigatorBtnClick('refresh')
+
+		window.electronAPI.on('navigatorCtrl', (action) => {
+			if (action == 'goBack') this.navigatorCtrl('goBack')
+			if (action == 'goForward') this.navigatorCtrl('goForward')
+			if (action == 'refresh') this.navigatorCtrl('refresh')
 		})
 
 		// 창 크기 변경 감지
@@ -828,6 +792,7 @@ export default {
 	beforeDestroy() {
 		window.removeEventListener('resize', this.handleResize)
 	},
+
 	computed: {
 		// 현재 탭의 URL
 		currentTabUrl() {

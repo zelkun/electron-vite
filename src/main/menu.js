@@ -39,7 +39,7 @@ export function setupMenu(mainWindow) {
 						if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
 							newWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
 						} else {
-							newWindow.loadFile(path.join(__dirname, '../renderer/index.html'))
+							newWindow.loadFile(join(__dirname, '../renderer/index.html'))
 						}
 					},
 				},
@@ -322,20 +322,20 @@ export function setupMenu(mainWindow) {
 				label: '뒤로 가기',
 				enabled: mainWindow.webContents.navigationHistory.canGoBack(),
 				click: (menuItem, focusedWindow, keyEvt) => {
-					if (focusedWindow) focusedWindow.webContents.send('go-back')
+					if (focusedWindow) focusedWindow.webContents.send('navigatorCtrl', 'goBack')
 				},
 			},
 			{
 				label: '앞으로 가기',
 				enabled: mainWindow.webContents.navigationHistory.canGoForward(),
 				click: (menuItem, focusedWindow, keyEvt) => {
-					if (focusedWindow) focusedWindow.webContents.send('go-forward')
+					if (focusedWindow) focusedWindow.webContents.send('navigatorCtrl', 'goForward')
 				},
 			},
 			{
 				label: '새로고침',
 				click: (menuItem, focusedWindow, keyEvt) => {
-					if (focusedWindow) focusedWindow.webContents.send('refresh-page')
+					if (focusedWindow) focusedWindow.webContents.send('navigatorCtrl', 'refresh')
 				},
 			},
 		)

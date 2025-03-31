@@ -55,7 +55,7 @@ window.addEventListener('mouseup', (e) => {
 		e.stopPropagation()
 		// 웹뷰 호스트(렌더러 프로세스)에 직접 메시지 전송
 		if (window.ipcRenderer && window.ipcRenderer.sendToHost) {
-			window.ipcRenderer.sendToHost('webview-navigation', 'back')
+			window.ipcRenderer.sendToHost('webview-navigation', 'goBack')
 		}
 	}
 	// 마우스 앞으로 가기 버튼 (일반적으로 버튼 4 또는 9)
@@ -64,7 +64,7 @@ window.addEventListener('mouseup', (e) => {
 		e.stopPropagation()
 		// 웹뷰 호스트(렌더러 프로세스)에 직접 메시지 전송
 		if (window.ipcRenderer && window.ipcRenderer.sendToHost) {
-			window.ipcRenderer.sendToHost('webview-navigation', 'forward')
+			window.ipcRenderer.sendToHost('webview-navigation', 'goForward')
 		}
 	}
 })
