@@ -1,6 +1,6 @@
-import { resolve } from 'path'
-import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
-import vue from '@vitejs/plugin-vue'
+import { resolve } from 'path';
+import { defineConfig, externalizeDepsPlugin } from 'electron-vite';
+import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
 	main: {
@@ -17,6 +17,7 @@ export default defineConfig({
 				input: {
 					index: resolve('src/preload/index.js'),
 					webviewPreload: resolve('src/preload/webviewPreload.js'),
+					popPreload: resolve('src/preload/popPreload.js'),
 				},
 			},
 		},
@@ -38,4 +39,4 @@ export default defineConfig({
 			}),
 		],
 	},
-})
+});
