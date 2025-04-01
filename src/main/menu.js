@@ -1,10 +1,11 @@
-import { Menu, ipcMain, BrowserWindow } from 'electron'
-import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import { join } from 'path'
+import { Menu, ipcMain, BrowserWindow } from 'electron';
+import { electronApp, optimizer, is } from '@electron-toolkit/utils';
+import { BrowserWindowOptions, webviewOptions, popOptions, preloadPaths } from './windowOptions';
+import { join } from 'path';
 
 function fnIpcCall(channel, ...args) {
-	const activeWindow = BrowserWindow.getFocusedWindow()
-	if (activeWindow) activeWindow.webContents.send(channel, ...args)
+	const activeWindow = BrowserWindow.getFocusedWindow();
+	if (activeWindow) activeWindow.webContents.send(channel, ...args);
 }
 
 export function setupMenu(mainWindow) {
@@ -17,29 +18,19 @@ export function setupMenu(mainWindow) {
 					label: '새 탭',
 					accelerator: 'CommandOrControl+T',
 					click: (menuItem, focusedWindow, keyEvt) => {
-						if (focusedWindow) focusedWindow.webContents.send('create-new-tab')
+						if (focusedWindow) focusedWindow.webContents.send('create-new-tab');
 					},
 				},
 				{
 					label: '새 창',
 					accelerator: 'CommandOrControl+Shift+N',
 					click: (menuItem, focusedWindow, keyEvt) => {
-						const newWindow = new BrowserWindow({
-							width: 1200,
-							height: 800,
-							webPreferences: {
-								preload: join(__dirname, '../preload/index.js'),
-								sandbox: false,
-								webviewTag: true,
-								nodeIntegration: false,
-								contextIsolation: true,
-							},
-						})
+						const newWindow = new BrowserWindow(BrowserWindowOptions);
 
 						if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-							newWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
+							newWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
 						} else {
-							newWindow.loadFile(join(__dirname, '../renderer/index.html'))
+							newWindow.loadFile(join(__dirname, '../renderer/index.html'));
 						}
 					},
 				},
@@ -47,7 +38,7 @@ export function setupMenu(mainWindow) {
 					label: '탭 닫기',
 					accelerator: 'CommandOrControl+W',
 					click: (menuItem, focusedWindow, keyEvt) => {
-						if (focusedWindow) focusedWindow.webContents.send('close-current-tab')
+						if (focusedWindow) focusedWindow.webContents.send('close-current-tab');
 					},
 				},
 				{ type: 'separator' },
@@ -55,7 +46,7 @@ export function setupMenu(mainWindow) {
 					label: '종료',
 					accelerator: 'CommandOrControl+Q',
 					click: (menuItem, focusedWindow, keyEvt) => {
-						if (focusedWindow) focusedWindow.close()
+						if (focusedWindow) focusedWindow.close();
 					},
 				},
 			],
@@ -77,7 +68,7 @@ export function setupMenu(mainWindow) {
 					label: '페이지 내 검색',
 					accelerator: 'CommandOrControl+F',
 					click: (menuItem, focusedWindow, keyEvt) => {
-						if (focusedWindow) focusedWindow.webContents.send('show-page-search')
+						if (focusedWindow) focusedWindow.webContents.send('show-page-search');
 					},
 				},
 			],
@@ -90,7 +81,7 @@ export function setupMenu(mainWindow) {
 					label: '새로고침',
 					accelerator: 'CommandOrControl+R',
 					click: (menuItem, focusedWindow, keyEvt) => {
-						if (focusedWindow) focusedWindow.webContents.send('refresh-page')
+						if (focusedWindow) focusedWindow.webContents.send('refresh-page');
 					},
 				},
 				{ role: 'forceReload' },
@@ -103,7 +94,7 @@ export function setupMenu(mainWindow) {
 								role: 'toggleWebviewDevTools',
 								accelerator: 'CommandOrControl+F12',
 								click: (menuItem, focusedWindow, keyEvt) => {
-									if (focusedWindow) focusedWindow.webContents.send('toggle-webview-devtools')
+									if (focusedWindow) focusedWindow.webContents.send('toggle-webview-devtools');
 								},
 							},
 							{ type: 'separator' },
@@ -126,14 +117,14 @@ export function setupMenu(mainWindow) {
 					type: 'checkbox',
 					checked: true,
 					click: (menuItem, focusedWindow, keyEvt) => {
-						if (focusedWindow) focusedWindow.webContents.send('toggle-bookmark-bar')
+						if (focusedWindow) focusedWindow.webContents.send('toggle-bookmark-bar');
 					},
 				},
 				{
 					label: '현재 페이지 북마크에 추가',
 					accelerator: 'CommandOrControl+D',
 					click: (menuItem, focusedWindow, keyEvt) => {
-						if (focusedWindow) focusedWindow.webContents.send('add-bookmark')
+						if (focusedWindow) focusedWindow.webContents.send('add-bookmark');
 					},
 				},
 			],
@@ -149,95 +140,95 @@ export function setupMenu(mainWindow) {
 				},
 			],
 		},
-	]
+	];
 
-	const menu = Menu.buildFromTemplate(template)
-	Menu.setApplicationMenu(menu)
+	const menu = Menu.buildFromTemplate(template);
+	Menu.setApplicationMenu(menu);
 
 	// 북마크 컨텍스트 메뉴 설정
 	ipcMain.on('show-bookmark-context-menu', (evt, data) => {
-		const { x, y, bookmarkIndex } = data
-		const sender = evt.sender
-		const currentWindow = BrowserWindow.fromWebContents(sender)
+		const { x, y, bookmarkIndex } = data;
+		const sender = evt.sender;
+		const currentWindow = BrowserWindow.fromWebContents(sender);
 
 		const bookmarkContextMenu = Menu.buildFromTemplate([
 			{
 				label: '새 탭에서 열기',
 				click: (menuItem, focusedWindow, keyEvt) => {
-					if (focusedWindow) focusedWindow.webContents.send('bookmark-context-menu-action', 'open-in-new-tab', bookmarkIndex)
+					if (focusedWindow) focusedWindow.webContents.send('bookmark-context-menu-action', 'open-in-new-tab', bookmarkIndex);
 				},
 			},
 			{ type: 'separator' },
 			{
 				label: '편집',
 				click: (menuItem, focusedWindow, keyEvt) => {
-					if (focusedWindow) focusedWindow.webContents.send('bookmark-context-menu-action', 'edit', bookmarkIndex)
+					if (focusedWindow) focusedWindow.webContents.send('bookmark-context-menu-action', 'edit', bookmarkIndex);
 				},
 			},
 			{
 				label: '삭제',
 				click: (menuItem, focusedWindow, keyEvt) => {
-					if (focusedWindow) focusedWindow.webContents.send('bookmark-context-menu-action', 'delete', bookmarkIndex)
+					if (focusedWindow) focusedWindow.webContents.send('bookmark-context-menu-action', 'delete', bookmarkIndex);
 				},
 			},
-		])
-		bookmarkContextMenu.popup({ window: currentWindow, x, y })
-	})
+		]);
+		bookmarkContextMenu.popup({ window: currentWindow, x, y });
+	});
 
 	// 탭 컨텍스트 메뉴 설정
 	ipcMain.on('show-tab-context-menu', (evt, data) => {
-		console.log('%csrc\main\menu.js:189 {show-tab-context-menu} data', 'color: #007acc;', data)
-		const { x, y, tabIndex } = data
-		const sender = evt.sender
-		const currentWindow = BrowserWindow.fromWebContents(sender)
+		console.log('%csrc\main\menu.js:189 {show-tab-context-menu} data', 'color: #007acc;', data);
+		const { x, y, tabIndex } = data;
+		const sender = evt.sender;
+		const currentWindow = BrowserWindow.fromWebContents(sender);
 
 		const menuItems = [
 			{
 				label: '새 탭',
 				click: (menuItem, focusedWindow, keyEvt) => {
-					if (focusedWindow) focusedWindow.webContents.send('create-new-tab')
+					if (focusedWindow) focusedWindow.webContents.send('create-new-tab');
 				},
 			},
 			{ type: 'separator' },
 			{
 				label: '탭 새로고침',
 				click: (menuItem, focusedWindow, keyEvt) => {
-					if (focusedWindow) focusedWindow.webContents.send('refresh-tab', tabIndex)
+					if (focusedWindow) focusedWindow.webContents.send('refresh-tab', tabIndex);
 				},
 			},
 			{
 				label: '탭 닫기',
 				click: (menuItem, focusedWindow, keyEvt) => {
-					if (focusedWindow) focusedWindow.webContents.send('close-tab', tabIndex)
+					if (focusedWindow) focusedWindow.webContents.send('close-tab', tabIndex);
 				},
 			},
 
 			,
-		]
+		];
 		if (is.dev) {
 			menuItems.push(
 				{ type: 'separator' },
 				{
 					label: '개발자 도구 열기',
 					click: (menuItem, focusedWindow, keyEvt) => {
-						if (focusedWindow) focusedWindow.webContents.send('toggle-webview-devtools', tabIndex)
+						if (focusedWindow) focusedWindow.webContents.send('toggle-webview-devtools', tabIndex);
 					},
 				},
-			)
+			);
 		}
 
-		const tabContextMenu = Menu.buildFromTemplate(menuItems)
-		tabContextMenu.popup({ window: currentWindow, x, y })
-	})
+		const tabContextMenu = Menu.buildFromTemplate(menuItems);
+		tabContextMenu.popup({ window: currentWindow, x, y });
+	});
 
 	// 웹뷰 컨텍스트 메뉴 설정
 	ipcMain.on('show-webview-context-menu', (evt, data) => {
-		console.log('%csrc\main\menu.js:235 {show-webview-context-menu} data', 'color: #007acc;', data)
-		const { x, y, linkURL, srcURL, isEditable, selectionText } = data
+		console.log('%csrc\main\menu.js:235 {show-webview-context-menu} data', 'color: #007acc;', data);
+		const { x, y, linkURL, srcURL, isEditable, selectionText } = data;
 
-		const menuItems = []
-		const sender = evt.sender
-		const currentWindow = BrowserWindow.fromWebContents(sender)
+		const menuItems = [];
+		const sender = evt.sender;
+		const currentWindow = BrowserWindow.fromWebContents(sender);
 
 		// 링크가 있는 경우
 		if (linkURL) {
@@ -245,17 +236,17 @@ export function setupMenu(mainWindow) {
 				{
 					label: '새 탭에서 링크 열기',
 					click: (menuItem, focusedWindow, keyEvt) => {
-						if (focusedWindow) focusedWindow.webContents.send('open-link-in-new-tab', linkURL)
+						if (focusedWindow) focusedWindow.webContents.send('open-link-in-new-tab', linkURL);
 					},
 				},
 				{
 					label: '링크 주소 복사',
 					click: (menuItem, focusedWindow, keyEvt) => {
-						if (focusedWindow) focusedWindow.webContents.send('copy-to-clipboard', linkURL)
+						if (focusedWindow) focusedWindow.webContents.send('copy-to-clipboard', linkURL);
 					},
 				},
 				{ type: 'separator' },
-			)
+			);
 		}
 
 		// 이미지가 있는 경우
@@ -264,23 +255,23 @@ export function setupMenu(mainWindow) {
 				{
 					label: '이미지 새 탭에서 열기',
 					click: (menuItem, focusedWindow, keyEvt) => {
-						if (focusedWindow) focusedWindow.webContents.send('open-link-in-new-tab', srcURL)
+						if (focusedWindow) focusedWindow.webContents.send('open-link-in-new-tab', srcURL);
 					},
 				},
 				{
 					label: '이미지 주소 복사',
 					click: (menuItem, focusedWindow, keyEvt) => {
-						if (focusedWindow) focusedWindow.webContents.send('copy-to-clipboard', srcURL)
+						if (focusedWindow) focusedWindow.webContents.send('copy-to-clipboard', srcURL);
 					},
 				},
 				{
 					label: '이미지 저장',
 					click: (menuItem, focusedWindow, keyEvt) => {
-						if (focusedWindow) focusedWindow.webContents.send('save-image', srcURL)
+						if (focusedWindow) focusedWindow.webContents.send('save-image', srcURL);
 					},
 				},
 				{ type: 'separator' },
-			)
+			);
 		}
 
 		// 텍스트 선택이 있는 경우
@@ -289,17 +280,17 @@ export function setupMenu(mainWindow) {
 				{
 					label: '복사',
 					click: (menuItem, focusedWindow, keyEvt) => {
-						if (focusedWindow) focusedWindow.webContents.send('copy-to-clipboard', selectionText)
+						if (focusedWindow) focusedWindow.webContents.send('copy-to-clipboard', selectionText);
 					},
 				},
 				{
 					label: '검색',
 					click: (menuItem, focusedWindow, keyEvt) => {
-						if (focusedWindow) focusedWindow.webContents.send('search-text', selectionText)
+						if (focusedWindow) focusedWindow.webContents.send('search-text', selectionText);
 					},
 				},
 				{ type: 'separator' },
-			)
+			);
 		}
 
 		// 편집 가능한 요소인 경우
@@ -313,7 +304,7 @@ export function setupMenu(mainWindow) {
 				{ label: '붙여넣기', role: 'paste' },
 				{ label: '모두 선택', role: 'selectAll' },
 				{ type: 'separator' },
-			)
+			);
 		}
 
 		// 기본 메뉴 항목
@@ -322,35 +313,35 @@ export function setupMenu(mainWindow) {
 				label: '뒤로 가기',
 				enabled: mainWindow.webContents.navigationHistory.canGoBack(),
 				click: (menuItem, focusedWindow, keyEvt) => {
-					if (focusedWindow) focusedWindow.webContents.send('navigatorCtrl', 'goBack')
+					if (focusedWindow) focusedWindow.webContents.send('navigatorCtrl', 'goBack');
 				},
 			},
 			{
 				label: '앞으로 가기',
 				enabled: mainWindow.webContents.navigationHistory.canGoForward(),
 				click: (menuItem, focusedWindow, keyEvt) => {
-					if (focusedWindow) focusedWindow.webContents.send('navigatorCtrl', 'goForward')
+					if (focusedWindow) focusedWindow.webContents.send('navigatorCtrl', 'goForward');
 				},
 			},
 			{
 				label: '새로고침',
 				click: (menuItem, focusedWindow, keyEvt) => {
-					if (focusedWindow) focusedWindow.webContents.send('navigatorCtrl', 'refresh')
+					if (focusedWindow) focusedWindow.webContents.send('navigatorCtrl', 'refresh');
 				},
 			},
-		)
+		);
 		if (is.dev) {
 			menuItems.push(
 				{ type: 'separator' },
 				{
 					label: '개발자 도구',
 					click: (menuItem, focusedWindow, keyEvt) => {
-						if (focusedWindow) focusedWindow.webContents.send('toggle-webview-devtools')
+						if (focusedWindow) focusedWindow.webContents.send('toggle-webview-devtools');
 					},
 				},
-			)
+			);
 		}
-		const contextMenu = Menu.buildFromTemplate(menuItems)
-		contextMenu.popup({ window: currentWindow, x, y })
-	})
+		const contextMenu = Menu.buildFromTemplate(menuItems);
+		contextMenu.popup({ window: currentWindow, x, y });
+	});
 }

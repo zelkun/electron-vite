@@ -6,48 +6,9 @@ import { setupTray } from './tray';
 import { setupUpdater } from './updater';
 import { getConfigSection, saveConfigSection, getConfigValue, setConfigValue } from './config';
 import fs from 'fs';
-import icon from '../../resources/icon.png?asset';
+import { BrowserWindowOptions, webviewOptions, popWindowOptions, preloadPaths } from './windowOptions';
 
 let mainWindow = null;
-
-const preloadPath = join(__dirname, '../preload/index.js');
-const webviewPreloadPath = join(__dirname, is.dev ? '../../src/preload/webviewPreload.js' : '../preload/webviewPreload.js');
-const popPreloadPath = join(__dirname, is.dev ? '../../src/preload/popPreload.js' : '../preload/popPreload.js');
-
-const BrowserWindowOptions = {
-	kiosk: false,
-	fullscreen: false,
-	resizable: true,
-	center: true,
-	alwaysOnTop: false,
-	width: 1200,
-	height: 800,
-	minWidth: 800,
-	minHeight: 600,
-	show: false,
-	movable: true,
-	focusable: true,
-	titleBarStyle: is.dev ? 'hiddenInset' : 'hidden',
-	autoHideMenuBar: true,
-	backgroundColor: 'white',
-	// ...(process.platform === 'linux' ? { icon } : {}),
-	// icon: join(__dirname, '../../resources/icon.png?asset'),
-	icon: icon,
-	webPreferences: {
-		preload: preloadPath,
-		webviewTag: true, // 웹뷰 태그 활성화
-		nodeIntegration: false, // 노드 통합 활성화
-		contextIsolation: true, // contextBridge 사용을 위해 true로 설정
-		nodeIntegrationInWorker: false,
-		nodeIntegrationInSubFrames: false,
-		sandbox: false,
-		javascript: true,
-		webSecurity: false,
-		textAreasAreResizable: true,
-		plugins: true,
-		allowRunningInsecureContent: false,
-	},
-};
 
 app.commandLine.appendSwitch('ignore-certificate-errors'); // 인증서 오류 무시 (개발용)
 app.commandLine.appendSwitch('disable-web-security'); // 웹 보안 비활성화 (개발용)
@@ -167,57 +128,19 @@ app.on('web-contents-created', (_, contents) => {
 
 		return {
 			action: 'allow',
-			overrideBrowserWindowOptions: {
-				webPreferences: {
-					preload: popPreloadPath,
-				},
-			},
+			overrideBrowserWindowOptions: popWindowOptions,
 		};
 	});
 
-	// popup 창을 띄울 때의 설정
-	/*
-		contents.setWindowOpenHandler((details) => {
-			shell.openExternal(details.url)
-
-			return {
-				action: 'allow',
-				overrideBrowserWindowOptions: {
-					resizable: true,
-					center: true,
-					alwaysOnTop: false,
-					show: true,
-					movable: true,
-					focusable: true,
-					autoHideMenuBar: true,
-					webPreferences: {
-						preload: webviewPreloadPath,
-						webviewTag: true,
-						contextIsolation: true,
-						nodeIntegration: false,
-						sandbox: true,
-					},
-					modal: true,
-					parent: details.parent,
-				},
-			}
-
-			return { action: 'deny' }
-		})
-	*/
-
 	contents.on('will-attach-webview', (event, webPreferences, params) => {
 		// console.log(`#### will-attach-webview`)
-		// preload 스크립트 설정
-		webPreferences.preload = webviewPreloadPath;
+
+		// webPreferences 설정복사
+		Object.assign(webPreferences, webviewOptions.webPreferences);
+		// webPreferences.preload = preloadPaths.webview;
 
 		// 웹뷰의 CSP 설정
 		// params.csp = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
-
-		// 보안 설정
-		webPreferences.nodeIntegration = false;
-		webPreferences.contextIsolation = true;
-		// console.log('Webview attached with preload:', webviewPreloadPath)
 	});
 
 	// 웹뷰 디버깅을 위한 콘솔 로그 캡처
