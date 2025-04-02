@@ -6,7 +6,7 @@ import { setupTray } from './tray';
 import { setupUpdater } from './updater';
 import { getConfigSection, saveConfigSection, getConfigValue, setConfigValue } from './config';
 import fs from 'fs';
-import { BrowserWindowOptions, webviewOptions, popWindowOptions, preloadPaths } from './windowOptions';
+import { BrowserWinOpt, webviewOpt, popWindowOpt, preloadPaths } from './windowOptions';
 
 let mainWindow = null;
 
@@ -20,7 +20,7 @@ app.on('certificate-error', (evt, webContents, url, err, cert, callback, isMainF
 
 function createWindow() {
 	// 메인 브라우저 윈도우 생성
-	mainWindow = new BrowserWindow(BrowserWindowOptions);
+	mainWindow = new BrowserWindow(BrowserWinOpt);
 
 	/* CSP 설정 예시
 	session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
@@ -128,7 +128,7 @@ app.on('web-contents-created', (_, contents) => {
 
 		return {
 			action: 'allow',
-			overrideBrowserWindowOptions: popWindowOptions,
+			overrideBrowserWindowOptions: popWindowOpt,
 		};
 	});
 
@@ -136,7 +136,7 @@ app.on('web-contents-created', (_, contents) => {
 		// console.log(`#### will-attach-webview`)
 
 		// webPreferences 설정복사
-		Object.assign(webPreferences, webviewOptions.webPreferences);
+		Object.assign(webPreferences, webviewOpt.webPreferences);
 		// webPreferences.preload = preloadPaths.webview;
 
 		// 웹뷰의 CSP 설정

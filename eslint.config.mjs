@@ -1,6 +1,6 @@
-import eslintConfig from '@electron-toolkit/eslint-config'
-import eslintConfigPrettier from '@electron-toolkit/eslint-config-prettier'
-import eslintPluginVue from 'eslint-plugin-vue'
+import eslintConfig from '@electron-toolkit/eslint-config';
+import eslintConfigPrettier from '@electron-toolkit/eslint-config-prettier';
+import eslintPluginVue from 'eslint-plugin-vue';
 
 export default [
 	{ ignores: ['**/node_modules', '**/dist', '**/out'] },
@@ -15,4 +15,4 @@ export default [
 		},
 	},
 	eslintConfigPrettier,
-]
+];

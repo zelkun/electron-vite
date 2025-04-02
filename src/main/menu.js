@@ -1,6 +1,6 @@
 import { Menu, ipcMain, BrowserWindow } from 'electron';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
-import { BrowserWindowOptions, webviewOptions, popOptions, preloadPaths } from './windowOptions';
+import { BrowserWinOpt, webviewOpt, popWindowOpt, preloadPaths } from './windowOptions';
 import { join } from 'path';
 
 function fnIpcCall(channel, ...args) {
@@ -25,7 +25,7 @@ export function setupMenu(mainWindow) {
 					label: '새 창',
 					accelerator: 'CommandOrControl+Shift+N',
 					click: (menuItem, focusedWindow, keyEvt) => {
-						const newWindow = new BrowserWindow(BrowserWindowOptions);
+						const newWindow = new BrowserWindow(BrowserWinOpt);
 
 						if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
 							newWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);

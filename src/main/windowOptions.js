@@ -3,8 +3,8 @@ import { join } from 'path';
 import icon from '../../resources/icon.png?asset';
 
 const preloadPath = join(__dirname, '../preload/index.js');
-const webviewPreloadPath = join(__dirname, is.dev ? '../../src/preload/webviewPreload.js' : '../preload/webviewPreload.js');
-const popPreloadPath = join(__dirname, is.dev ? '../../src/preload/popPreload.js' : '../preload/popPreload.js');
+const webviewPreloadPath = join(__dirname, '../preload/webviewPreload.js');
+const popPreloadPath = join(__dirname, '../preload/popPreload.js');
 
 export const preloadPaths = {
 	main: preloadPath,
@@ -12,27 +12,18 @@ export const preloadPaths = {
 	pop: popPreloadPath,
 };
 
-export const BrowserWindowOptions = {
+const defualtOpt = {
 	kiosk: false,
 	fullscreen: false,
 	resizable: true,
 	center: true,
 	alwaysOnTop: false,
-	width: 1200,
-	height: 800,
-	minWidth: 800,
-	minHeight: 600,
 	show: false,
 	movable: true,
 	focusable: true,
-	titleBarStyle: is.dev ? 'hiddenInset' : 'hidden',
 	autoHideMenuBar: true,
 	backgroundColor: 'white',
-	// ...(process.platform === 'linux' ? { icon } : {}),
-	// icon: join(__dirname, '../../resources/icon.png?asset'),
-	icon: icon,
 	webPreferences: {
-		preload: preloadPath,
 		webviewTag: true, // 웹뷰 태그 활성화
 		nodeIntegration: false, // 노드 통합 활성화
 		contextIsolation: true, // contextBridge 사용을 위해 true로 설정
@@ -47,18 +38,34 @@ export const BrowserWindowOptions = {
 	},
 };
 
-export const webviewOptions = {
-	...BrowserWindowOptions,
+export const BrowserWinOpt = {
+	width: 1200,
+	height: 800,
+	minWidth: 800,
+	minHeight: 600,
+	titleBarStyle: is.dev ? 'hiddenInset' : 'hidden',
+	// ...(process.platform === 'linux' ? { icon } : {}),
+	// icon: join(__dirname, '../../resources/icon.png?asset'),
+	icon: icon,
+	...defualtOpt,
 	webPreferences: {
-		...BrowserWindowOptions.webPreferences,
+		preload: preloadPath,
+		...defualtOpt.webPreferences,
+	},
+};
+
+export const webviewOpt = {
+	...defualtOpt,
+	webPreferences: {
+		...defualtOpt.webPreferences,
 		preload: webviewPreloadPath,
 	},
 };
 
-export const popWindowOptions = {
-	...BrowserWindowOptions,
+export const popWindowOpt = {
+	...defualtOpt,
 	webPreferences: {
-		...BrowserWindowOptions.webPreferences,
+		...defualtOpt.webPreferences,
 		preload: popPreloadPath,
 	},
 };

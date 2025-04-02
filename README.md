@@ -38,7 +38,6 @@ electron-vite
 ├─ .editorconfig
 ├─ .prettierignore
 ├─ .prettierrc.yaml
-├─ README.md
 ├─ build
 │  ├─ entitlements.mac.plist
 │  ├─ icon.icns
@@ -51,6 +50,7 @@ electron-vite
 ├─ kill_electron.bat
 ├─ package-lock.json
 ├─ package.json
+├─ README.md
 ├─ resources
 │  ├─ icon.ico
 │  ├─ icon.png
@@ -61,17 +61,21 @@ electron-vite
 │  │  ├─ index.js
 │  │  ├─ menu.js
 │  │  ├─ tray.js
-│  │  └─ updater.js
+│  │  ├─ updater.js
+│  │  └─ windowOptions.js
 │  ├─ preload
 │  │  ├─ index.js
+│  │  ├─ popPreload.js
 │  │  └─ webviewPreload.js
 │  └─ renderer
 │     ├─ index.html
 │     └─ src
 │        ├─ App.vue
 │        ├─ assets
-│        │  └─ css
-│        │     └─ styles.css
+│        │  ├─ css
+│        │  │  └─ styles.css
+│        │  └─ images
+│        ├─ components
 │        └─ main.js
 └─ tools
    ├─ nsis-3.0.4.1.7z
@@ -172,6 +176,8 @@ async () => {
 }
 
 ```
+
+---
 
 ```JAVASCRIPT
 // main.js
