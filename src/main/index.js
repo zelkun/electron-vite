@@ -11,8 +11,20 @@ import { BrowserWinOpt, webviewOpt, popWindowOpt, preloadPaths } from './windowO
 let mainWindow = null;
 
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
+app.commandLine.appendSwitch('v', '1'); // 로깅 레벨 설정 (개발용)
 app.commandLine.appendSwitch('ignore-certificate-errors'); // 인증서 오류 무시 (개발용)
+app.commandLine.appendSwitch('enable-logging'); // 로깅 활성화 (개발용)
 app.commandLine.appendSwitch('disable-web-security'); // 웹 보안 비활성화 (개발용)
+app.commandLine.appendSwitch('disable-http-cache'); // HTTP 캐시 비활성화 (개발용)
+app.commandLine.appendSwitch('disable-features', 'SameSiteByDefaultCookies'); // SameSite 쿠키 비활성화 (개발용)
+app.commandLine.appendSwitch('disable-features', 'OutOfBlinkCors'); // CORS 비활성화 (개발용)
+app.commandLine.appendSwitch('disable-features', 'IsolateOrigins,site-per-process'); // 사이트 격리 비활성화 (개발용)
+app.commandLine.appendSwitch('disable-features', 'CrossSiteDocumentBlockingIfIsolating'); // 크로스 사이트 문서 차단 비활성화 (개발용)
+app.commandLine.appendSwitch('disable-features', 'CrossSiteDocumentBlockingAlways'); // 크로스 사이트 문서 차단 비활성화 (개발용)
+app.commandLine.appendSwitch('disable-features', 'CookiesWithoutSameSiteMustBeSecure'); // SameSite 쿠키 비활성화 (개발용)
+app.commandLine.appendSwitch('disable-features', 'AllowInsecureLocalhost'); // 로컬호스트에 대한 보안 예외 허용 (개발용)
+app.commandLine.appendSwitch('allow-insecure-localhost'); // 로컬호스트에 대한 보안 예외 허용 (개발용)
+
 // 인증서 오류 발생 시 무시 (개발용)
 app.on('certificate-error', (evt, webContents, url, err, cert, callback, isMainFrame) => {
 	evt.preventDefault();
@@ -39,8 +51,7 @@ function createWindow() {
 	});
 
 	mainWindow.webContents.setWindowOpenHandler((details) => {
-		console.log(`#### createWindow setWindowOpenHandler url: ${details.url}`);
-		// shell.openExternal(details.url);
+		shell.openExternal(details.url);
 		return { action: 'deny' };
 	});
 

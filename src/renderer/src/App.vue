@@ -85,11 +85,20 @@
 				<div class="bookmark-modal-body">
 					<div class="form-group">
 						<label for="bookmark-title">이름</label>
-						<input type="text" id="bookmark-title" v-model="editingBookmark.title" placeholder="북마크 이름" class="bookmark-input" ref="editTitleInput" @keyup.esc="closeBookmarkModal" />
+						<input
+							type="text"
+							id="bookmark-title"
+							v-model="editingBookmark.title"
+							placeholder="북마크 이름"
+							class="bookmark-input"
+							ref="editTitleInput"
+							@keyup.esc="closeBookmarkModal"
+							@keyup.enter="saveBookmark"
+						/>
 					</div>
 					<div class="form-group">
 						<label for="bookmark-url">URL</label>
-						<input type="text" id="bookmark-url" v-model="editingBookmark.url" placeholder="https://example.com" class="bookmark-input" />
+						<input type="text" id="bookmark-url" v-model="editingBookmark.url" placeholder="https://example.com" class="bookmark-input" @keyup.esc="closeBookmarkModal" @keyup.enter="saveBookmark" />
 					</div>
 				</div>
 				<div class="bookmark-modal-footer">
