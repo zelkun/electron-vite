@@ -477,7 +477,7 @@ export default {
 
 		async addBookmark() {
 			// 현재 URL이 비어있거나 about:blank인 경우 추가하지 않음
-			if (!this.currentUrl || this.currentUrl === 'about:blank') return;
+			// if (!this.currentUrl || this.currentUrl === 'about:blank') return;
 
 			// 북마크 바가 숨겨져 있으면 표시
 			if (!this.showBookmarkBar) {

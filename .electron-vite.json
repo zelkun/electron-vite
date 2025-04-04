@@ -1,14 +1,5 @@
 {
-  "bookmarks": [
-    {
-      "title": "조달청",
-      "url": "https://pps.go.kr"
-    },
-    {
-      "title": "조달청 | 고객감동을 전달하는 세/계/초/일/류/ 조달기관1",
-      "url": "https://pps.go.kr/kor/index.do"
-    }
-  ],
+  "bookmarks": [],
   "settings": {
     "defaultHomePage": "about:blank",
     "showBookmarkBar": true,
