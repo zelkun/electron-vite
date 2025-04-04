@@ -85,21 +85,16 @@ export function setupMenu(mainWindow) {
 					},
 				},
 				{ role: 'forceReload' },
-				// 개발 환경에서만 개발자 도구 메뉴 표시
-				...(is.dev
-					? [
-							{ role: 'toggleDevTools', accelerator: 'F12' },
-							{
-								label: '웹뷰 개발자 도구',
-								role: 'toggleWebviewDevTools',
-								accelerator: 'CommandOrControl+F12',
-								click: (menuItem, focusedWindow, keyEvt) => {
-									if (focusedWindow) focusedWindow.webContents.send('toggle-webview-devtools');
-								},
-							},
-							{ type: 'separator' },
-						]
-					: []),
+				{ role: 'toggleDevTools', accelerator: 'F12' },
+				{
+					label: '웹뷰 개발자 도구',
+					role: 'toggleWebviewDevTools',
+					accelerator: 'CommandOrControl+F12',
+					click: (menuItem, focusedWindow, keyEvt) => {
+						if (focusedWindow) focusedWindow.webContents.send('toggle-webview-devtools');
+					},
+				},
+				{ type: 'separator' },
 				{ type: 'separator' },
 				{ role: 'resetZoom' },
 				{ role: 'zoomIn' },
