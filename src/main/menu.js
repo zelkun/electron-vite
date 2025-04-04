@@ -26,12 +26,12 @@ export function setupMenu(mainWindow) {
 					accelerator: 'CommandOrControl+Shift+N',
 					click: (menuItem, focusedWindow, keyEvt) => {
 						const newWindow = new BrowserWindow(BrowserWinOpt);
-
 						if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
 							newWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
 						} else {
 							newWindow.loadFile(join(__dirname, '../renderer/index.html'));
 						}
+						newWindow.on('ready-to-show', newWindow.show);
 					},
 				},
 				{

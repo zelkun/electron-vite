@@ -10,6 +10,7 @@ import { BrowserWinOpt, webviewOpt, popWindowOpt, preloadPaths } from './windowO
 
 let mainWindow = null;
 
+process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
 app.commandLine.appendSwitch('ignore-certificate-errors'); // 인증서 오류 무시 (개발용)
 app.commandLine.appendSwitch('disable-web-security'); // 웹 보안 비활성화 (개발용)
 // 인증서 오류 발생 시 무시 (개발용)
@@ -38,7 +39,8 @@ function createWindow() {
 	});
 
 	mainWindow.webContents.setWindowOpenHandler((details) => {
-		shell.openExternal(details.url);
+		console.log(`#### createWindow setWindowOpenHandler url: ${details.url}`);
+		// shell.openExternal(details.url);
 		return { action: 'deny' };
 	});
 
@@ -85,17 +87,10 @@ app.whenReady().then(() => {
 		optimizer.watchWindowShortcuts(window);
 	});
 
-	// 메인 윈도우 생성
-	createWindow();
-
-	// 트레이 설정
-	setupTray(mainWindow);
-
-	// 메뉴 설정
-	setupMenu(mainWindow);
-
-	// 업데이터 설정
-	setupUpdater();
+	createWindow(); // 메인 윈도우 생성
+	setupTray(mainWindow); // 트레이 설정
+	setupMenu(mainWindow); // 메뉴 설정
+	setupUpdater(); // 업데이터 설정
 
 	app.on('activate', function () {
 		if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -193,20 +188,14 @@ ipcMain.handle('save-file', async (_, options) => {
 // 창 제어 이벤트 핸들러
 ipcMain.on('window-control-action', (evt, payload) => {
 	const currentWindow = BrowserWindow.fromWebContents(evt.sender);
-	if (payload.action === 'close-window') currentWindow?.close();
-	if (payload.action === 'minimize-window') currentWindow?.minimize();
-	if (payload.action === 'maximize-window') {
-		if (currentWindow?.isMaximized()) {
-			currentWindow.unmaximize();
-		} else {
-			currentWindow.maximize();
-		}
+	if (payload === 'close-window') currentWindow?.close();
+	if (payload === 'minimize-window') currentWindow?.minimize();
+	if (payload === 'maximize-window') {
+		if (currentWindow?.isMaximized()) currentWindow?.unmaximize();
+		else currentWindow?.maximize();
 	}
-	if (payload.action === 'fullscreen') {
-		if (currentWindow?.isFullScreen()) {
-			currentWindow.setFullScreen(false);
-		} else {
-			currentWindow.setFullScreen(true);
-		}
+	if (payload === 'fullscreen') {
+		if (currentWindow?.isFullScreen()) currentWindow?.setFullScreen(false);
+		else currentWindow?.setFullScreen(true);
 	}
 });
