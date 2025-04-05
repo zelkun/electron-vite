@@ -18,7 +18,8 @@
 		"build:win": "npm run build && electron-builder --win",
 		"build:mac": "npm run build && electron-builder --mac",
 		"build:linux": "npm run build && electron-builder --linux",
-		"release": "kill_electron.bat && npm run build && electron-builder -p always"
+		"release": "kill_electron.bat && npm run build && electron-builder -p always",
+		"release:mac": "npm run build && electron-builder -p always"
 	},
 	"build": {
 		"productName": "electron-vite",
@@ -28,7 +29,8 @@
 		"publish": [
 			{
 				"provider": "generic",
-				"url": "http://releases.electron.vite:9000"
+				"url-gitea": "http://releases.electron.vite:9000",
+				"url": "http://github.com/zelkun/electron-vite"
 			}
 		],
 		"extraFiles": [
