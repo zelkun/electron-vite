@@ -81,6 +81,7 @@ export function setupMenu(mainWindow) {
 					label: '새로고침',
 					accelerator: 'CommandOrControl+R',
 					click: (menuItem, focusedWindow, keyEvt) => {
+						console.log(`%csrc\main\menu.js:83 {refresh-page} focusedWindow`, 'color: #007acc;', focusedWindow);
 						if (focusedWindow) focusedWindow.webContents.send('refresh-page');
 					},
 				},
@@ -95,10 +96,30 @@ export function setupMenu(mainWindow) {
 					},
 				},
 				{ type: 'separator' },
-				{ type: 'separator' },
-				{ role: 'resetZoom' },
-				{ role: 'zoomIn' },
-				{ role: 'zoomOut' },
+				{
+					// role: 'resetZoom',
+					label: '원래 크기로',
+					accelerator: 'CommandOrControl + 0',
+					click: (menuItem, focusedWindow, keyEvt) => {
+						if (focusedWindow) focusedWindow.webContents.send('zoomCtrl', 'reset');
+					},
+				},
+				{
+					// role: 'zoomIn',
+					label: '확대',
+					accelerator: 'CommandOrControl + plus',
+					click: (menuItem, focusedWindow, keyEvt) => {
+						if (focusedWindow) focusedWindow.webContents.send('zoomCtrl', 'increase');
+					},
+				},
+				{
+					// role: 'zoomOut',
+					label: '축소',
+					accelerator: 'CommandOrControl + -',
+					click: (menuItem, focusedWindow, keyEvt) => {
+						if (focusedWindow) focusedWindow.webContents.send('zoomCtrl', 'decrease');
+					},
+				},
 				{ type: 'separator' },
 				{ role: 'togglefullscreen' },
 			],

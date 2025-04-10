@@ -155,9 +155,9 @@
 				{{ tabs[currentTabIndex]?.loading ? '로딩 중...' : '완료' }}
 			</div>
 			<div class="zoom-controls">
-				<button @click="decreaseZoom" class="zoom-btn">-</button>
-				<span>{{ zoomLevel }}%</span>
-				<button @click="increaseZoom" class="zoom-btn">+</button>
+				<button @click="zoomCtrl('decrease')" class="zoom-btn">-</button>
+				<span>{{ tabs[currentTabIndex]?.zoomLevel }}%</span>
+				<button @click="zoomCtrl('increase')" class="zoom-btn">+</button>
 			</div>
 		</div>
 	</div>
@@ -172,7 +172,6 @@ export default {
 			currentUrl: '',
 			canGoBack: false,
 			canGoForward: false,
-			zoomLevel: 100,
 			draggedTabIndex: null,
 			bookmarks: [],
 			showBookmarkBar: false,
@@ -313,6 +312,7 @@ export default {
 				title: '새 탭',
 				loading: false,
 				color: this.getRandomColor(),
+				zoomLevel: 100,
 			});
 			this.currentTabIndex = this.tabs.length - 1;
 			this.currentUrl = url;
@@ -351,7 +351,11 @@ export default {
 			}
 
 			// 웹뷰 상태 업데이트
-			this.setNavigationButtonsState(this.getWebview(index));
+			const webview = this.getWebview(index);
+			if (webview) {
+				webview.setZoomFactor(this.tabs[index].zoomLevel / 100);
+				this.setNavigationButtonsState(webview);
+			}
 		},
 		startLoading(index) {
 			this.tabs[index].loading = true;
@@ -369,20 +373,28 @@ export default {
 		updateTitle(event, index) {
 			this.tabs[index].title = event.title === 'about:blank' ? '새 탭' : event.title;
 		},
-		increaseZoom() {
+
+		zoomCtrl(action) {
 			const webview = this.getWebview();
-			if (webview && this.zoomLevel < 200) {
-				this.zoomLevel += 10;
-				webview.setZoomFactor(this.zoomLevel / 100);
+			const index = this.currentTabIndex;
+			if (action === 'reset') {
+				if (webview) {
+					this.tabs[index].zoomLevel = 100;
+					webview.setZoomFactor(1);
+				}
+			} else if (action === 'increase') {
+				if (webview && this.tabs[index].zoomLevel < 200) {
+					this.tabs[index].zoomLevel += 10;
+					webview.setZoomFactor(this.tabs[index].zoomLevel / 100);
+				}
+			} else if (action === 'decrease') {
+				if (webview && this.tabs[index].zoomLevel > 50) {
+					this.tabs[index].zoomLevel -= 10;
+					webview.setZoomFactor(this.tabs[index].zoomLevel / 100);
+				}
 			}
 		},
-		decreaseZoom() {
-			const webview = this.getWebview();
-			if (webview && this.zoomLevel > 50) {
-				this.zoomLevel -= 10;
-				webview.setZoomFactor(this.zoomLevel / 100);
-			}
-		},
+
 		getRandomColor() {
 			// 탭 색상 목록에서 선택
 			const colors = [
@@ -775,6 +787,11 @@ export default {
 			}
 		});
 
+		// Zoom 관련 이벤트 리스너
+		window.electronAPI.on('zoomCtrl', (action) => {
+			if (action) this.zoomCtrl(action); // reset, increase, decrease
+		});
+
 		window.electronAPI.on('add-bookmark', this.addBookmark);
 
 		// 탭 관련 이벤트 처리
@@ -831,9 +848,7 @@ export default {
 		});
 
 		window.electronAPI.on('navigatorCtrl', (action) => {
-			if (action == 'goBack') this.navigatorCtrl('goBack');
-			if (action == 'goForward') this.navigatorCtrl('goForward');
-			if (action == 'refresh') this.navigatorCtrl('refresh');
+			if (!action) this.navigatorCtrl(action); // goBack, goForward, refresh
 		});
 
 		// 창 크기 변경 감지
