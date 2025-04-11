@@ -7,7 +7,7 @@
   ],
   "settings": {
     "defaultHomePage": "about:blank",
-    "showBookmarkBar": true,
+    "showBookmarkBar": false,
     "theme": "light"
   }
 }
