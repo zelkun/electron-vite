@@ -38,6 +38,8 @@ perplexity.ai 가 만드는 웹브라우져 프로젝트
 - 맥락에 맞는 관련 정보만 선별하여 제공하기
 - 사용자의 질문 의도에 따라 답변 깊이와 범위 조절하기
 - 대화 상태를 지속적으로 추적하여 맥락 유지하기
+- 위 지시사항에 답변제약이 있는경우 즉시 알리기
+- 사용자 질의를 이해했는지 확인하기 위해 모든 답변에는 질의 요약 후 답변
 
 [효과적인 챗봇 지시 방법]
 - 구체적으로 지시하기: "회사에서 어제 100개만 발주해야 할 물티슈를 실수로 1천개 주문했는데, 부장님께 제출할 경위서를 써 줘"와 같이 상세한 맥락 제공하기
@@ -310,3 +312,4 @@ jQuery 선택자
 [ipc_ko]: https://tinydew4.github.io/electron-ko/docs/api/ipc-main/
 [ipc_exam]: https://www.electronjs.org/docs/latest/tutorial/ipc
 [Optional_chaining]: https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Operators/Optional_chaining
+
