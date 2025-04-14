@@ -34,6 +34,7 @@ app.on('certificate-error', (evt, webContents, url, err, cert, callback, isMainF
 function createWindow() {
 	// 메인 브라우저 윈도우 생성
 	mainWindow = new BrowserWindow(BrowserWinOpt);
+	mainWindow.windowType = 'main'; // 윈도우 타입 설정 (메인 윈도우)
 
 	/* CSP 설정 예시
 	session.defaultSession.webRequest.onHeadersReceived((details, callback) => {

@@ -1,13 +1,8 @@
 {
-  "bookmarks": [
-    {
-      "title": "NAVER",
-      "url": "https://www.naver.com/"
-    }
-  ],
-  "settings": {
-    "defaultHomePage": "about:blank",
-    "showBookmarkBar": false,
-    "theme": "light"
-  }
+	"bookmarks": [
+		{
+			"title": "NAVER",
+			"url": "https://www.naver.com/"
+		}
+	]
 }

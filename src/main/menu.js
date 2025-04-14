@@ -26,6 +26,8 @@ export function setupMenu(mainWindow) {
 					accelerator: 'CommandOrControl + Shift + N',
 					click: (menuItem, focusedWindow, keyEvt) => {
 						const newWindow = new BrowserWindow(BrowserWinOpt);
+						newWindow.windowType = 'main'; // 윈도우 타입 설정 (메인 윈도우)
+
 						if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
 							newWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
 						} else {
@@ -38,7 +40,9 @@ export function setupMenu(mainWindow) {
 					label: '탭 닫기',
 					accelerator: 'CommandOrControl + W',
 					click: (menuItem, focusedWindow, keyEvt) => {
-						if (focusedWindow) focusedWindow.webContents.send('close-current-tab');
+						// BrowserWindow 생성시 windowType을 설정함
+						if (focusedWindow?.windowType === 'main') focusedWindow.webContents.send('close-current-tab');
+						else focusedWindow.close(); // popup 윈도우인 경우 닫기
 					},
 				},
 				{ type: 'separator' },
@@ -81,8 +85,9 @@ export function setupMenu(mainWindow) {
 					label: '새로고침',
 					accelerator: 'CommandOrControl + R',
 					click: (menuItem, focusedWindow, keyEvt) => {
-						console.log(`%csrc\main\menu.js:83 {refresh-page} focusedWindow`, 'color: #007acc;', focusedWindow);
-						if (focusedWindow) focusedWindow.webContents.send('refresh-page');
+						// BrowserWindow 생성시 windowType을 설정함
+						if (focusedWindow?.windowType === 'main') focusedWindow.webContents.send('refresh-tab');
+						else focusedWindow?.webContents.reload(true); // popup 윈도우인 경우 강제 새로고침
 					},
 				},
 				{ role: 'forceReload' },

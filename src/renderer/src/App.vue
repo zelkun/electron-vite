@@ -815,6 +815,7 @@ export default {
 
 		// 탭 컨텍스트 메뉴 이벤트 리스너
 		window.electronAPI.on('refresh-tab', (index) => {
+			if (!index) index = this.currentTabIndex;
 			if (index === this.currentTabIndex) {
 				this.navigatorCtrl('refresh');
 			} else {
