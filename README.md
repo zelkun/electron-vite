@@ -76,12 +76,16 @@ electron-vite
 ├─ package-lock.json
 ├─ package.json
 ├─ README.md
+├─ ref
+│  ├─ promis.js
+│  └─ script.js
 ├─ resources
 │  ├─ icon.ico
 │  ├─ icon.png
 │  └─ icon.png.org
 ├─ src
 │  ├─ main
+│  │  ├─ commandLine.js
 │  │  ├─ config.js
 │  │  ├─ index.js
 │  │  ├─ menu.js
@@ -106,7 +110,6 @@ electron-vite
    ├─ nsis-3.0.4.1.7z
    ├─ nsis-resources-3.4.1.7z
    └─ winCodeSign-2.6.0.7z
-
 ```
 
 ## Recommended IDE Setup
@@ -312,4 +315,3 @@ jQuery 선택자
 [ipc_ko]: https://tinydew4.github.io/electron-ko/docs/api/ipc-main/
 [ipc_exam]: https://www.electronjs.org/docs/latest/tutorial/ipc
 [Optional_chaining]: https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Operators/Optional_chaining
-
