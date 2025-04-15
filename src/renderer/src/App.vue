@@ -37,14 +37,23 @@
 
 			<div class="address-bar">
 				<input type="text" v-model="currentUrl" @keyup.enter="navigate" placeholder="URL을 입력하세요" class="url-input" />
-				<button @click="navigate" class="go-btn">이동</button>
+				<!--<button @click="navigate" class="go-btn">이동</button>-->
 			</div>
 
 			<div class="browser-actions">
 				<button @click="addBookmark" class="action-btn">🔖</button>
 				<button @click="toggleBookmarkBar" class="action-btn" :class="{ active: showBookmarkBar }">📚</button>
+				<button @click="toggleSearchArea" class="action-btn search-icon" title="검색">🔍</button>
 				<button @click="showSettings" class="action-btn">⚙️</button>
 				<button @click="showMenu" class="action-btn">⋮</button>
+			</div>
+		</div>
+
+		<!-- 검색 영역 -->
+		<div class="search-area" v-if="showSearchArea">
+			<div class="search-area-container">
+				<input type="text" v-model="searchQuery" placeholder="검색어를 입력하세요" class="search-area-input" />
+				<button @click="performSearch" class="search-area-button">검색</button>
 			</div>
 		</div>
 
@@ -174,6 +183,7 @@ export default {
 			canGoForward: false,
 			draggedTabIndex: null,
 			bookmarks: [],
+			showSearchArea: true,
 			showBookmarkBar: false,
 			editingBookmarkIndex: -1,
 			editingBookmark: { title: '', url: '' },
@@ -447,6 +457,16 @@ export default {
 				}
 			} catch (error) {
 				console.error('설정 로드 오류:', error);
+			}
+		},
+
+		async toggleSearchArea() {
+			this.showSearchArea = !this.showSearchArea;
+			try {
+				await window.electronAPI.invoke('set-config-value', 'settings', 'searchBar', this.showSearchArea);
+			} catch (error) {
+				console.error('검색 바 설정 저장 오류:', error);
+				this.showErrorNotification('검색 바 저장하는 중 오류가 발생했습니다.');
 			}
 		},
 

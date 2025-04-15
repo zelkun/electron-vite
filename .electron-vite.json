@@ -1,6 +1,10 @@
 {
   "bookmarks": [
     {
+      "title": "Perplexity",
+      "url": "https://www.perplexity.ai/"
+    },
+    {
       "title": "NAVER",
       "url": "https://www.naver.com/"
     },
@@ -12,5 +16,9 @@
       "title": "네이트",
       "url": "https://www.nate.com/"
     }
-  ]
+  ],
+  "settings": {
+    "searchBar": true,
+    "showBookmarkBar": true
+  }
 }
