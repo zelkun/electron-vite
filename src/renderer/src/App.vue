@@ -222,6 +222,7 @@ export default {
 
 		// 웹뷰 네비게이션 버튼 클릭 메서드
 		navigatorCtrl(direction) {
+			console.log(`navigatorCtrl: ${direction}`);
 			const webview = this.getWebview();
 			if (webview) {
 				if (direction === 'goBack' && webview.canGoBack()) webview.goBack();
@@ -233,18 +234,9 @@ export default {
 
 		// 웹뷰 이벤트 리스너 설정 메서드 수정 - 참조 저장 추가
 		setupWebviewEventListeners(webview, index) {
+			console.log(`setupWebviewEventListeners for tab ${index}`);
 			// dom-ready 이벤트 리스너
 			webview._domReadyListener = () => {
-				webview.addEventListener('context-menu', (e, params) => {
-					window.electronAPI.send('show-webview-context-menu', {
-						x: e.clientX,
-						y: e.clientY,
-						linkURL: params.linkURL,
-						srcURL: params.srcURL,
-						isEditable: params.isEditable,
-						selectionText: params.selectionText,
-					});
-				});
 				this.setNavigationButtonsState(webview);
 			};
 			webview.addEventListener('dom-ready', webview._domReadyListener);
@@ -261,12 +253,20 @@ export default {
 			webview.addEventListener('did-fail-load', webview._failLoadListener);
 
 			// ipc-message 이벤트 리스너
-			webview._ipcMessageListener = (event) => {
-				console.log('Webview IPC message:', event.channel, event.args);
-				if (event.channel === 'webview-navigation') {
-					const direction = event.args[0];
-					if (direction === 'back') this.navigatorBtnClick('goBack');
-					if (direction === 'forward') this.navigatorBtnClick('goForward');
+			webview._ipcMessageListener = (evt) => {
+				console.log('Webview IPC message:', evt.channel, evt.args);
+				if (evt.channel === 'webview-navigation') {
+					const direction = evt.args[0];
+					if (direction === 'goBack') this.navigatorCtrl('goBack');
+					if (direction === 'goForward') this.navigatorCtrl('goForward');
+				}
+				if (evt.channel === 'show-webview-context-menu') {
+					const data = evt.args[0];
+					window.electronAPI.send('show-webview-context-menu', {
+						...data,
+						canGoBack: this.canGoBack,
+						canGoForward: this.canGoForward,
+					});
 				}
 			};
 			webview.addEventListener('ipc-message', webview._ipcMessageListener);
@@ -849,7 +849,7 @@ export default {
 		});
 
 		window.electronAPI.on('navigatorCtrl', (action) => {
-			if (!action) this.navigatorCtrl(action); // goBack, goForward, refresh
+			if (action) this.navigatorCtrl(action); // goBack, goForward, refresh
 		});
 
 		// 창 크기 변경 감지

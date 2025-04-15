@@ -1,8 +1,16 @@
 {
-	"bookmarks": [
-		{
-			"title": "NAVER",
-			"url": "https://www.naver.com/"
-		}
-	]
+  "bookmarks": [
+    {
+      "title": "NAVER",
+      "url": "https://www.naver.com/"
+    },
+    {
+      "title": "나라장터",
+      "url": "https://www.g2b.go.kr/"
+    },
+    {
+      "title": "네이트",
+      "url": "https://www.nate.com/"
+    }
+  ]
 }

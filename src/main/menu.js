@@ -229,7 +229,7 @@ export function setupMenu(mainWindow) {
 
 	// 탭 컨텍스트 메뉴 설정
 	ipcMain.on('show-tab-context-menu', (evt, data) => {
-		console.log('%csrc\main\menu.js:189 {show-tab-context-menu} data', 'color: #007acc;', data);
+		console.log('{show-tab-context-menu} data', data);
 		const { x, y, tabIndex } = data;
 		const sender = evt.sender;
 		const currentWindow = BrowserWindow.fromWebContents(sender);
@@ -275,8 +275,8 @@ export function setupMenu(mainWindow) {
 
 	// 웹뷰 컨텍스트 메뉴 설정
 	ipcMain.on('show-webview-context-menu', (evt, data) => {
-		console.log('%csrc\main\menu.js:235 {show-webview-context-menu} data', 'color: #007acc;', data);
-		const { x, y, linkURL, srcURL, isEditable, selectionText } = data;
+		console.log('{show-webview-context-menu} data', data);
+		const { x, y, linkURL, srcURL, isEditable, selectionText, canGoBack, canGoForward } = data;
 
 		const menuItems = [];
 		const sender = evt.sender;
@@ -363,14 +363,14 @@ export function setupMenu(mainWindow) {
 		menuItems.push(
 			{
 				label: '뒤로 가기',
-				enabled: mainWindow.webContents.navigationHistory.canGoBack(),
+				enabled: canGoBack,
 				click: (menuItem, focusedWindow, keyEvt) => {
 					if (focusedWindow) focusedWindow.webContents.send('navigatorCtrl', 'goBack');
 				},
 			},
 			{
 				label: '앞으로 가기',
-				enabled: mainWindow.webContents.navigationHistory.canGoForward(),
+				enabled: canGoForward,
 				click: (menuItem, focusedWindow, keyEvt) => {
 					if (focusedWindow) focusedWindow.webContents.send('navigatorCtrl', 'goForward');
 				},
