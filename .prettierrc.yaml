@@ -9,4 +9,3 @@ bracketSpacing: true
 bracketSameLine: false
 arrowParens: 'always'
 endOfLine: 'crlf'
-jsxBracketSameLine: true

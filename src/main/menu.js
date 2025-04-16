@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { Menu, ipcMain, BrowserWindow } from 'electron';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { BrowserWinOpt, webviewOpt, popWindowOpt, preloadPaths } from './windowOptions';
@@ -254,8 +255,6 @@ export function setupMenu(mainWindow) {
 					if (focusedWindow) focusedWindow.webContents.send('close-tab', tabIndex);
 				},
 			},
-
-			,
 		];
 		if (is.dev) {
 			menuItems.push(
@@ -331,9 +330,10 @@ export function setupMenu(mainWindow) {
 			menuItems.push(
 				{
 					label: '복사',
-					click: (menuItem, focusedWindow, keyEvt) => {
-						if (focusedWindow) focusedWindow.webContents.send('copy-to-clipboard', selectionText);
-					},
+					role: 'copy',
+					// click: (menuItem, focusedWindow, keyEvt) => {
+					// 	if (focusedWindow) focusedWindow.webContents.send('copy-to-clipboard', selectionText);
+					// },
 				},
 				{
 					label: '검색',

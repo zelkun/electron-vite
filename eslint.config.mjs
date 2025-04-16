@@ -11,7 +11,6 @@ export default [
 		rules: {
 			'vue/require-default-prop': 'off',
 			'vue/multi-word-component-names': 'off',
-			endOfLine: 'crlf',
 		},
 	},
 	eslintConfigPrettier,

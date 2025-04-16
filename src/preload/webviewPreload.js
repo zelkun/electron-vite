@@ -1,4 +1,4 @@
-const { ipcRenderer, contextBridge } = require('electron');
+import { ipcRenderer, contextBridge } from 'electron';
 
 console.log('Webview preload script loaded successfully!');
 // alert('webview preload script loaded successfully!')
