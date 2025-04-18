@@ -5,6 +5,8 @@ import { app } from 'electron';
  */
 export function setupCommandLine() {
 	process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
+	process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'; // 인증서 오류 무시 (개발용)
+	app.commandLine.appendSwitch('no-sandbox'); // 샌드박스 비활성화 (개발용)
 	app.commandLine.appendSwitch('v', '1'); // 로깅 레벨 설정 (개발용)
 	app.commandLine.appendSwitch('ignore-certificate-errors'); // 인증서 오류 무시 (개발용)
 	app.commandLine.appendSwitch('enable-logging'); // 로깅 활성화 (개발용)
