@@ -18,7 +18,7 @@
     }
   ],
   "settings": {
-    "searchBar": true,
+    "searchBar": false,
     "showBookmarkBar": true
   }
 }

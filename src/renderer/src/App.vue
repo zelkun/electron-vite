@@ -12,7 +12,7 @@
 				@dragstart="dragStart(index, $event)"
 				@dragover.prevent
 				@drop="drop(index, $event)"
-				@contextmenu.prevent="showTabContextMenu(index, $event)"
+				@contextmenu.prevent="showContextMenu('tab', index, $event)"
 			>
 				<span class="tab-title">{{ tab.title || '새 탭' }}</span>
 				<button @click.stop="closeTab(index)" class="close-tab">×</button>
@@ -41,9 +41,9 @@
 			</div>
 
 			<div class="browser-actions">
+				<button @click="toggleSearchArea" class="action-btn search-icon" title="검색" :class="{ active: showSearchArea }">🔍</button>
 				<button @click="addBookmark" class="action-btn">🔖</button>
 				<button @click="toggleBookmarkBar" class="action-btn" :class="{ active: showBookmarkBar }">📚</button>
-				<button @click="toggleSearchArea" class="action-btn search-icon" title="검색">🔍</button>
 				<button @click="showSettings" class="action-btn">⚙️</button>
 				<button @click="showMenu" class="action-btn">⋮</button>
 			</div>
@@ -73,7 +73,7 @@
 						@dragstart="dragStartBookmark(index, $event)"
 						@dragover.prevent
 						@drop="dropBookmark(index, $event)"
-						@contextmenu.prevent="showBookmarkContextMenu(index, $event)"
+						@contextmenu.prevent="showContextMenu('bookmark', index, $event)"
 					>
 						<button @click="navigateToBookmark(bookmark.url)" class="bookmark-link">
 							<span class="bookmark-favicon">🌐</span>
@@ -446,20 +446,6 @@ export default {
 			}
 		},
 
-		// 설정 로드 메서드
-		async loadSettings() {
-			try {
-				// 설정에서 북마크 바 표시 여부 가져오기
-				const showBookmarkBar = await window.electronAPI.invoke('get-config-value', 'settings', 'showBookmarkBar');
-				// null이나 undefined가 아니면 설정값 적용
-				if (showBookmarkBar !== null && showBookmarkBar !== undefined) {
-					this.showBookmarkBar = showBookmarkBar;
-				}
-			} catch (error) {
-				console.error('설정 로드 오류:', error);
-			}
-		},
-
 		async toggleSearchArea() {
 			this.showSearchArea = !this.showSearchArea;
 			try {
@@ -617,21 +603,12 @@ export default {
 			}
 		},
 
-		// 북마크 우클릭 메뉴
-		showBookmarkContextMenu(index, event) {
-			window.electronAPI.send('show-bookmark-context-menu', {
-				x: event.clientX,
-				y: event.clientY,
-				bookmarkIndex: index,
-			});
-		},
-
-		// 탭 컨텍스트 메뉴
-		showTabContextMenu(index, event) {
-			window.electronAPI.send('show-tab-context-menu', {
-				x: event.clientX,
-				y: event.clientY,
-				tabIndex: index,
+		showContextMenu(type, index, evt) {
+			window.electronAPI.send(`show-${type}-context-menu`, {
+				type: type,
+				x: evt.clientX,
+				y: evt.clientY,
+				[`${type}Index`]: index,
 			});
 		},
 
@@ -656,6 +633,7 @@ export default {
 					console.log('Image saved to:', result.path);
 				} else {
 					console.error('Failed to save image:', result.reason);
+					alert(result.reason);
 				}
 			} catch (error) {
 				console.error('Error saving image:', error);
@@ -740,12 +718,17 @@ export default {
 		async loadSettings() {
 			try {
 				const settings = await window.electronAPI.invoke('get-config-section', 'settings');
-				if (settings) this.showBookmarkBar = settings.showBookmarkBar || false;
+				if (settings) {
+					// 북마크 바 설정 적용
+					this.showBookmarkBar = settings.showBookmarkBar || false;
+
+					// 필요한 경우 추가 설정 적용
+					// this.otherSetting = settings.otherSetting || defaultValue;
+				}
 			} catch (error) {
 				console.error('설정 로드 오류:', error);
 			}
 		},
-
 		// 설정 저장 메서드
 		async saveSettings() {
 			try {
@@ -758,27 +741,35 @@ export default {
 			}
 		},
 
+		setupEventHandler(evtNm, handler) {
+			window.electronAPI.on(evtNm, handler);
+			return () => {
+				window.electronAPI.removeListener(evtNm, handler);
+			};
+		},
+
 		handleResize() {
 			// 창 크기 변경 시 필요한 업데이트 수행
 			// tabWidth computed 속성이 자동으로 재계산됨
 		},
 	},
 	async mounted() {
-		// 설정 로드
-		await this.loadSettings();
+		await this.loadSettings(); // 설정 로드
 
-		// 북마크 로드
-		await this.loadBookmarks();
+		await this.loadBookmarks(); // 북마크 로드
 
 		// 첫 번째 탭 생성
 		const homePage = (await window.electronAPI.invoke('get-config-value', 'settings', 'defaultHomePage')) || 'about:blank';
 		this.addNewTab(homePage);
 
-		// 북마크 컨텍스트 메뉴 이벤트 리스너
-		window.electronAPI.on('toggle-bookmark-bar', this.toggleBookmarkBar);
+		// Zoom 관련 이벤트 리스너
+		this.setupEventHandler('zoomCtrl', this.zoomCtrl); // reset, increase, decrease
+
+		this.setupEventHandler('add-bookmark', this.addBookmark);
+		this.setupEventHandler('toggle-bookmark-bar', this.toggleBookmarkBar);
 
 		// 웹뷰 개발자 도구 이벤트 리스너
-		window.electronAPI.on('toggle-webview-devtools', (tabIndex) => {
+		this.setupEventHandler('toggle-webview-devtools', (tabIndex) => {
 			// tabIndex가 제공되면 해당 탭의 웹뷰 사용, 아니면 현재 탭 사용
 			const index = typeof tabIndex === 'number' ? tabIndex : this.currentTabIndex;
 			const webview = this.getWebview(index);
@@ -789,7 +780,7 @@ export default {
 		});
 
 		// 북마크 컨텍스트 메뉴 이벤트 리스너
-		window.electronAPI.on('bookmark-context-menu-action', (action, index) => {
+		this.setupEventHandler('bookmark-context-menu-action', (action, index) => {
 			switch (action) {
 				case 'edit':
 					this.openEditBookmarkModal(index);
@@ -807,15 +798,8 @@ export default {
 			}
 		});
 
-		// Zoom 관련 이벤트 리스너
-		window.electronAPI.on('zoomCtrl', (action) => {
-			if (action) this.zoomCtrl(action); // reset, increase, decrease
-		});
-
-		window.electronAPI.on('add-bookmark', this.addBookmark);
-
 		// 탭 관련 이벤트 처리
-		window.electronAPI.on('create-new-tab', (url) => {
+		this.setupEventHandler('create-new-tab', (url) => {
 			this.addNewTab();
 			if (url) {
 				this.currentUrl = url;
@@ -823,18 +807,16 @@ export default {
 			}
 		});
 
-		window.electronAPI.on('navigate-to-url', (url) => {
+		this.setupEventHandler('navigate-to-url', (url) => {
 			this.currentUrl = url;
 			this.navigate();
 		});
 
-		window.electronAPI.on('close-current-tab', () => this.closeTab(this.currentTabIndex));
-
-		// 탭 드래그 앤 드롭 이벤트 리스너
-		window.electronAPI.on('show-page-search', this.showPageSearch);
+		this.setupEventHandler('close-current-tab', () => this.closeTab(this.currentTabIndex));
+		this.setupEventHandler('show-page-search', this.showPageSearch);
 
 		// 탭 컨텍스트 메뉴 이벤트 리스너
-		window.electronAPI.on('refresh-tab', (index) => {
+		this.setupEventHandler('refresh-tab', (index) => {
 			if (!index) index = this.currentTabIndex;
 			if (index === this.currentTabIndex) {
 				this.navigatorCtrl('refresh');
@@ -846,31 +828,20 @@ export default {
 			}
 		});
 
-		window.electronAPI.on('close-tab', (index) => {
-			this.closeTab(index);
-		});
+		this.setupEventHandler('close-tab', this.closeTab);
 
 		// 컨텍스트 메뉴 액션 이벤트 리스너
-		window.electronAPI.on('copy-to-clipboard', (text) => {
-			this.copyToClipboard(text);
-		});
+		this.setupEventHandler('copy-to-clipboard', this.copyToClipboard);
 
-		window.electronAPI.on('open-link-in-new-tab', (url) => {
+		this.setupEventHandler('open-link-in-new-tab', (url) => {
 			this.addNewTab();
 			this.currentUrl = url;
 			this.navigate();
 		});
 
-		window.electronAPI.on('save-image', (url) => {
-			this.saveImage(url);
-		});
-		window.electronAPI.on('search-text', (text) => {
-			this.searchGoogle(text);
-		});
-
-		window.electronAPI.on('navigatorCtrl', (action) => {
-			if (action) this.navigatorCtrl(action); // goBack, goForward, refresh
-		});
+		this.setupEventHandler('save-image', this.saveImage);
+		this.setupEventHandler('search-text', this.searchGoogle);
+		this.setupEventHandler('navigatorCtrl', this.navigatorCtrl); // goBack, goForward, refresh
 
 		// 창 크기 변경 감지
 		window.addEventListener('resize', this.handleResize);

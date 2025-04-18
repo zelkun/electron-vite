@@ -200,6 +200,7 @@ export function setupMenu(mainWindow) {
 
 	// 북마크 컨텍스트 메뉴 설정
 	ipcMain.on('show-bookmark-context-menu', (evt, data) => {
+		console.log('{show-bookmark-context-menu} data', data);
 		const { x, y, bookmarkIndex } = data;
 		const sender = evt.sender;
 		const currentWindow = BrowserWindow.fromWebContents(sender);
