@@ -633,7 +633,6 @@ export default {
 					console.log('Image saved to:', result.path);
 				} else {
 					console.error('Failed to save image:', result.reason);
-					alert(result.reason);
 				}
 			} catch (error) {
 				console.error('Error saving image:', error);

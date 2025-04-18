@@ -1,12 +1,13 @@
 import { app, shell, BrowserWindow, ipcMain, session, clipboard, dialog } from 'electron';
-import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
+import { join } from 'path';
 import { setupMenu } from './menu';
 import { setupTray } from './tray';
 import { setupUpdater } from './updater';
 import { setupCommandLine, parseCommandLineArgs, hasSwitch, getSwitchValue } from './commandLine';
 import { getConfigSection, saveConfigSection, getConfigValue, setConfigValue } from './config';
 import fs from 'fs';
+// import fetch from 'electron-fetch';
 import { BrowserWinOpt, webviewOpt, popWindowOpt, preloadPaths } from './windowOptions';
 
 setupCommandLine(); // 보안관련 설정 해제
