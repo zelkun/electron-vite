@@ -5,64 +5,64 @@
 			<div
 				v-for="(tab, index) in tabs"
 				:key="index"
-				@click="switchTab(index)"
 				:class="['tab', { active: currentTabIndex === index }]"
 				:style="{ borderTop: `3px solid ${tab.color}`, width: tabWidth }"
 				draggable="true"
+				@click="switchTab(index)"
 				@dragstart="dragStart(index, $event)"
 				@dragover.prevent
 				@drop="drop(index, $event)"
 				@contextmenu.prevent="showContextMenu('tab', index, $event)"
 			>
 				<span class="tab-title">{{ tab.title || '새 탭' }}</span>
-				<button @click.stop="closeTab(index)" class="close-tab">×</button>
+				<button class="close-tab" @click.stop="closeTab(index)">×</button>
 			</div>
-			<button @click="addNewTab" class="add-tab">+</button>
+			<button class="add-tab" @click="addNewTab">+</button>
 
 			<div class="window-controls">
-				<button @click="windowCtrlBtnClick('minimize-window')" class="window-control minimize-btn" title="최소화">─</button>
-				<button @click="windowCtrlBtnClick('maximize-window')" class="window-control maximize-btn" title="최대화">□</button>
-				<button @click="windowCtrlBtnClick('close-window')" class="window-control close-btn" title="닫기">×</button>
+				<button title="최소화" class="window-control minimize-btn" @click="windowCtrlBtnClick('minimize-window')">─</button>
+				<button title="최대화" class="window-control maximize-btn" @click="windowCtrlBtnClick('maximize-window')">□</button>
+				<button title="닫기" class="window-control close-btn" @click="windowCtrlBtnClick('close-window')">×</button>
 			</div>
 		</div>
 
 		<!-- 주소창 및 네비게이션 영역 -->
 		<div class="browser-toolbar">
 			<div class="navigation-buttons">
-				<button @click="navigatorCtrl('goBack')" :disabled="!canGoBack" class="nav-btn">◀</button>
-				<button @click="navigatorCtrl('goForward')" :disabled="!canGoForward" class="nav-btn">▶</button>
-				<button @click="navigatorCtrl('refresh')" class="nav-btn">↻</button>
-				<button @click="navigatorCtrl('goHome')" class="nav-btn">🏠</button>
+				<button :disabled="!canGoBack" class="nav-btn" @click="navigatorCtrl('goBack')">◀</button>
+				<button :disabled="!canGoForward" class="nav-btn" @click="navigatorCtrl('goForward')">▶</button>
+				<button class="nav-btn" @click="navigatorCtrl('refresh')">↻</button>
+				<button class="nav-btn" @click="navigatorCtrl('goHome')">🏠</button>
 			</div>
 
 			<div class="address-bar">
-				<input type="text" v-model="currentUrl" @keyup.enter="navigate" placeholder="URL을 입력하세요" class="url-input" />
+				<input v-model="currentUrl" type="text" placeholder="URL을 입력하세요" class="url-input" @keyup.enter="navigate" />
 				<!--<button @click="navigate" class="go-btn">이동</button>-->
 			</div>
 
 			<div class="browser-actions">
-				<button @click="toggleSearchArea" class="action-btn search-icon" title="검색" :class="{ active: showSearchArea }">🔍</button>
-				<button @click="addBookmark" class="action-btn">🔖</button>
-				<button @click="toggleBookmarkBar" class="action-btn" :class="{ active: showBookmarkBar }">📚</button>
-				<button @click="showSettings" class="action-btn">⚙️</button>
-				<button @click="showMenu" class="action-btn">⋮</button>
+				<button class="action-btn search-icon" title="검색" :class="{ active: showSearchArea }" @click="toggleSearchArea">🔍</button>
+				<button class="action-btn" @click="addBookmark">🔖</button>
+				<button class="action-btn" :class="{ active: showBookmarkBar }" @click="toggleBookmarkBar">📚</button>
+				<button class="action-btn" @click="showSettings">⚙️</button>
+				<button class="action-btn" @click="showMenu">⋮</button>
 			</div>
 		</div>
 
 		<!-- 검색 영역 -->
-		<div class="search-area" v-if="showSearchArea">
+		<div v-if="showSearchArea" class="search-area">
 			<div class="search-area-container">
-				<input type="text" v-model="searchQuery" placeholder="검색어를 입력하세요" class="search-area-input" />
-				<button @click="performSearch" class="search-area-button">검색</button>
+				<input type="text" placeholder="검색어를 입력하세요" class="search-area-input" />
+				<button class="search-area-button" @click="performSearch">검색</button>
 			</div>
 		</div>
 
 		<!-- 북마크 바 -->
-		<div class="bookmark-bar" v-if="showBookmarkBar">
+		<div v-if="showBookmarkBar" class="bookmark-bar">
 			<div class="bookmark-items">
 				<div v-if="bookmarks.length === 0" class="bookmark-empty">
 					<span>북마크가 없습니다.</span>
-					<button @click="addBookmark" class="bookmark-add-btn">북마크 추가</button>
+					<button class="bookmark-add-btn" @click="addBookmark">북마크 추가</button>
 				</div>
 				<template v-else>
 					<div
@@ -75,7 +75,7 @@
 						@drop="dropBookmark(index, $event)"
 						@contextmenu.prevent="showContextMenu('bookmark', index, $event)"
 					>
-						<button @click="navigateToBookmark(bookmark.url)" class="bookmark-link">
+						<button class="bookmark-link" @click="navigateToBookmark(bookmark.url)">
 							<span class="bookmark-favicon">🌐</span>
 							<span class="bookmark-title">{{ bookmark.title }}</span>
 						</button>
@@ -85,55 +85,55 @@
 		</div>
 
 		<!-- 북마크 편집 모달 -->
-		<div class="bookmark-modal" v-if="showBookmarkEditModal">
+		<div v-if="showBookmarkEditModal" class="bookmark-modal">
 			<div class="bookmark-modal-content">
 				<div class="bookmark-modal-header">
 					<h3>{{ isNewBookmark ? '북마크 추가' : '북마크 편집' }}</h3>
-					<button @click="closeBookmarkModal" class="modal-close-btn">×</button>
+					<button class="modal-close-btn" @click="closeBookmarkModal">×</button>
 				</div>
 				<div class="bookmark-modal-body">
 					<div class="form-group">
 						<label for="bookmark-title">이름</label>
 						<input
-							type="text"
 							id="bookmark-title"
+							ref="editTitleInput"
 							v-model="editingBookmark.title"
+							type="text"
 							placeholder="북마크 이름"
 							class="bookmark-input"
-							ref="editTitleInput"
 							@keyup.esc="closeBookmarkModal"
 							@keyup.enter="saveBookmark"
 						/>
 					</div>
 					<div class="form-group">
 						<label for="bookmark-url">URL</label>
-						<input type="text" id="bookmark-url" v-model="editingBookmark.url" placeholder="https://example.com" class="bookmark-input" @keyup.esc="closeBookmarkModal" @keyup.enter="saveBookmark" />
+						<input id="bookmark-url" v-model="editingBookmark.url" type="text" placeholder="https://example.com" class="bookmark-input" @keyup.esc="closeBookmarkModal" @keyup.enter="saveBookmark" />
 					</div>
 				</div>
 				<div class="bookmark-modal-footer">
-					<button @click="deleteBookmark" v-if="!isNewBookmark" class="bookmark-btn delete-btn">삭제</button>
+					<button v-if="!isNewBookmark" class="bookmark-btn delete-btn" @click="deleteBookmark">삭제</button>
 					<div class="modal-actions">
-						<button @click="closeBookmarkModal" class="bookmark-btn cancel-btn">취소</button>
-						<button @click="saveBookmark" class="bookmark-btn save-btn">저장</button>
+						<button class="bookmark-btn cancel-btn" @click="closeBookmarkModal">취소</button>
+						<button class="bookmark-btn save-btn" @click="saveBookmark">저장</button>
 					</div>
 				</div>
 			</div>
 		</div>
 
 		<!-- 페이지 검색 UI -->
-		<div class="search-bar" v-if="showSearch">
+		<div v-if="showSearch" class="search-bar">
 			<div class="search-input-container">
-				<input id="search-input" type="text" v-model="searchText" @keyup.enter="findInPage" @keyup.esc="closeSearch" placeholder="페이지 내 검색" ref="searchInput" class="search-input" />
-				<div class="search-counter" v-if="searchResults.matches > 0">{{ searchResults.activeMatchOrdinal }}/{{ searchResults.matches }}</div>
+				<input id="search-input" ref="searchInput" v-model="searchText" type="text" placeholder="페이지 내 검색" class="search-input" @keyup.enter="findInPage" @keyup.esc="closeSearch" />
+				<div v-if="searchResults.matches > 0" class="search-counter">{{ searchResults.activeMatchOrdinal }}/{{ searchResults.matches }}</div>
 			</div>
 			<div class="search-buttons">
-				<button @click="findPrevious" class="search-btn" title="이전">
+				<button class="search-btn" title="이전" @click="findPrevious">
 					<span class="nav-icon">▲</span>
 				</button>
-				<button @click="findNext" class="search-btn" title="다음">
+				<button class="search-btn" title="다음" @click="findNext">
 					<span class="nav-icon">▼</span>
 				</button>
-				<button @click="closeSearch" class="search-btn close-btn" title="닫기">
+				<button class="search-btn close-btn" title="닫기" @click="closeSearch">
 					<span>×</span>
 				</button>
 			</div>
@@ -143,14 +143,14 @@
 		<div class="webview-container">
 			<webview
 				v-for="(tab, index) in tabs"
-				:key="index"
 				:id="`webview-${index}`"
+				:key="index"
 				:src="tab.url"
 				:style="{ display: currentTabIndex === index ? 'flex' : 'none' }"
 				class="webview"
 				webpreferences="nativeWindowOption=true"
 				allowpopups
-				nodeIntegration
+				node-integration
 				@did-start-loading="startLoading(index)"
 				@did-stop-loading="stopLoading(index)"
 				@did-navigate="updateUrl($event, index)"
@@ -164,9 +164,9 @@
 				{{ tabs[currentTabIndex]?.loading ? '로딩 중...' : '완료' }}
 			</div>
 			<div class="zoom-controls">
-				<button @click="zoomCtrl('decrease')" class="zoom-btn">-</button>
+				<button class="zoom-btn" @click="zoomCtrl('decrease')">-</button>
 				<span>{{ tabs[currentTabIndex]?.zoomLevel }}%</span>
-				<button @click="zoomCtrl('increase')" class="zoom-btn">+</button>
+				<button class="zoom-btn" @click="zoomCtrl('increase')">+</button>
 			</div>
 		</div>
 	</div>
@@ -196,6 +196,115 @@ export default {
 			foundInPageListener: null,
 		};
 	},
+	computed: {
+		// 현재 탭의 URL
+		currentTabUrl() {
+			return this.tabs[this.currentTabIndex]?.url || '';
+		},
+		tabWidth() {
+			// 브라우저 너비에서 추가 버튼과 종료 버튼 너비를 제외한 공간
+			const availableWidth = window.innerWidth - 100;
+			// 최소 60px, 최대 150px 사이에서 탭 너비 계산 (기존 100px, 200px에서 축소)
+			const calculatedWidth = Math.min(150, Math.max(60, availableWidth / this.tabs.length));
+			return `${calculatedWidth}px`;
+		},
+	},
+	beforeUnmount() {
+		window.removeEventListener('resize', this.handleResize);
+	},
+	async mounted() {
+		await this.loadSettings(); // 설정 로드
+
+		await this.loadBookmarks(); // 북마크 로드
+
+		// 첫 번째 탭 생성
+		const homePage = (await window.electronAPI.invoke('get-config-value', 'settings', 'defaultHomePage')) || 'about:blank';
+		this.addNewTab(homePage);
+
+		// Zoom 관련 이벤트 리스너
+		this.setupEventHandler('zoomCtrl', this.zoomCtrl); // reset, increase, decrease
+
+		this.setupEventHandler('add-bookmark', this.addBookmark);
+		this.setupEventHandler('toggle-bookmark-bar', this.toggleBookmarkBar);
+
+		// 웹뷰 개발자 도구 이벤트 리스너
+		this.setupEventHandler('toggle-webview-devtools', (tabIndex) => {
+			// tabIndex가 제공되면 해당 탭의 웹뷰 사용, 아니면 현재 탭 사용
+			const index = typeof tabIndex === 'number' ? tabIndex : this.currentTabIndex;
+			const webview = this.getWebview(index);
+			if (webview) {
+				if (webview.isDevToolsOpened()) webview.closeDevTools();
+				else webview.openDevTools();
+			}
+		});
+
+		// 북마크 컨텍스트 메뉴 이벤트 리스너
+		this.setupEventHandler('bookmark-context-menu-action', (action, index) => {
+			switch (action) {
+				case 'edit':
+					this.openEditBookmarkModal(index);
+					break;
+				case 'delete':
+					this.editingBookmarkIndex = index;
+					this.deleteBookmark();
+					break;
+				case 'open-in-new-tab':
+					this.addNewTab();
+					this.currentUrl = this.bookmarks[index].url;
+					this.navigate();
+					break;
+			}
+		});
+
+		// 탭 관련 이벤트 처리
+		this.setupEventHandler('create-new-tab', (url) => {
+			this.addNewTab();
+			if (url) {
+				this.currentUrl = url;
+				this.navigate();
+			}
+		});
+
+		this.setupEventHandler('navigate-to-url', (url) => {
+			this.currentUrl = url;
+			this.navigate();
+		});
+
+		this.setupEventHandler('close-current-tab', () => this.closeTab(this.currentTabIndex));
+		this.setupEventHandler('show-page-search', this.showPageSearch);
+
+		// 탭 컨텍스트 메뉴 이벤트 리스너
+		this.setupEventHandler('refresh-tab', (index) => {
+			if (!index) index = this.currentTabIndex;
+			if (index === this.currentTabIndex) {
+				this.navigatorCtrl('refresh');
+			} else {
+				const webview = this.getWebview(index);
+				if (webview) {
+					webview.reload();
+				}
+			}
+		});
+
+		this.setupEventHandler('close-tab', this.closeTab);
+
+		// 컨텍스트 메뉴 액션 이벤트 리스너
+		this.setupEventHandler('copy-to-clipboard', this.copyToClipboard);
+
+		this.setupEventHandler('open-link-in-new-tab', (url) => {
+			this.addNewTab();
+			this.currentUrl = url;
+			this.navigate();
+		});
+
+		this.setupEventHandler('save-image', this.saveImage);
+		this.setupEventHandler('search-text', this.searchGoogle);
+		this.setupEventHandler('navigatorCtrl', this.navigatorCtrl); // goBack, goForward, refresh
+
+		// 창 크기 변경 감지
+		window.addEventListener('resize', this.handleResize);
+	},
+
 	methods: {
 		// 에러 알림 메서드 추가
 		showErrorNotification(message) {
@@ -426,6 +535,8 @@ export default {
 			this.draggedTabIndex = index;
 			event.dataTransfer.effectAllowed = 'move';
 		},
+
+		/* eslint-disable no-unused-vars */
 		drop(index, event) {
 			if (this.draggedTabIndex !== null) {
 				// 탭 순서 변경
@@ -750,116 +861,6 @@ export default {
 		handleResize() {
 			// 창 크기 변경 시 필요한 업데이트 수행
 			// tabWidth computed 속성이 자동으로 재계산됨
-		},
-	},
-	async mounted() {
-		await this.loadSettings(); // 설정 로드
-
-		await this.loadBookmarks(); // 북마크 로드
-
-		// 첫 번째 탭 생성
-		const homePage = (await window.electronAPI.invoke('get-config-value', 'settings', 'defaultHomePage')) || 'about:blank';
-		this.addNewTab(homePage);
-
-		// Zoom 관련 이벤트 리스너
-		this.setupEventHandler('zoomCtrl', this.zoomCtrl); // reset, increase, decrease
-
-		this.setupEventHandler('add-bookmark', this.addBookmark);
-		this.setupEventHandler('toggle-bookmark-bar', this.toggleBookmarkBar);
-
-		// 웹뷰 개발자 도구 이벤트 리스너
-		this.setupEventHandler('toggle-webview-devtools', (tabIndex) => {
-			// tabIndex가 제공되면 해당 탭의 웹뷰 사용, 아니면 현재 탭 사용
-			const index = typeof tabIndex === 'number' ? tabIndex : this.currentTabIndex;
-			const webview = this.getWebview(index);
-			if (webview) {
-				if (webview.isDevToolsOpened()) webview.closeDevTools();
-				else webview.openDevTools();
-			}
-		});
-
-		// 북마크 컨텍스트 메뉴 이벤트 리스너
-		this.setupEventHandler('bookmark-context-menu-action', (action, index) => {
-			switch (action) {
-				case 'edit':
-					this.openEditBookmarkModal(index);
-					break;
-				case 'delete':
-					this.editingBookmarkIndex = index;
-					this.deleteBookmark();
-					break;
-				case 'open-in-new-tab':
-					const url = this.bookmarks[index].url;
-					this.addNewTab();
-					this.currentUrl = url;
-					this.navigate();
-					break;
-			}
-		});
-
-		// 탭 관련 이벤트 처리
-		this.setupEventHandler('create-new-tab', (url) => {
-			this.addNewTab();
-			if (url) {
-				this.currentUrl = url;
-				this.navigate();
-			}
-		});
-
-		this.setupEventHandler('navigate-to-url', (url) => {
-			this.currentUrl = url;
-			this.navigate();
-		});
-
-		this.setupEventHandler('close-current-tab', () => this.closeTab(this.currentTabIndex));
-		this.setupEventHandler('show-page-search', this.showPageSearch);
-
-		// 탭 컨텍스트 메뉴 이벤트 리스너
-		this.setupEventHandler('refresh-tab', (index) => {
-			if (!index) index = this.currentTabIndex;
-			if (index === this.currentTabIndex) {
-				this.navigatorCtrl('refresh');
-			} else {
-				const webview = this.getWebview(index);
-				if (webview) {
-					webview.reload();
-				}
-			}
-		});
-
-		this.setupEventHandler('close-tab', this.closeTab);
-
-		// 컨텍스트 메뉴 액션 이벤트 리스너
-		this.setupEventHandler('copy-to-clipboard', this.copyToClipboard);
-
-		this.setupEventHandler('open-link-in-new-tab', (url) => {
-			this.addNewTab();
-			this.currentUrl = url;
-			this.navigate();
-		});
-
-		this.setupEventHandler('save-image', this.saveImage);
-		this.setupEventHandler('search-text', this.searchGoogle);
-		this.setupEventHandler('navigatorCtrl', this.navigatorCtrl); // goBack, goForward, refresh
-
-		// 창 크기 변경 감지
-		window.addEventListener('resize', this.handleResize);
-	},
-	beforeDestroy() {
-		window.removeEventListener('resize', this.handleResize);
-	},
-
-	computed: {
-		// 현재 탭의 URL
-		currentTabUrl() {
-			return this.tabs[this.currentTabIndex]?.url || '';
-		},
-		tabWidth() {
-			// 브라우저 너비에서 추가 버튼과 종료 버튼 너비를 제외한 공간
-			const availableWidth = window.innerWidth - 100;
-			// 최소 60px, 최대 150px 사이에서 탭 너비 계산 (기존 100px, 200px에서 축소)
-			const calculatedWidth = Math.min(150, Math.max(60, availableWidth / this.tabs.length));
-			return `${calculatedWidth}px`;
 		},
 	},
 };
