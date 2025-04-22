@@ -1,11 +1,22 @@
 import { app, shell, BrowserWindow, ipcMain, session, clipboard, dialog } from 'electron';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { join } from 'path';
+import log from 'electron-log/main';
 import fs from 'fs';
 import os from 'os';
 
 // 설정 파일 경로
 const configPath = join(is.dev ? app.getAppPath() : os.homedir(), '.electron-vite.json');
+
+const logFormat = `[{processType}:{logId}:{scope}][{level}][{h}:{i}:{s}]]{text}`; // 로그 포맷 설정
+// log.transports.file.file = logPath; // 로그 파일 경로 설정
+log.transports.console.level = 'debug'; // 콘솔 로그 레벨 설정
+log.transports.console.format = logFormat; // 콘솔 로그 포맷 설정
+// log.transports.file.level = isDev ? 'debug' : 'info'; // 로그 레벨 설정
+// log.transports.file.format = logFormat; // 파일 로그 포맷 설정
+
+// 개발 모드 체크
+export const isDev = process.argv.includes('dev') || process.env.NODE_ENV === 'development'; // || is.dev;
 
 // 기본 설정
 const defaultConfig = {
@@ -25,7 +36,7 @@ export function loadConfig() {
 			return JSON.parse(data);
 		}
 	} catch (error) {
-		console.error('설정 파일 로드 오류:', error);
+		log.error('설정 파일 로드 오류:', error);
 	}
 	return { ...defaultConfig };
 }
@@ -36,7 +47,7 @@ export function saveConfig(config) {
 		fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
 		return true;
 	} catch (error) {
-		console.error('설정 파일 저장 오류:', error);
+		log.error('설정 파일 저장 오류:', error);
 		return false;
 	}
 }

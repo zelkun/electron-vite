@@ -4,16 +4,18 @@ import { join } from 'path';
 import { setupMenu } from './menu';
 import { setupTray } from './tray';
 import { setupUpdater } from './updater';
+import { setupIpcHandlers } from './ipcHandlers';
+import { isDev } from './config';
 import { setupCommandLine, parseCommandLineArgs, hasSwitch, getSwitchValue } from './commandLine';
-import { getConfigSection, saveConfigSection, getConfigValue, setConfigValue } from './config';
-import fs from 'fs';
 import { BrowserWinOpt, webviewOpt, popWindowOpt, preloadPaths } from './windowOptions';
+import log from 'electron-log/main';
 
 setupCommandLine(); // 보안관련 설정 해제
 
 let mainWindow = null;
 
 function createWindow() {
+	log.info(`## createWindow`);
 	// 메인 브라우저 윈도우 생성
 	mainWindow = new BrowserWindow(BrowserWinOpt);
 	mainWindow.windowType = 'main'; // 윈도우 타입 설정 (메인 윈도우)
@@ -45,30 +47,10 @@ function createWindow() {
 		mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
 	}
 
-	// 설정 관련 IPC 핸들러 설정
-	ipcMain.handle('get-config-section', (_, section) => {
-		return getConfigSection(section);
-	});
-
-	ipcMain.handle('save-config-section', (_, section, data) => {
-		return saveConfigSection(section, data);
-	});
-
-	ipcMain.handle('get-config-value', (_, section, key) => {
-		return getConfigValue(section, key);
-	});
-
-	ipcMain.handle('set-config-value', (_, section, key, value) => {
-		return setConfigValue(section, key, value);
-	});
-
-	// 북마크 관련 IPC 핸들러 (이전 방식과 호환성 유지)
-	ipcMain.handle('get-bookmarks', () => {
-		return getConfigSection('bookmarks');
-	});
-
-	ipcMain.handle('save-bookmarks', (_, bookmarks) => {
-		return saveConfigSection('bookmarks', bookmarks);
+	setupIpcHandlers(); // IPC 핸들러 설정
+	mainWindow.webContents.on('console-message', (evt, level, message, line, sourceId) => {
+		const levels = ['verbose', 'info', 'warning', 'error'];
+		log.debug(`[${mainWindow.windowType} ${levels[level]}:${line}:${sourceId}]: ${message}`);
 	});
 }
 
@@ -93,17 +75,17 @@ app.whenReady().then(() => {
 
 // 웹뷰 생성 시 preload 스크립트 설정
 app.on('web-contents-created', (_, contents) => {
-	// console.log(`## Web contents created`, contents.getType())
+	log.debug(`## Web contents created`, contents.getType());
 
 	contents.on('did-create-window', (window, details) => {
-		// console.log(`#### did-create-window url: ${details.url}\nframeName: ${JSON.stringify(details.frameName, '\t', 4)}\n, options: ${JSON.stringify(details.options, '\t', 4)}\n, referrer: ${JSON.stringify(details.referrer, '\t', 4)}\n, postBody: ${JSON.stringify(details.postBody, '\t', 4)}\n, disposition: ${details.disposition}`,);
+		// log.debug(`#### did-create-window url: ${details.url}\nframeName: ${JSON.stringify(details.frameName, '\t', 4)}\n, options: ${JSON.stringify(details.options, '\t', 4)}\n, referrer: ${JSON.stringify(details.referrer, '\t', 4)}\n, postBody: ${JSON.stringify(details.postBody, '\t', 4)}\n, disposition: ${details.disposition}`,);
 		window.webContents.on('ready-to-show', () => {
 			window.show();
 		});
 	});
 
 	contents.setWindowOpenHandler((handle) => {
-		console.log(`#### setWindowOpenHandler url: ${handle.url}`);
+		log.debug(`#### setWindowOpenHandler url: ${handle.url}`);
 
 		// shell.openExternal(handle.url); // 웹뷰가 아닌 일반 브라우저 창을 열 때의 설정
 
@@ -122,7 +104,7 @@ app.on('web-contents-created', (_, contents) => {
 	});
 
 	contents.on('will-attach-webview', (event, webPreferences, params) => {
-		// console.log(`#### will-attach-webview`)
+		// log.debug(`#### will-attach-webview`)
 
 		// webPreferences 설정복사
 		Object.assign(webPreferences, webviewOpt.webPreferences);
@@ -135,7 +117,7 @@ app.on('web-contents-created', (_, contents) => {
 	// 웹뷰 디버깅을 위한 콘솔 로그 캡처
 	contents.on('console-message', (evt, level, message, line, sourceId) => {
 		const levels = ['verbose', 'info', 'warning', 'error'];
-		console.log(`[${contents.getType()} ${levels[level]}:${line}:${sourceId}]: ${message}`);
+		log.debug(`[${contents.getType()} ${levels[level]}:${line}:${sourceId}]: ${message}`);
 	});
 });
 
@@ -143,53 +125,4 @@ app.on('web-contents-created', (_, contents) => {
 app.on('window-all-closed', () => {
 	// if (process.platform !== 'darwin')
 	app.quit();
-});
-
-// 클립보드 관련 IPC 핸들러
-ipcMain.handle('write-to-clipboard', (_, text) => {
-	clipboard.writeText(text);
-	return true;
-});
-
-// 파일 저장 관련 IPC 핸들러
-ipcMain.handle('save-file', async (_, options) => {
-	const { url, defaultPath } = options;
-
-	try {
-		const { filePath } = await dialog.showSaveDialog(mainWindow, {
-			defaultPath: defaultPath || 'image.jpg',
-			filters: [
-				{ name: 'Images', extensions: ['jpg', 'png', 'gif'] },
-				{ name: 'All Files', extensions: ['*'] },
-			],
-		});
-
-		if (filePath) {
-			// 파일 다운로드 로직
-			const response = await fetch(url);
-			const buffer = await response.arrayBuffer();
-			fs.writeFileSync(filePath, Buffer.from(buffer));
-			return { success: true, path: filePath };
-		}
-
-		return { success: false, reason: 'User cancelled' };
-	} catch (error) {
-		console.error('Error saving file:', error);
-		return { success: false, reason: error.message };
-	}
-});
-
-// 창 제어 이벤트 핸들러
-ipcMain.on('window-control-action', (evt, payload) => {
-	const currentWindow = BrowserWindow.fromWebContents(evt.sender);
-	if (payload === 'close-window') currentWindow?.close();
-	if (payload === 'minimize-window') currentWindow?.minimize();
-	if (payload === 'maximize-window') {
-		if (currentWindow?.isMaximized()) currentWindow?.unmaximize();
-		else currentWindow?.maximize();
-	}
-	if (payload === 'fullscreen') {
-		if (currentWindow?.isFullScreen()) currentWindow?.setFullScreen(false);
-		else currentWindow?.setFullScreen(true);
-	}
 });

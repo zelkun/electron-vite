@@ -1,7 +1,8 @@
 import { autoUpdater } from 'electron-updater';
-import { dialog, app, BrowserWindow } from 'electron';
-import log from 'electron-log';
+import { dialog, BrowserWindow } from 'electron';
+import log from 'electron-log/main';
 import ProgressBar from 'electron-progressbar';
+import { hostsCheckAndUpdate } from './hostsChecker.js';
 
 let progressBar = null;
 
@@ -9,6 +10,8 @@ export function setupUpdater() {
 	// 로깅 설정
 	log.transports.file.level = 'info';
 	autoUpdater.logger = log;
+
+	const mainWindow = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
 
 	// 업데이트 이벤트 처리
 	autoUpdater.on('checking-for-update', () => {
@@ -18,7 +21,7 @@ export function setupUpdater() {
 	autoUpdater.on('update-available', (info) => {
 		log.info('업데이트 가능:', info);
 		dialog
-			.showMessageBox({
+			.showMessageBox(mainWindow, {
 				type: 'info',
 				title: '업데이트 발견',
 				message: '새 버전이 발견되었습니다. 지금 다운로드하시겠습니까?',
@@ -40,7 +43,7 @@ export function setupUpdater() {
 
 	autoUpdater.on('update-not-available', () => {
 		log.info('최신 버전입니다.');
-		dialog.showMessageBox({
+		dialog.showMessageBox(mainWindow, {
 			type: 'info',
 			title: '업데이트 없음',
 			message: '현재 최신 버전을 사용 중입니다.',
@@ -64,7 +67,7 @@ export function setupUpdater() {
 		}
 
 		dialog
-			.showMessageBox({
+			.showMessageBox(mainWindow, {
 				type: 'info',
 				title: '업데이트 준비 완료',
 				message: '업데이트가 다운로드되었습니다. 지금 설치하시겠습니까?',
@@ -86,8 +89,16 @@ export function setupUpdater() {
 		dialog.showErrorBox('업데이트 오류', '업데이트 중 오류가 발생했습니다: ' + err);
 	});
 
+	// 업데이트 확인 함수
+	const checkForUpdates = () => {
+		autoUpdater.checkForUpdates();
+	};
+
 	// 자동 업데이트 확인 설정 (앱 시작 후 10초 후)
 	setTimeout(() => {
-		autoUpdater.checkForUpdates();
+		// hosts 파일 체크 후 업데이트 진행
+		hostsCheckAndUpdate(checkForUpdates).catch((err) => {
+			log.error('hosts 체크 중 오류:', err);
+		});
 	}, 10000);
 }

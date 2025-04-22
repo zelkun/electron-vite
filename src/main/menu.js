@@ -2,6 +2,7 @@
 import { Menu, ipcMain, BrowserWindow } from 'electron';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { BrowserWinOpt, webviewOpt, popWindowOpt, preloadPaths } from './windowOptions';
+import log from 'electron-log/main';
 import { join } from 'path';
 
 function fnIpcCall(channel, ...args) {
@@ -200,7 +201,7 @@ export function setupMenu(mainWindow) {
 
 	// 북마크 컨텍스트 메뉴 설정
 	ipcMain.on('show-bookmark-context-menu', (evt, data) => {
-		console.log('{show-bookmark-context-menu} data', data);
+		log.debug('{show-bookmark-context-menu} data', data);
 		const { x, y, bookmarkIndex } = data;
 		const sender = evt.sender;
 		const currentWindow = BrowserWindow.fromWebContents(sender);
@@ -231,7 +232,7 @@ export function setupMenu(mainWindow) {
 
 	// 탭 컨텍스트 메뉴 설정
 	ipcMain.on('show-tab-context-menu', (evt, data) => {
-		console.log('{show-tab-context-menu} data', data);
+		log.debug('{show-tab-context-menu} data', data);
 		const { x, y, tabIndex } = data;
 		const sender = evt.sender;
 		const currentWindow = BrowserWindow.fromWebContents(sender);
@@ -275,7 +276,7 @@ export function setupMenu(mainWindow) {
 
 	// 웹뷰 컨텍스트 메뉴 설정
 	ipcMain.on('show-webview-context-menu', (evt, data) => {
-		console.log('{show-webview-context-menu} data', data);
+		log.debug('{show-webview-context-menu} data', data);
 		const { x, y, linkURL, srcURL, isEditable, selectionText, canGoBack, canGoForward } = data;
 
 		const menuItems = [];

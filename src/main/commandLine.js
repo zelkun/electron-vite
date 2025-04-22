@@ -1,4 +1,5 @@
 import { app } from 'electron';
+import log from 'electron-log/main';
 
 /**
  * Electron 애플리케이션의 명령줄 인수를 설정합니다.
@@ -27,7 +28,7 @@ export function setupCommandLine() {
 		callback(true);
 	});
 
-	console.log(`Command line switches have been configured`);
+	log.info(`Command line switches have been configured`);
 }
 
 /**

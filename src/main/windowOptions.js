@@ -1,5 +1,6 @@
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { join } from 'path';
+import log from 'electron-log/main';
 import icon from '../../resources/icon.png?asset';
 
 const preloadPath = join(__dirname, '../preload/index.js');
