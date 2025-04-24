@@ -1,3 +1,4 @@
+// src/main/ipcHandlers.js
 import { BrowserWindow, ipcMain, clipboard, dialog } from 'electron';
 import { getConfigSection, saveConfigSection, getConfigValue, setConfigValue } from './config';
 import fs from 'fs';

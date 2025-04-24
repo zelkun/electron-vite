@@ -1,3 +1,4 @@
+// src/main/menu.js
 /* eslint-disable no-unused-vars */
 import { Menu, ipcMain, BrowserWindow } from 'electron';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';

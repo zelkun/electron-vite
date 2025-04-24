@@ -1,3 +1,4 @@
+// src/preload/webviewPreload.js
 import { ipcRenderer, contextBridge } from 'electron';
 
 console.log('Webview preload script loaded successfully!');

@@ -1,3 +1,4 @@
+// src/main/windowOptions.js
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { join } from 'path';
 import log from 'electron-log/main';

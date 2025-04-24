@@ -1,3 +1,4 @@
+// src/main/commandLine.js
 import { app } from 'electron';
 import log from 'electron-log/main';
 

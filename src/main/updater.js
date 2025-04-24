@@ -1,3 +1,4 @@
+// src/main/updater.js
 import { autoUpdater } from 'electron-updater';
 import { dialog, BrowserWindow } from 'electron';
 import log from 'electron-log/main';

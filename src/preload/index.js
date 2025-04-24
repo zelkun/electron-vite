@@ -1,3 +1,4 @@
+// src/preload/index.js
 import { contextBridge, ipcRenderer } from 'electron';
 
 console.log(`preload script loaded successfully!`);

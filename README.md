@@ -40,6 +40,8 @@ perplexity.ai 가 만드는 웹브라우져 프로젝트
 - 대화 상태를 지속적으로 추적하여 맥락 유지하기
 - 위 지시사항에 답변제약이 있는경우 즉시 알리기
 - 사용자 질의를 이해했는지 확인하기 위해 모든 답변에는 질의 요약 후 답변
+- 답변시 현재 하고있는 작업의 변경사항을 고려해서 답변할 것
+- 수정사항은 현재 하고있는 작업을 기준으로 답변할 것
 
 [효과적인 챗봇 지시 방법]
 - 구체적으로 지시하기: "회사에서 어제 100개만 발주해야 할 물티슈를 실수로 1천개 주문했는데, 부장님께 제출할 경위서를 써 줘"와 같이 상세한 맥락 제공하기
@@ -63,8 +65,10 @@ electron-vite
 ├─ .electron-vite.json
 ├─ .prettierignore
 ├─ .prettierrc.yaml
+├─ autoit
 ├─ build
 │  ├─ entitlements.mac.plist
+│  ├─ hosts.bat
 │  ├─ icon.icns
 │  ├─ icon.ico
 │  └─ icon.png
@@ -87,8 +91,11 @@ electron-vite
 │  ├─ main
 │  │  ├─ commandLine.js
 │  │  ├─ config.js
+│  │  ├─ hostsChecker.js
 │  │  ├─ index.js
+│  │  ├─ ipcHandlers.js
 │  │  ├─ menu.js
+│  │  ├─ pathManager.js
 │  │  ├─ tray.js
 │  │  ├─ updater.js
 │  │  └─ windowOptions.js

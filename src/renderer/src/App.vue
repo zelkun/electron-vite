@@ -1,3 +1,4 @@
+<!-- src/renderer/src/App.vue -->
 <template>
 	<div class="browser-container">
 		<!-- 탭 영역 -->

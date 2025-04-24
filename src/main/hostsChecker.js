@@ -4,11 +4,13 @@ import { exec } from 'child_process';
 import log from 'electron-log/main';
 import fs from 'fs';
 import { join } from 'path';
+import { isDev } from './config.js'; // isDev 변수를 가져옵니다.
+import pathManager from './pathManager.js';
 
 // hosts 파일 경로 (Windows 기준)
-const hostsPath = 'C:\\Windows\\System32\\drivers\\etc\\hosts';
+const hostsPath = join(process.env.SYSTEMROOT, 'System32', 'drivers', 'etc', 'hosts');
+const batFilePath = isDev ? join(__dirname, '../../build/hosts.bat') : join(pathManager.appRootPath, 'resources', 'host.bat');
 const domain = 'git.electron.vite';
-const batFilePath = join(__dirname, '../../build/hosts.bat'); // 배포 시 경로 수정 필요
 let mainWindow = null;
 
 /**

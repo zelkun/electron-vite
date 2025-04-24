@@ -1,3 +1,4 @@
+// src/main/pathManager.js
 import { app } from 'electron';
 import { join, resolve, normalize, isAbsolute } from 'path';
 import log from 'electron-log/main';
@@ -7,7 +8,7 @@ import fs from 'fs';
 /**
  * 프로젝트 루트 경로 (main 프로세스 기준)
  */
-const getRootPath = () => {
+const appRootPath = () => {
 	return app.getAppPath();
 };
 
@@ -15,13 +16,13 @@ const getRootPath = () => {
  * 주요 디렉토리 경로
  */
 const dirPaths = {
-	src: join(getRootPath(), 'src'),
-	main: join(getRootPath(), 'src/main'),
-	renderer: join(getRootPath(), 'src/renderer'),
-	preload: join(getRootPath(), 'src/preload'),
-	resources: join(getRootPath(), 'resources'),
-	build: join(getRootPath(), 'build'),
-	out: join(getRootPath(), 'out'),
+	src: join(appRootPath(), 'src'),
+	main: join(appRootPath(), 'src/main'),
+	renderer: join(appRootPath(), 'src/renderer'),
+	preload: join(appRootPath(), 'src/preload'),
+	resources: join(appRootPath(), 'resources'),
+	build: join(appRootPath(), 'build'),
+	out: join(appRootPath(), 'out'),
 };
 
 /**
@@ -30,8 +31,8 @@ const dirPaths = {
 const filePaths = {
 	mainWindow: join(dirPaths.main, 'index.js'),
 	trayIcon: join(dirPaths.resources, 'icon.png'),
-	packageJson: join(getRootPath(), 'package.json'),
-	electronConfig: join(getRootPath(), 'electron.vite.config.mjs'),
+	packageJson: join(appRootPath(), 'package.json'),
+	electronConfig: join(appRootPath(), 'electron.vite.config.mjs'),
 };
 
 /**
@@ -57,9 +58,9 @@ const envPaths = {
 	},
 };
 
-module.exports = {
+export default {
 	// 기본 경로
-	root: getRootPath,
+	appRootPath,
 	dirs: dirPaths,
 	files: filePaths,
 	dynamic: dynamicPaths,

@@ -1,3 +1,4 @@
+// src/main/tray.js
 import { Tray, Menu, nativeImage, app } from 'electron';
 import { join } from 'path';
 import log from 'electron-log/main';

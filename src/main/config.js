@@ -1,3 +1,4 @@
+// src/main/config.js
 import { app, shell, BrowserWindow, ipcMain, session, clipboard, dialog } from 'electron';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { join } from 'path';
