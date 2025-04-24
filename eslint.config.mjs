@@ -1,3 +1,4 @@
+// eslint.config.mjs
 import eslintConfig from '@electron-toolkit/eslint-config';
 import eslintConfigPrettier from '@electron-toolkit/eslint-config-prettier';
 import eslintPluginVue from 'eslint-plugin-vue';

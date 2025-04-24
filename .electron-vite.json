@@ -1,28 +1,28 @@
 {
-  "bookmarks": [
-    {
-      "title": "Perplexity",
-      "url": "https://www.perplexity.ai/"
-    },
-    {
-      "title": "NAVER",
-      "url": "https://www.naver.com/"
-    },
-    {
-      "title": "나라장터",
-      "url": "https://www.g2b.go.kr/"
-    },
-    {
-      "title": "네이트",
-      "url": "https://www.nate.com/"
-    },
-    {
-      "title": "image",
-      "url": "https://adimg.nate.com/img/2025/04/hms/hms_0414_730x120.jpg"
-    }
-  ],
-  "settings": {
-    "searchBar": false,
-    "showBookmarkBar": true
-  }
+	"bookmarks": [
+		{
+			"title": "Perplexity",
+			"url": "https://www.perplexity.ai/"
+		},
+		{
+			"title": "NAVER",
+			"url": "https://www.naver.com/"
+		},
+		{
+			"title": "나라장터",
+			"url": "https://www.g2b.go.kr/"
+		},
+		{
+			"title": "네이트",
+			"url": "https://www.nate.com/"
+		},
+		{
+			"title": "image",
+			"url": "https://adimg.nate.com/img/2025/04/hms/hms_0414_730x120.jpg"
+		}
+	],
+	"settings": {
+		"searchBar": false,
+		"showBookmarkBar": true
+	}
 }
