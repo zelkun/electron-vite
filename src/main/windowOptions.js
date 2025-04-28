@@ -1,8 +1,8 @@
 // src/main/windowOptions.js
-import { electronApp, optimizer, is } from '@electron-toolkit/utils';
+// import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { join } from 'path';
 import { isDev } from './config';
-import log from 'electron-log/main';
+// import log from 'electron-log/main';
 import icon from '../../resources/icon.png?asset';
 
 const preloadPath = join(__dirname, '../preload/index.js');
