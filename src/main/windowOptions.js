@@ -1,6 +1,7 @@
 // src/main/windowOptions.js
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { join } from 'path';
+import { isDev } from './config';
 import log from 'electron-log/main';
 import icon from '../../resources/icon.png?asset';
 
@@ -56,7 +57,7 @@ export const BrowserWinOpt = {
 	height: 800,
 	minWidth: 800,
 	minHeight: 600,
-	titleBarStyle: is.dev ? 'hiddenInset' : 'hidden',
+	titleBarStyle: isDev ? 'hiddenInset' : 'hidden',
 	// ...(process.platform === 'linux' ? { icon } : {}),
 	// icon: join(__dirname, '../../resources/icon.png?asset'),
 	icon: icon,

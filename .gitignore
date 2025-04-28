@@ -211,3 +211,8 @@ Temporary Items
 
 # LOCAL
 TEST.vue
+
+electron-v*-win32-x64.zip
+nsis-*.7z
+nsis-resources-*.7z
+winCodeSign-*.7z

@@ -9,7 +9,7 @@ import pathManager from './pathManager.js';
 
 // hosts 파일 경로 (Windows 기준)
 const hostsPath = join(process.env.SYSTEMROOT, 'System32', 'drivers', 'etc', 'hosts');
-const batFilePath = isDev ? join(__dirname, '../../build/hosts.bat') : join(pathManager.appRootPath, 'resources', 'host.bat');
+const batFilePath = join(pathManager.appRootPath, isDev ? 'build' : 'resources', 'host.bat');
 const domain = 'git.electron.vite';
 let mainWindow = null;
 

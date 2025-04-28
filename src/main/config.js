@@ -1,13 +1,10 @@
 // src/main/config.js
-import { app, shell, BrowserWindow, ipcMain, session, clipboard, dialog } from 'electron';
-import { electronApp, optimizer, is } from '@electron-toolkit/utils';
+import { app } from 'electron';
+import { is } from '@electron-toolkit/utils';
 import { join } from 'path';
 import log from 'electron-log/main';
 import fs from 'fs';
 import os from 'os';
-
-// 설정 파일 경로
-const configPath = join(is.dev ? app.getAppPath() : os.homedir(), '.electron-vite.json');
 
 const logFormat = `[{processType}:{logId}:{scope}][{level}][{h}:{i}:{s}]]{text}`; // 로그 포맷 설정
 // log.transports.file.file = logPath; // 로그 파일 경로 설정
@@ -17,7 +14,10 @@ log.transports.console.format = logFormat; // 콘솔 로그 포맷 설정
 // log.transports.file.format = logFormat; // 파일 로그 포맷 설정
 
 // 개발 모드 체크
-export const isDev = process.argv.includes('dev') || process.env.NODE_ENV === 'development'; // || is.dev;
+export const isDev = process.argv.includes('dev') || process.env.NODE_ENV === 'development' || is.dev;
+
+// 설정 파일 경로
+const configPath = join(isDev ? app.getAppPath() : os.homedir(), '.electron-vite.json');
 
 // 기본 설정
 const defaultConfig = {

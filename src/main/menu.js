@@ -3,6 +3,7 @@
 import { Menu, ipcMain, BrowserWindow } from 'electron';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { BrowserWinOpt, webviewOpt, popWindowOpt, preloadPaths } from './windowOptions';
+import { isDev } from './config';
 import log from 'electron-log/main';
 import { join } from 'path';
 
@@ -31,7 +32,7 @@ export function setupMenu(mainWindow) {
 						const newWindow = new BrowserWindow(BrowserWinOpt);
 						newWindow.windowType = 'main'; // 윈도우 타입 설정 (메인 윈도우)
 
-						if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+						if (isDev && process.env['ELECTRON_RENDERER_URL']) {
 							newWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
 						} else {
 							newWindow.loadFile(join(__dirname, '../renderer/index.html'));
@@ -259,7 +260,7 @@ export function setupMenu(mainWindow) {
 				},
 			},
 		];
-		if (is.dev) {
+		if (isDev) {
 			menuItems.push(
 				{ type: 'separator' },
 				{
@@ -385,7 +386,7 @@ export function setupMenu(mainWindow) {
 				},
 			},
 		);
-		if (is.dev) {
+		if (isDev) {
 			menuItems.push(
 				{ type: 'separator' },
 				{

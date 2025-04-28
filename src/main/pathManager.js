@@ -60,7 +60,7 @@ const envPaths = {
 
 export default {
 	// 기본 경로
-	appRootPath,
+	appRootPath: appRootPath(),
 	dirs: dirPaths,
 	files: filePaths,
 	dynamic: dynamicPaths,

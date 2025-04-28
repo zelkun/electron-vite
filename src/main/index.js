@@ -1,14 +1,14 @@
 // src/main/index.js
-import { app, shell, BrowserWindow, ipcMain, session, clipboard, dialog } from 'electron';
-import { electronApp, optimizer, is } from '@electron-toolkit/utils';
+import { app, shell, BrowserWindow } from 'electron';
+import { electronApp, optimizer } from '@electron-toolkit/utils';
 import { join } from 'path';
 import { setupMenu } from './menu';
 import { setupTray } from './tray';
 import { setupUpdater } from './updater';
 import { setupIpcHandlers } from './ipcHandlers';
 import { isDev } from './config';
-import { setupCommandLine, parseCommandLineArgs, hasSwitch, getSwitchValue } from './commandLine';
-import { BrowserWinOpt, webviewOpt, popWindowOpt, preloadPaths } from './windowOptions';
+import { setupCommandLine /*, parseCommandLineArgs, hasSwitch, getSwitchValue*/ } from './commandLine';
+import { BrowserWinOpt, webviewOpt, popWindowOpt } from './windowOptions';
 import log from 'electron-log/main';
 
 setupCommandLine(); // 보안관련 설정 해제
@@ -42,7 +42,7 @@ function createWindow() {
 	});
 
 	// HMR for renderer base on electron-vite cli
-	if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+	if (isDev && process.env['ELECTRON_RENDERER_URL']) {
 		mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
 	} else {
 		mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
