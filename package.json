@@ -36,7 +36,7 @@
 		"extraFiles": [
 			{
 				"from": "build/hosts.bat",
-				"to": "resources/host.bat",
+				"to": "resources/hosts.bat",
 				"filter": [
 					"**/*"
 				]
