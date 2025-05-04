@@ -2,8 +2,8 @@
 import { app } from 'electron';
 import { join, resolve, normalize, isAbsolute } from 'path';
 import log from 'electron-log/main';
-import { isDev } from './config';
 import fs from 'fs';
+import { isDev, isMac } from './config.js'; // isDev 변수를 가져옵니다.
 
 /**
  * 프로젝트 루트 경로 (main 프로세스 기준)
@@ -11,6 +11,11 @@ import fs from 'fs';
 const appRootPath = () => {
 	return app.getAppPath();
 };
+
+const systemPath = process.env.SYSTEMROOT || '/';
+// hosts 파일 경로 (Windows 기준, linux/macOS 추가)
+const hostsPath = !isMac ? join(systemPath, 'System32', 'drivers', 'etc', 'hosts') : join(systemPath, 'etc', 'hosts');
+const batFilePath = join(appRootPath(), isDev ? 'build' : 'resources', !isMac ? 'hosts.bat' : 'hosts.sh');
 
 /**
  * 주요 디렉토리 경로
@@ -59,6 +64,10 @@ const envPaths = {
 };
 
 export default {
+	systemPath,
+	batFilePath,
+	hostsPath,
+
 	// 기본 경로
 	appRootPath: appRootPath(),
 	dirs: dirPaths,

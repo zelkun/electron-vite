@@ -13,11 +13,10 @@ log.transports.console.format = logFormat; // 콘솔 로그 포맷 설정
 // log.transports.file.level = isDev ? 'debug' : 'info'; // 로그 레벨 설정
 // log.transports.file.format = logFormat; // 파일 로그 포맷 설정
 
-// 개발 모드 체크
-export const isDev = process.argv.includes('dev') || process.env.NODE_ENV === 'development' || is.dev;
+export const isMac = process.platform === 'darwin'; // macOS 체크
+export const isDev = process.argv.includes('dev') || process.env.NODE_ENV === 'development' || is.dev; // 개발 모드 체크
 
-// 설정 파일 경로
-const configPath = join(isDev ? app.getAppPath() : os.homedir(), '.electron-vite.json');
+const configPath = join(isDev ? app.getAppPath() : os.homedir(), '.electron-vite.json'); // 설정 파일 경로
 
 // 기본 설정
 const defaultConfig = {

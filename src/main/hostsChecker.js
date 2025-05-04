@@ -3,13 +3,8 @@ import { dialog, BrowserWindow } from 'electron';
 import { exec } from 'child_process';
 import log from 'electron-log/main';
 import fs from 'fs';
-import { join } from 'path';
-import { isDev } from './config.js'; // isDev 변수를 가져옵니다.
 import pathManager from './pathManager.js';
 
-// hosts 파일 경로 (Windows 기준)
-const hostsPath = join(process.env.SYSTEMROOT, 'System32', 'drivers', 'etc', 'hosts');
-const batFilePath = join(pathManager.appRootPath, isDev ? 'build' : 'resources', 'hosts.bat');
 const domain = 'git.electron.vite';
 let mainWindow = null;
 
@@ -19,7 +14,7 @@ let mainWindow = null;
  */
 function checkDomainInHosts() {
 	try {
-		const content = fs.readFileSync(hostsPath, 'utf-8');
+		const content = fs.readFileSync(pathManager.hostsPath, 'utf-8');
 		return content.includes(domain);
 	} catch (err) {
 		log.error('hosts 파일 읽기 오류:', err);
@@ -32,9 +27,9 @@ function checkDomainInHosts() {
  * @returns {Promise<boolean>} 실행 성공 여부
  */
 function runBatFile() {
-	log.debug('batFilePath:', batFilePath);
+	log.debug('batFilePath:', pathManager.batFilePath);
 	return new Promise((resolve, reject) => {
-		exec(batFilePath, (error, stdout, stderr) => {
+		exec(pathManager.batFilePath, (error, stdout, stderr) => {
 			if (error) {
 				log.error('bat 파일 실행 오류:', error);
 				reject(error);

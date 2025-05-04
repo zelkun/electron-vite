@@ -23,6 +23,11 @@ export function setupCommandLine() {
 	app.commandLine.appendSwitch('disable-features', 'AllowInsecureLocalhost'); // 로컬호스트에 대한 보안 예외 허용 (개발용)
 	app.commandLine.appendSwitch('allow-insecure-localhost'); // 로컬호스트에 대한 보안 예외 허용 (개발용)
 
+	app.commandLine.appendSwitch('vmodule', 'logging_network_change_observer=0'); // 네트워크 변경 관찰자 로깅 비활성화 (개발용)
+	app.commandLine.appendSwitch('v', '0'); // 로깅 레벨 설정 (개발용)
+	app.commandLine.appendSwitch('disable-gpu'); // GPU 가속 비활성화
+	app.commandLine.appendSwitch('disable-software-rasterizer'); // 소프트웨어 래스터라이저 비활성화
+
 	// 인증서 오류 발생 시 무시 (개발용)
 	app.on('certificate-error', (evt, webContents, url, err, cert, callback, isMainFrame) => {
 		evt.preventDefault();
