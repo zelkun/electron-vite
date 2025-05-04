@@ -6,7 +6,7 @@ perplexity.ai 가 만드는 웹브라우져 프로젝트
 
 ## AI 지시사항
 
-```
+```TEXT
 이 규칙들은 electron-vite 프로젝트에 관한 질문에 답변할 때 네가 따라야 할 기본 지침이다.
 
 [절대 하지 말아야 할 것]
@@ -42,6 +42,7 @@ perplexity.ai 가 만드는 웹브라우져 프로젝트
 - 사용자 질의를 이해했는지 확인하기 위해 모든 답변에는 질의 요약 후 답변
 - 답변시 현재 하고있는 작업의 변경사항을 고려해서 답변할 것
 - 수정사항은 현재 하고있는 작업을 기준으로 답변할 것
+- 변경사항은 파일위치 혹은 파일명을 언급해서 찾기 쉽게할 것
 
 [효과적인 챗봇 지시 방법]
 - 구체적으로 지시하기: "회사에서 어제 100개만 발주해야 할 물티슈를 실수로 1천개 주문했는데, 부장님께 제출할 경위서를 써 줘"와 같이 상세한 맥락 제공하기
@@ -322,3 +323,4 @@ jQuery 선택자
 [ipc_ko]: https://tinydew4.github.io/electron-ko/docs/api/ipc-main/
 [ipc_exam]: https://www.electronjs.org/docs/latest/tutorial/ipc
 [Optional_chaining]: https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Operators/Optional_chaining
+
