@@ -1,6 +1,6 @@
 // src/main/ipcHandlers.js
 import { BrowserWindow, ipcMain, clipboard, dialog } from 'electron';
-import { getConfigSection, saveConfigSection, getConfigValue, setConfigValue } from './config';
+import { getConfigSection, saveConfigSection, getConfigValue, setConfigValue, defaultConfig, saveConfig, loadConfig } from './config';
 import fs from 'fs';
 import log from 'electron-log/main';
 
@@ -79,6 +79,67 @@ export function setupIpcHandlers() {
 		if (payload === 'fullscreen') {
 			if (currentWindow?.isFullScreen()) currentWindow?.setFullScreen(false);
 			else currentWindow?.setFullScreen(true);
+		}
+	});
+
+	/**
+	 * settings 관련 IPC 핸들러
+	 */
+	ipcMain.handle('export-settings', () => {
+		return JSON.stringify(loadConfig());
+	});
+	ipcMain.handle('import-settings', (_, data) => {
+		const config = JSON.parse(data);
+		return saveConfig(config);
+	});
+
+	ipcMain.handle('save-setting', async (_, key, value) => {
+		try {
+			const success = await setConfigValue('settings', key, value);
+			if (!success) throw new Error('설정 저장 실패');
+			return { status: 'success' };
+		} catch (error) {
+			log.error('설정 저장 오류:', error);
+			return { status: 'error', message: error.message };
+		}
+	});
+	ipcMain.handle('reset-settings', async () => {
+		const win = BrowserWindow.getFocusedWindow();
+		const result = await dialog.showMessageBox(win, {
+			type: 'warning',
+			buttons: ['초기화', '취소'],
+			title: '설정 초기화',
+			detail: '※ 북마크는 유지됩니다.',
+		});
+
+		if (result.response === 0) {
+			try {
+				const currentConfig = loadConfig();
+				return saveConfigSection('settings', {
+					...defaultConfig.settings,
+					bookmarks: currentConfig.bookmarks || [],
+				});
+			} catch (error) {
+				log.error('설정 초기화 실패:', error);
+				return false;
+			}
+		}
+		return false;
+	});
+
+	const getSessionPath = () => {
+		return path.join(app.getPath('userData'), 'session.json');
+	};
+
+	ipcMain.handle('save-session', (_, data) => {
+		fs.writeFileSync(getSessionPath(), JSON.stringify(data));
+	});
+
+	ipcMain.handle('load-session', () => {
+		try {
+			return JSON.parse(fs.readFileSync(getSessionPath()));
+		} catch {
+			return null;
 		}
 	});
 }

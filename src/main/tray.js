@@ -12,7 +12,7 @@ export function setupTray(mainWindow) {
 	const iconPath = join(__dirname, '../../resources/icon.png');
 	const icon = nativeImage.createFromPath(iconPath);
 
-	const homePage = getConfigValue('settings', 'defaultHomePage') || 'about:blank';
+	const homePage = getConfigValue('settings', 'homePage') || 'about:blank';
 
 	// 트레이 생성
 	tray = new Tray(icon);

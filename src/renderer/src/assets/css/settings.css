@@ -1,0 +1,60 @@
+/* src/renderer/src/assets/css/settings.css */
+
+.settings-wrapper {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0, 0, 0, 0.5);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	z-index: 1000;
+}
+
+.settings-container {
+	background: var(--bg-color);
+	width: 80%;
+	max-width: 800px;
+	height: 70vh;
+	border-radius: 8px;
+	display: flex;
+	position: relative;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.settings-section {
+	margin-bottom: 32px;
+}
+
+.setting-item {
+	margin: 16px 0;
+	padding: 12px;
+	border: 1px solid #e0e0e0;
+	border-radius: 8px;
+}
+
+.setting-item label {
+	display: block;
+	margin-bottom: 8px;
+	font-weight: 500;
+	color: #202124;
+}
+
+.setting-item input,
+.setting-item select {
+	width: 100%;
+	padding: 8px;
+	border: 1px solid #dadce0;
+	border-radius: 4px;
+	font-size: 14px;
+}
+
+h2 {
+	color: #202124;
+	font-size: 20px;
+	border-bottom: 1px solid #e0e0e0;
+	padding-bottom: 12px;
+	margin-bottom: 24px;
+}

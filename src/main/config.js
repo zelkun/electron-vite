@@ -19,10 +19,11 @@ export const isDev = process.argv.includes('dev') || process.env.NODE_ENV === 'd
 const configPath = join(isDev ? app.getAppPath() : os.homedir(), '.electron-vite.json'); // 설정 파일 경로
 
 // 기본 설정
-const defaultConfig = {
+export const defaultConfig = {
 	bookmarks: [],
 	settings: {
-		defaultHomePage: 'about:blank',
+		homePage: 'about:blank',
+		startupAction: 'newTab',
 		showBookmarkBar: true,
 		theme: 'light',
 	},
@@ -33,11 +34,19 @@ export function loadConfig() {
 	try {
 		if (fs.existsSync(configPath)) {
 			const data = fs.readFileSync(configPath, 'utf8');
-			return JSON.parse(data);
+			try {
+				const parsed = JSON.parse(data);
+				log.info('Config loaded successfully');
+				return parsed;
+			} catch (parseError) {
+				log.error('JSON 파싱 오류:', parseError.message);
+				//dialog.showErrorBox('설정 파일 오류', 'JSON 형식이 잘못되었습니다.');
+			}
 		}
 	} catch (error) {
-		log.error('설정 파일 로드 오류:', error);
+		log.error('설정 파일 읽기 오류:', error);
 	}
+	log.info('기본 설정 사용');
 	return { ...defaultConfig };
 }
 

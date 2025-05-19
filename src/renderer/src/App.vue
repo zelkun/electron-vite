@@ -1,5 +1,6 @@
 <!-- src/renderer/src/App.vue -->
 <template>
+	<Settings v-if="showSettings" @close="showSettings = false" @update-setting="updateSetting" />
 	<div class="browser-container">
 		<!-- 탭 영역 -->
 		<div class="browser-tabs">
@@ -45,7 +46,7 @@
 				<button class="action-btn search-icon" title="검색" :class="{ active: showSearchArea }" @click="toggleSearchArea">🔍</button>
 				<button class="action-btn" @click="addBookmark">🔖</button>
 				<button class="action-btn" :class="{ active: showBookmarkBar }" @click="toggleBookmarkBar">📚</button>
-				<button class="action-btn" @click="showSettings">⚙️</button>
+				<button class="action-btn" @click="openSettings">⚙️</button>
 				<button class="action-btn" @click="showMenu">⋮</button>
 			</div>
 		</div>
@@ -174,9 +175,17 @@
 </template>
 
 <script>
+import Settings from './components/Settings/Settings.vue';
+
 export default {
+	components: {
+		Settings,
+	},
 	data() {
 		return {
+			homePage: 'about:blank',
+			startupAction: 'newtab',
+			showSettings: false,
 			tabs: [],
 			currentTabIndex: 0,
 			currentUrl: '',
@@ -212,19 +221,44 @@ export default {
 	},
 	beforeUnmount() {
 		window.removeEventListener('resize', this.handleResize);
+		this.saveSession();
 	},
 	async mounted() {
 		await this.loadSettings(); // 설정 로드
-
 		await this.loadBookmarks(); // 북마크 로드
 
 		// 첫 번째 탭 생성
-		const homePage = (await window.electronAPI.invoke('get-config-value', 'settings', 'defaultHomePage')) || 'about:blank';
-		this.addNewTab(homePage);
+		this.startupAction = (await window.electronAPI.invoke('get-config-value', 'settings', 'startupAction ')) || 'newtab';
+		this.homePage = (await window.electronAPI.invoke('get-config-value', 'settings', 'homePage ')) || 'about:blank';
+		const session = await window.electronAPI.invoke('load-session');
+
+		switch (this.startupAction) {
+			case 'newtab':
+				this.addNewTab();
+				break;
+			case 'homepage':
+				this.addNewTab(this.homePage);
+				break;
+			case 'lastsession':
+				if (session) {
+					this.tabs = session.tabs;
+					this.currentTabIndex = session.currentTabIndex;
+					this.$nextTick(() => {
+						this.tabs.forEach((tab, index) => {
+							const webview = this.getWebview(index);
+							if (webview) {
+								this.setupWebviewEventListeners(webview, index);
+								webview.setZoomFactor(tab.zoomLevel / 100);
+							}
+						});
+					});
+					return;
+				}
+				break;
+		}
 
 		// Zoom 관련 이벤트 리스너
 		this.setupEventHandler('zoomCtrl', this.zoomCtrl); // reset, increase, decrease
-
 		this.setupEventHandler('add-bookmark', this.addBookmark);
 		this.setupEventHandler('toggle-bookmark-bar', this.toggleBookmarkBar);
 
@@ -313,7 +347,6 @@ export default {
 			console.error(message);
 			// 실제 구현에서는 토스트 메시지나 모달 등으로 사용자에게 알림
 		},
-
 		getWebview(index) {
 			return document.querySelector(`#webview-${index !== undefined ? index : this.currentTabIndex}`);
 		},
@@ -331,12 +364,25 @@ export default {
 
 		async goHome() {
 			// 설정에서 홈페이지 URL 가져오기
-			const homePage = (await window.electronAPI.invoke('get-config-value', 'settings', 'defaultHomePage')) || 'about:blank';
-			this.currentUrl = homePage;
-			this.tabs[this.currentTabIndex].url = homePage;
+			this.homePage = (await window.electronAPI.invoke('get-config-value', 'settings', 'homePage ')) || 'about:blank';
+			this.currentUrl = this.homePage;
+			this.tabs[this.currentTabIndex].url = this.currentUrl;
 			const webview = this.getWebview();
 			if (webview) {
-				webview.src = homePage;
+				webview.src = this.currentUrl;
+			}
+		},
+		saveSession() {
+			if (this.startupAction === 'lastSession') {
+				const sessionData = {
+					tabs: this.tabs.map((tab) => ({
+						url: tab.url,
+						title: tab.title,
+						zoomLevel: tab.zoomLevel,
+					})),
+					currentTabIndex: this.currentTabIndex,
+				};
+				window.electronAPI.send('save-session', sessionData);
 			}
 		},
 
@@ -817,8 +863,30 @@ export default {
 			if (webview) webview.findInPage(this.searchText, { forward: false, findNext: true });
 		},
 
-		showSettings() {
-			console.log('설정 메뉴 표시');
+		openSettings() {
+			this.showSettings = !this.showSettings;
+			console.log('설정 메뉴 표시', this.showSettings);
+		},
+		async updateSetting({ key, value }) {
+			console.log('설정 업데이트:', key, value);
+			await window.electronAPI.invoke('save-setting', key, value);
+			this.applySetting(key, value);
+		},
+		applySetting(key, value) {
+			// 메서드명 수정
+			switch (key) {
+				case 'showBookmarkBar':
+					this.showBookmarkBar = value;
+					break;
+				case 'theme':
+					document.documentElement.setAttribute('data-theme', value);
+					break;
+				case 'homePage':
+					this.homePage = value;
+					break;
+				default:
+					console.warn(`Unknown setting key: ${key}`);
+			}
 		},
 
 		showMenu() {
@@ -832,6 +900,10 @@ export default {
 				if (settings) {
 					// 북마크 바 설정 적용
 					this.showBookmarkBar = settings.showBookmarkBar || false;
+
+					// 테마 설정 강화
+					const theme = settings.theme || 'light';
+					document.documentElement.setAttribute('data-theme', theme);
 
 					// 필요한 경우 추가 설정 적용
 					// this.otherSetting = settings.otherSetting || defaultValue;
