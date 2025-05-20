@@ -21,8 +21,8 @@
     "searchBar": true,
     "showBookmarkBar": true,
     "theme": "light",
-    "homePage": "naver.com",
-    "startupAction": "newTab",
+    "homePage": "https://naver.com",
+    "startupAction": "lastSession",
     "acceptCookies": false,
     "saveHistory": false
   }

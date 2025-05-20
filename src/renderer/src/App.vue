@@ -255,6 +255,9 @@ export default {
 						});
 					});
 					return;
+				} else {
+					this.addNewTab();
+					this.showErrorNotification('세션 복원 실패: 세션 데이터가 없습니다.');
 				}
 				break;
 			default:
