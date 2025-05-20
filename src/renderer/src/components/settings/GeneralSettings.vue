@@ -1,13 +1,12 @@
-<!-- src/renderer/src/components/Settings/GeneralSettings.vue -->
 <template>
 	<div class="setting-item">
 		<label>시작 페이지</label>
-		<input v-model="homePage" @change="updateSetting('homePage', homePage)" placeholder="예: about:blank 또는 https://example.com" />
+		<input v-model="homePage" placeholder="예: about:blank 또는 https://example.com" @input="updateSetting('homePage', homePage)" />
 	</div>
 
 	<div class="setting-item">
 		<label>시작 시 동작</label>
-		<select v-model="startupAction" @change="updateSetting('startupAction', startupAction)">
+		<select :key="startupAction" v-model="startupAction" @change="updateSetting('startupAction', startupAction)">
 			<option value="newTab">새 탭 열기</option>
 			<option value="homePage">홈페이지 열기</option>
 			<option value="lastSession">이전 세션 복원</option>
@@ -17,9 +16,20 @@
 
 <script>
 export default {
+	data() {
+		return {
+			homePage: 'about:blank',
+			startupAction: 'newTab',
+		};
+	},
 	async mounted() {
-		this.homePage = (await window.electronAPI.invoke('get-config-value', 'settings', 'homePage')) || 'about:blank'; // 기본값 설정
-		this.startupAction = (await window.electronAPI.invoke('get-config-value', 'settings', 'startupAction')) || 'newTab'; // 기본값 설정
+		this.homePage = (await window.electronAPI.invoke('get-config-value', 'settings', 'homePage')) || 'about:blank';
+		this.startupAction = (await window.electronAPI.invoke('get-config-value', 'settings', 'startupAction')) || 'newTab';
+	},
+	methods: {
+		updateSetting(key, value) {
+			this.$emit('update-setting', { key, value });
+		},
 	},
 };
 </script>

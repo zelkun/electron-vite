@@ -89,3 +89,11 @@ export function setConfigValue(section, key, value) {
 	config[section][key] = value;
 	return saveConfig(config);
 }
+
+export function saveSession(sessionData) {
+	return saveConfigSection('session', sessionData);
+}
+
+export function loadSession() {
+	return getConfigSection('session') || {};
+}

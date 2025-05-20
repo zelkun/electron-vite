@@ -1,6 +1,6 @@
 // src/main/ipcHandlers.js
 import { BrowserWindow, ipcMain, clipboard, dialog } from 'electron';
-import { getConfigSection, saveConfigSection, getConfigValue, setConfigValue, defaultConfig, saveConfig, loadConfig } from './config';
+import { getConfigSection, saveConfigSection, getConfigValue, setConfigValue, defaultConfig, saveConfig, loadConfig, saveSession, loadSession } from './config';
 import fs from 'fs';
 import log from 'electron-log/main';
 
@@ -127,19 +127,11 @@ export function setupIpcHandlers() {
 		return false;
 	});
 
-	const getSessionPath = () => {
-		return path.join(app.getPath('userData'), 'session.json');
-	};
-
-	ipcMain.handle('save-session', (_, data) => {
-		fs.writeFileSync(getSessionPath(), JSON.stringify(data));
+	ipcMain.handle('save-session', (_, sessionData) => {
+		return saveSession(sessionData);
 	});
 
 	ipcMain.handle('load-session', () => {
-		try {
-			return JSON.parse(fs.readFileSync(getSessionPath()));
-		} catch {
-			return null;
-		}
+		return loadSession();
 	});
 }

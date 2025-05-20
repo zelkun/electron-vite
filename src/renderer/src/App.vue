@@ -184,7 +184,7 @@ export default {
 	data() {
 		return {
 			homePage: 'about:blank',
-			startupAction: 'newtab',
+			startupAction: 'newTab',
 			showSettings: false,
 			tabs: [],
 			currentTabIndex: 0,
@@ -228,21 +228,23 @@ export default {
 		await this.loadBookmarks(); // 북마크 로드
 
 		// 첫 번째 탭 생성
-		this.startupAction = (await window.electronAPI.invoke('get-config-value', 'settings', 'startupAction ')) || 'newtab';
-		this.homePage = (await window.electronAPI.invoke('get-config-value', 'settings', 'homePage ')) || 'about:blank';
-		const session = await window.electronAPI.invoke('load-session');
+		this.startupAction = (await window.electronAPI.invoke('get-config-value', 'settings', 'startupAction')) || 'newTab';
+		this.homePage = (await window.electronAPI.invoke('get-config-value', 'settings', 'homePage')) || 'about:blank';
+		const saveSession = await window.electronAPI.invoke('load-session');
+
+		console.log(`### startupAction: ${this.startupAction}, ${this.homePage}`, JSON.stringify(saveSession));
 
 		switch (this.startupAction) {
-			case 'newtab':
+			case 'newTab':
 				this.addNewTab();
 				break;
-			case 'homepage':
+			case 'homePage':
 				this.addNewTab(this.homePage);
 				break;
-			case 'lastsession':
-				if (session) {
-					this.tabs = session.tabs;
-					this.currentTabIndex = session.currentTabIndex;
+			case 'lastSession':
+				if (saveSession && saveSession.tabs) {
+					this.tabs = saveSession.tabs;
+					this.currentTabIndex = saveSession.currentTabIndex;
 					this.$nextTick(() => {
 						this.tabs.forEach((tab, index) => {
 							const webview = this.getWebview(index);
@@ -255,6 +257,8 @@ export default {
 					return;
 				}
 				break;
+			default:
+				console.log('Invalid startup action:', this.startupAction);
 		}
 
 		// Zoom 관련 이벤트 리스너
@@ -367,10 +371,7 @@ export default {
 			this.homePage = (await window.electronAPI.invoke('get-config-value', 'settings', 'homePage ')) || 'about:blank';
 			this.currentUrl = this.homePage;
 			this.tabs[this.currentTabIndex].url = this.currentUrl;
-			const webview = this.getWebview();
-			if (webview) {
-				webview.src = this.currentUrl;
-			}
+			this.navigate();
 		},
 		saveSession() {
 			if (this.startupAction === 'lastSession') {
@@ -470,7 +471,7 @@ export default {
 		},
 
 		addNewTab(url = 'about:blank') {
-			console.log(`url ${typeof url}`);
+			console.log(`# addNewTab: url ${typeof url}`);
 			if (typeof url !== 'string') url = 'about:blank';
 
 			this.tabs.push({

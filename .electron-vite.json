@@ -18,11 +18,11 @@
     }
   ],
   "settings": {
-    "searchBar": false,
-    "showBookmarkBar": false,
-    "theme": "dark",
-    "homePage": "https://www.naver.com",
-    "startupAction": "lastSession",
+    "searchBar": true,
+    "showBookmarkBar": true,
+    "theme": "light",
+    "homePage": "naver.com",
+    "startupAction": "newTab",
     "acceptCookies": false,
     "saveHistory": false
   }
