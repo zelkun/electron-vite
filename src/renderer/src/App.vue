@@ -221,7 +221,7 @@ export default {
 	},
 	beforeUnmount() {
 		window.removeEventListener('resize', this.handleResize);
-		this.saveSession();
+		window.removeEventListener('beforeunload', this.saveSession);
 	},
 	async mounted() {
 		await this.loadSettings(); // 설정 로드
@@ -343,8 +343,8 @@ export default {
 		this.setupEventHandler('search-text', this.searchGoogle);
 		this.setupEventHandler('navigatorCtrl', this.navigatorCtrl); // goBack, goForward, refresh
 
-		// 창 크기 변경 감지
-		window.addEventListener('resize', this.handleResize);
+		window.addEventListener('resize', this.handleResize); // 창 크기 변경 감지
+		window.addEventListener('beforeunload', this.saveSession); // 페이지 종료 시 세션 저장
 	},
 
 	methods: {
@@ -377,17 +377,15 @@ export default {
 			this.navigate();
 		},
 		saveSession() {
-			if (this.startupAction === 'lastSession') {
-				const sessionData = {
-					tabs: this.tabs.map((tab) => ({
-						url: tab.url,
-						title: tab.title,
-						zoomLevel: tab.zoomLevel,
-					})),
-					currentTabIndex: this.currentTabIndex,
-				};
-				window.electronAPI.send('save-session', sessionData);
-			}
+			const sessionData = {
+				tabs: this.tabs.map((tab) => ({
+					url: tab.url,
+					title: tab.title,
+					zoomLevel: tab.zoomLevel,
+				})),
+				currentTabIndex: this.currentTabIndex,
+			};
+			window.electronAPI.send('save-session', sessionData);
 		},
 
 		// 웹뷰 네비게이션 버튼 클릭 메서드
