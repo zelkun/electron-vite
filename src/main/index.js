@@ -9,6 +9,7 @@ import { setupIpcHandlers } from './ipcHandlers';
 import { isDev } from './config';
 import { setupCommandLine /*, parseCommandLineArgs, hasSwitch, getSwitchValue*/ } from './commandLine';
 import { BrowserWinOpt, webviewOpt, popWindowOpt } from './windowOptions';
+import { saveSession } from './config';
 import log from 'electron-log/main';
 
 setupCommandLine(); // 보안관련 설정 해제
@@ -124,6 +125,22 @@ app.on('web-contents-created', (_, contents) => {
 
 // 모든 윈도우가 닫히면 앱 종료 (macOS 제외)
 app.on('window-all-closed', () => {
+	console.log('## window-all-closed');
 	// if (process.platform !== 'darwin')
 	app.quit();
+});
+
+app.on('will-quit', async (evt) => {
+	console.log('## will-quit');
+	evt.preventDefault();
+
+	const sessionData = BrowserWindow.getAllWindows().map((win) => ({
+		url: win.webContents.getURL(),
+		state: win.webContents.executeJavascript('window.getAppState()'),
+	}));
+
+	console.log('## sessionData', sessionData);
+	saveSession(sessionData); // 세션 데이터 저장
+
+	app.exit();
 });
