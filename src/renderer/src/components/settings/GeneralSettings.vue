@@ -1,16 +1,24 @@
+<!-- src/renderer/src/components/settings/GeneralSettings.vue -->
 <template>
-	<div class="setting-item">
-		<label>시작 페이지</label>
-		<input v-model="homePage" placeholder="예: about:blank 또는 https://example.com" @input="updateSetting('homePage', homePage)" />
-	</div>
-
-	<div class="setting-item">
-		<label>시작 시 동작</label>
-		<select :key="startupAction" v-model="startupAction" @change="updateSetting('startupAction', startupAction)">
-			<option value="newTab">새 탭 열기</option>
-			<option value="homePage">홈페이지 열기</option>
-			<option value="lastSession">이전 세션 복원</option>
-		</select>
+	<div class="settings-section">
+		<h2>시작 시 설정</h2>
+		<div class="setting-item">
+			<label>앱 시작 시 동작</label>
+			<div>
+				<label>
+					<input v-model="startupAction" type="radio" value="newTab" @change="savestartupAction" />
+					새 탭 페이지 열기
+				</label>
+				<label>
+					<input v-model="startupAction" type="radio" value="homePage" @change="savestartupAction" />
+					홈페이지 열기
+				</label>
+			</div>
+		</div>
+		<div v-if="startupAction === 'homePage'" class="setting-item">
+			<label>홈페이지 주소</label>
+			<input v-model="homePage" placeholder="https://example.com" @change="saveHomePage" />
+		</div>
 	</div>
 </template>
 
@@ -18,17 +26,20 @@
 export default {
 	data() {
 		return {
-			homePage: 'about:blank',
 			startupAction: 'newTab',
+			homePage: '',
 		};
 	},
 	async mounted() {
-		this.homePage = (await window.electronAPI.invoke('get-config-value', 'settings', 'homePage')) || 'about:blank';
 		this.startupAction = (await window.electronAPI.invoke('get-config-value', 'settings', 'startupAction')) || 'newTab';
+		this.homePage = (await window.electronAPI.invoke('get-config-value', 'settings', 'homePage')) || '';
 	},
 	methods: {
-		updateSetting(key, value) {
-			this.$emit('update-setting', { key, value });
+		async savestartupAction() {
+			await window.electronAPI.invoke('save-setting', 'startupAction', this.startupAction);
+		},
+		async saveHomePage() {
+			await window.electronAPI.invoke('save-setting', 'homePage', this.homePage);
 		},
 	},
 };

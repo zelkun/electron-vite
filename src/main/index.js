@@ -130,17 +130,6 @@ app.on('window-all-closed', () => {
 	app.quit();
 });
 
-app.on('will-quit', async (evt) => {
+app.on('will-quit', (evt) => {
 	console.log('## will-quit');
-	evt.preventDefault();
-
-	const sessionData = BrowserWindow.getAllWindows().map((win) => ({
-		url: win.webContents.getURL(),
-		state: win.webContents.executeJavascript('window.getAppState()'),
-	}));
-
-	console.log('## sessionData', sessionData);
-	saveSession(sessionData); // 세션 데이터 저장
-
-	app.exit();
 });
