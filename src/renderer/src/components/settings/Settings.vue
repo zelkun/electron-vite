@@ -24,10 +24,13 @@
 import GeneralSettings from './GeneralSettings.vue';
 import AppearanceSettings from './AppearanceSettings.vue';
 import PrivacySettings from './PrivacySettings.vue';
+import ShortcutsSettings from './shortcutsSettings.vue'; // 추가
+import AdvancedSettings from './AdvancedSettings.vue'; // 추가
 
 export default {
-	components: { GeneralSettings, AppearanceSettings, PrivacySettings },
+	components: { GeneralSettings, AppearanceSettings, PrivacySettings, ShortcutsSettings, AdvancedSettings },
 
+	// Settings.vue 데이터 수정
 	data() {
 		return {
 			activeCategory: 'general',
@@ -35,6 +38,9 @@ export default {
 				{ id: 'general', label: '일반', component: 'GeneralSettings' },
 				{ id: 'appearance', label: '모양', component: 'AppearanceSettings' },
 				{ id: 'privacy', label: '개인정보', component: 'PrivacySettings' },
+				// ▼▼▼ 추가된 항목 ▼▼▼
+				{ id: 'shortcuts', label: '단축키', component: 'ShortcutsSettings' },
+				{ id: 'advanced', label: '고급', component: 'AdvancedSettings' },
 			],
 		};
 	},

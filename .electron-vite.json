@@ -24,7 +24,10 @@
     "homePage": "https://naver.com",
     "startupAction": "homePage",
     "acceptCookies": false,
-    "saveHistory": false
+    "saveHistory": false,
+    "shortcuts.newTab": "Ctrl+T",
+    "shortcuts.closeTab": "Ctrl+W",
+    "shortcuts.search": "Ctrl+F"
   },
   "session": []
 }
