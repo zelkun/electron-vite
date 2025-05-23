@@ -22,7 +22,7 @@
     "showBookmarkBar": true,
     "theme": "system",
     "homePage": "https://naver.com",
-    "startupAction": "newTab",
+    "startupAction": "homePage",
     "acceptCookies": false,
     "saveHistory": false
   },
