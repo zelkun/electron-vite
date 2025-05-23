@@ -76,6 +76,7 @@ electron-vite
 ├─ build
 │  ├─ entitlements.mac.plist
 │  ├─ hosts.bat
+│  ├─ hosts.sh
 │  ├─ icon.icns
 │  ├─ icon.ico
 │  └─ icon.png
@@ -116,9 +117,17 @@ electron-vite
 │        ├─ App.vue
 │        ├─ assets
 │        │  ├─ css
+│        │  │  ├─ settings.css
 │        │  │  └─ styles.css
 │        │  └─ images
 │        ├─ components
+│        │  └─ settings
+│        │     ├─ AdvancedSettings.vue
+│        │     ├─ AppearanceSettings.vue
+│        │     ├─ GeneralSettings.vue
+│        │     ├─ PrivacySettings.vue
+│        │     ├─ Settings.vue
+│        │     └─ shortcutsSettings.vue
 │        └─ main.js
 └─ tools
    ├─ nsis-3.0.4.1.7z
