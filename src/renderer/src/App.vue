@@ -213,7 +213,7 @@ export default {
 		},
 		tabWidth() {
 			// 브라우저 너비에서 추가 버튼과 종료 버튼 너비를 제외한 공간
-			const availableWidth = window.innerWidth - 100;
+			const availableWidth = window.innerWidth - 140;
 			// 최소 60px, 최대 150px 사이에서 탭 너비 계산 (기존 100px, 200px에서 축소)
 			const calculatedWidth = Math.min(150, Math.max(60, availableWidth / this.tabs.length));
 			return `${calculatedWidth}px`;

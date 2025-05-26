@@ -15,7 +15,7 @@
 			</div>
 
 			<!-- 닫기 버튼 -->
-			<button class="close-btn" @click="$emit('close')">×</button>
+			<button class="setting-close-btn" @click="$emit('close')">×</button>
 		</div>
 	</div>
 </template>

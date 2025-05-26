@@ -24,17 +24,17 @@
 
 [data-theme='dark'] {
 	--bg-color: #202124;
-	--text-color: #e8eaed;
+	--text-color: #f8fafc;
 	--border-color: #5f6368;
 	--tab-bg: #2a2d31;
 	--tab-active-bg: #292b2f;
-	--tab-title-color: #b0b3b8;
+	--tab-title-color: #f1f3f4;
 	--tab-title-active: #fff;
 	--toolbar-bg: #222327;
 	--toolbar-border: #44464a;
-	--action-hover: #33353a;
+	--action-hover: rgba(255, 255, 255, 0.08);
 	--bookmark-bar-bg: #232428;
-	--bookmark-link-color: #e8eaed;
+	--bookmark-link-color: #f8fafc;
 	--bookmark-link-hover: #33353a;
 	--modal-bg: #232428;
 	--modal-header: #fff;
@@ -42,7 +42,7 @@
 	--search-bar-bg: #232428;
 	--search-bar-border: #44464a;
 	--status-bar-bg: #232428;
-	--status-bar-color: #b0b3b8;
+	--status-bar-color: #f1f3f4;
 }
 
 html,
@@ -231,6 +231,11 @@ body {
 .url-input:focus {
 	border-color: #4285f4;
 	box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+}
+
+::placeholder {
+	color: rgba(248, 250, 252, 0.7);
+	opacity: 1;
 }
 
 .go-btn {
@@ -617,7 +622,7 @@ body {
 }
 
 .close-btn:hover {
-	background-color: #f1f3f4;
+	background-color: #e81123;
 }
 
 .window-controls {
@@ -646,10 +651,6 @@ body {
 
 .maximize-btn:hover {
 	background-color: rgba(255, 255, 255, 0.1);
-}
-
-.close-btn:hover {
-	background-color: #e81123;
 }
 
 .search-area {

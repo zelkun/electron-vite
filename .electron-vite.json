@@ -18,9 +18,9 @@
     }
   ],
   "settings": {
-    "searchBar": true,
+    "searchBar": false,
     "showBookmarkBar": true,
-    "theme": "system",
+    "theme": "light",
     "homePage": "https://naver.com",
     "startupAction": "homePage",
     "acceptCookies": false,
