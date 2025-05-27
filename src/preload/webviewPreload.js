@@ -44,11 +44,6 @@ contextBridge.exposeInMainWorld('webviewAPI', {
 			ipcRenderer.removeListener(channel, subscription);
 		};
 	},
-
-	// 호스트에 직접 메시지 전송 (렌더러 프로세스에서 사용, Promise 반환)
-	invokeToHost: (channel, ...args) => {
-		return ipcRenderer.invokeToHost(channel, ...args);
-	},
 });
 
 window.addEventListener('contextmenu', (e) => {
