@@ -12,8 +12,6 @@ import { BrowserWinOpt, webviewOpt, popWindowOpt } from './windowOptions';
 import { saveSession } from './config';
 import log from 'electron-log/main';
 
-setupCommandLine(); // 보안관련 설정 해제
-
 let mainWindow = null;
 
 function createWindow() {
@@ -58,21 +56,38 @@ function createWindow() {
 
 // 앱이 준비되면 윈도우 생성
 app.whenReady().then(() => {
-	electronApp.setAppUserModelId('com.electron-vite');
+	setupCommandLine(); // 보안관련 설정 해제
 
-	// 최적화 설정
-	app.on('browser-window-created', (_, window) => {
-		optimizer.watchWindowShortcuts(window);
-	});
+	const gotTheLock = app.requestSingleInstanceLock();
+	if (!gotTheLock) {
+		log.info('Another instance is running. Exiting this instance.');
+		app.quit();
+	} else {
+		app.on('second-instance', (event, commandLine, workingDirectory) => {
+			log.info('Second instance detected. Focusing the main window.');
+			if (mainWindow) {
+				if (mainWindow.isMinimized()) mainWindow.restore();
+				mainWindow.focus();
+			}
+		});
 
-	createWindow(); // 메인 윈도우 생성
-	setupTray(mainWindow); // 트레이 설정
-	setupMenu(mainWindow); // 메뉴 설정
-	setupUpdater(); // 업데이터 설정
+		// 이중실행 방지를 위해 위치 이동
+		electronApp.setAppUserModelId('com.electron-vite');
 
-	app.on('activate', function () {
-		if (BrowserWindow.getAllWindows().length === 0) createWindow();
-	});
+		// 최적화 설정
+		app.on('browser-window-created', (_, window) => {
+			optimizer.watchWindowShortcuts(window);
+		});
+
+		createWindow(); // 메인 윈도우 생성
+		setupTray(mainWindow); // 트레이 설정
+		setupMenu(mainWindow); // 메뉴 설정
+		setupUpdater(); // 업데이터 설정
+
+		app.on('activate', function () {
+			if (BrowserWindow.getAllWindows().length === 0) createWindow();
+		});
+	}
 });
 
 // 웹뷰 생성 시 preload 스크립트 설정
@@ -125,11 +140,11 @@ app.on('web-contents-created', (_, contents) => {
 
 // 모든 윈도우가 닫히면 앱 종료 (macOS 제외)
 app.on('window-all-closed', () => {
-	console.log('## window-all-closed');
+	log.debug('## window-all-closed');
 	// if (process.platform !== 'darwin')
 	app.quit();
 });
 
 app.on('will-quit', (evt) => {
-	console.log('## will-quit');
+	log.debug('## will-quit');
 });
