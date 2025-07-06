@@ -3,7 +3,7 @@
 	<Settings v-if="showSettings" @close="showSettings = false" @update-setting="updateSetting" />
 	<div class="browser-container">
 		<!-- 탭 영역 -->
-		<div class="browser-tabs">
+		<div :class="['browser-tabs', { mac: isMac }]">
 			<div
 				v-for="(tab, index) in tabs"
 				:key="index"
@@ -21,7 +21,7 @@
 			</div>
 			<button class="add-tab" @click="addNewTab">+</button>
 
-			<div class="window-controls">
+			<div v-if="!isMac" class="window-controls">
 				<button title="최소화" class="window-control minimize-btn" @click="windowCtrlBtnClick('minimize-window')">─</button>
 				<button title="최대화" class="window-control maximize-btn" @click="windowCtrlBtnClick('maximize-window')">□</button>
 				<button title="닫기" class="window-control close-btn" @click="windowCtrlBtnClick('close-window')">×</button>
@@ -183,6 +183,7 @@ export default {
 	},
 	data() {
 		return {
+			isMac: window.electronAPI?.platform === 'darwin' || false,
 			homePage: 'about:blank',
 			startupAction: 'newTab',
 			showSettings: false,

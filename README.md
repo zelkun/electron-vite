@@ -125,7 +125,6 @@ electron-vite
 │        │     ├─ AdvancedSettings.vue
 │        │     ├─ AppearanceSettings.vue
 │        │     ├─ GeneralSettings.vue
-│        │     ├─ PrivacySettings.vue
 │        │     ├─ Settings.vue
 │        │     └─ shortcutsSettings.vue
 │        └─ main.js

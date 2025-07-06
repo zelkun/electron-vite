@@ -29,4 +29,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
 	once: (channel, callback) => {
 		ipcRenderer.once(channel, (event, ...args) => callback(...args));
 	},
+	platform: process.platform,
 });

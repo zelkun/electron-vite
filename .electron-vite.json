@@ -20,7 +20,7 @@
   "settings": {
     "searchBar": false,
     "showBookmarkBar": true,
-    "theme": "light",
+    "theme": "system",
     "homePage": "https://naver.com",
     "startupAction": "homePage",
     "acceptCookies": false,

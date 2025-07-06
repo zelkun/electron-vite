@@ -77,6 +77,9 @@ body {
 	-webkit-app-region: drag;
 	width: 100%;
 }
+.browser-tabs.mac {
+	padding-left: 70px; /* macOS 좌측 버튼 영역만큼 여백 확보 */
+}
 
 .tab,
 .add-tab {
