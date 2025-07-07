@@ -350,6 +350,13 @@ jQuery 선택자
 [Project Manager]: https://marketplace.visualstudio.com/items?itemName=alefragnani.project-manager
 [Auto Reload]: https://marketplace.visualstudio.com/items?itemName=sebastian-lay.auto-reload
 [Auto Scroll]: https://marketplace.visualstudio.com/items?itemName=LamborGhinious.auto-scroll
+[Live Server]: https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer
+[Indentation Level Movement2]: https://marketplace.visualstudio.com/items?itemName=MikiFos.indentation-level-movement2
+[indent-rainbow]: https://marketplace.visualstudio.com/items?itemName=oderwat.indent-rainbow
+[file-size]: https://marketplace.visualstudio.com/items?itemName=zh9528.file-size
+[Bracket Peek]: https://marketplace.visualstudio.com/items?itemName=jomeinaster.bracket-peek
+[Bookmarks]: https://marketplace.visualstudio.com/items?itemName=alefragnani.Bookmarks
+[Better Align]: https://marketplace.visualstudio.com/items?itemName=Chouzz.vscode-better-align
 
 ## DOC
 
@@ -357,13 +364,16 @@ jQuery 선택자
 [vscode-hwp]: https://marketplace.visualstudio.com/items?itemName=pusnow.hwp
 [vscode-pdf]: https://marketplace.visualstudio.com/items?itemName=tomoki1207.pdf
 [Polacode(fixed edition)]: https://marketplace.visualstudio.com/items?itemName=mrrefactoring.polacode-fixed-edition
+[Excel to Markdown table]: https://marketplace.visualstudio.com/items?itemName=csholmq.excel-to-markdown-table
 [Paste Image]: https://marketplace.visualstudio.com/items?itemName=mushan.vscode-paste-image
 [Markdown Paste]: https://marketplace.visualstudio.com/items?itemName=telesoho.vscode-markdown-paste-image
+[Office Viewer]: https://marketplace.visualstudio.com/items?itemName=cweijan.vscode-office
+[Edit CSV]: https://marketplace.visualstudio.com/items?itemName=janisdd.vscode-edit-csv
+[Rainbow CSV]: https://marketplace.visualstudio.com/items?itemName=mechatroner.rainbow-csv
 
 ## dev
 
 [project-tree]: https://marketplace.visualstudio.com/items?itemName=zhucy.project-tree
-[indent-rainbow]: https://marketplace.visualstudio.com/items?itemName=oderwat.indent-rainbow
 [JavaScript (ES6) code snippets]: https://marketplace.visualstudio.com/items?itemName=xabikos.JavaScriptSnippets
 [console.log snippets - clg]: https://marketplace.visualstudio.com/items?itemName=alexkev.clg
 [Error Lens]: https://marketplace.visualstudio.com/items?itemName=usernamehw.errorlens
