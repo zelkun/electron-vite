@@ -337,3 +337,47 @@ jQuery 선택자
 [ipc_ko]: https://tinydew4.github.io/electron-ko/docs/api/ipc-main/
 [ipc_exam]: https://www.electronjs.org/docs/latest/tutorial/ipc
 [Optional_chaining]: https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Operators/Optional_chaining
+
+# Extends
+
+[Auto Close Tag]: https://marketplace.visualstudio.com/items?itemName=formulahendry.auto-close-tag
+[Auto Rename Tag]: https://marketplace.visualstudio.com/items?itemName=formulahendry.auto-rename-tag
+[Bracket Select]: https://marketplace.visualstudio.com/items?itemName=chunsen.bracket-select
+[Material Icon Theme]: https://marketplace.visualstudio.com/items?itemName=PKief.material-icon-theme
+[Unique Lines]: https://marketplace.visualstudio.com/items?itemName=bibhasdn.unique-lines
+[Paste JSON as Code]: https://marketplace.visualstudio.com/items?itemName=quicktype.quicktype
+[XML Tools]: https://marketplace.visualstudio.com/items?itemName=DotJoshJohnson.xml
+[Project Manager]: https://marketplace.visualstudio.com/items?itemName=alefragnani.project-manager
+[Auto Reload]: https://marketplace.visualstudio.com/items?itemName=sebastian-lay.auto-reload
+[Auto Scroll]: https://marketplace.visualstudio.com/items?itemName=LamborGhinious.auto-scroll
+
+## DOC
+
+[Markdown All in One]: https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one
+[vscode-hwp]: https://marketplace.visualstudio.com/items?itemName=pusnow.hwp
+[vscode-pdf]: https://marketplace.visualstudio.com/items?itemName=tomoki1207.pdf
+[Polacode(fixed edition)]: https://marketplace.visualstudio.com/items?itemName=mrrefactoring.polacode-fixed-edition
+[Paste Image]: https://marketplace.visualstudio.com/items?itemName=mushan.vscode-paste-image
+[Markdown Paste]: https://marketplace.visualstudio.com/items?itemName=telesoho.vscode-markdown-paste-image
+
+## dev
+
+[project-tree]: https://marketplace.visualstudio.com/items?itemName=zhucy.project-tree
+[indent-rainbow]: https://marketplace.visualstudio.com/items?itemName=oderwat.indent-rainbow
+[JavaScript (ES6) code snippets]: https://marketplace.visualstudio.com/items?itemName=xabikos.JavaScriptSnippets
+[console.log snippets - clg]: https://marketplace.visualstudio.com/items?itemName=alexkev.clg
+[Error Lens]: https://marketplace.visualstudio.com/items?itemName=usernamehw.errorlens
+[inline Parameters for VSCode]: https://marketplace.visualstudio.com/items?itemName=liamhammett.inline-parameters
+[inline Parameters Extended for VSCode]: https://marketplace.visualstudio.com/items?itemName=RobertOstermann.inline-parameters-extended
+[ESLint]: https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint
+[Prettier]: https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode
+[Vue]: https://marketplace.visualstudio.com/items?itemName=Vue.volar
+[Electron Snippets]: https://marketplace.visualstudio.com/items?itemName=antoniormrzz.electron-snippets
+
+## Git
+
+[GitLens]: https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens
+[Git Graph]: https://marketplace.visualstudio.com/items?itemName=mhutchie.git-graph
+[Git History]: https://marketplace.visualstudio.com/items?itemName=donjayamanne.githistory
+[gitignore]: https://marketplace.visualstudio.com/items?itemName=codezombiech.gitignore
+[Ignore files]: https://marketplace.visualstudio.com/items?itemName=ldez.ignore-files
