@@ -90,10 +90,18 @@ export function setConfigValue(section, key, value) {
 	return saveConfig(config);
 }
 
+export function getShortcut(key, defaultValue) {
+	return getConfigValue('shortcuts', key) || defaultValue;
+}
+
+/**
+ * session 기능이 없어서 제거할 예정..
+ * @param {*} sessionData
+ * @returns
+ */
 export function saveSession(sessionData) {
 	return saveConfigSection('session', sessionData);
 }
-
 export function loadSession() {
 	return getConfigSection('session') || {};
 }

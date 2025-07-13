@@ -3,7 +3,7 @@
 import { Menu, ipcMain, BrowserWindow } from 'electron';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { BrowserWinOpt, webviewOpt, popWindowOpt, preloadPaths } from './windowOptions';
-import { isDev } from './config';
+import { isDev, getShortcut } from './config';
 import log from 'electron-log/main';
 import { join } from 'path';
 
@@ -20,14 +20,14 @@ export function setupMenu(mainWindow) {
 			submenu: [
 				{
 					label: '새 탭',
-					accelerator: 'CommandOrControl + T',
+					accelerator: getShortcut('newTab', 'CommandOrControl + T'),
 					click: (menuItem, focusedWindow, keyEvt) => {
 						if (focusedWindow) focusedWindow.webContents.send('create-new-tab');
 					},
 				},
 				{
 					label: '새 창',
-					accelerator: 'CommandOrControl + Shift + N',
+					accelerator: getShortcut('newWindow', 'CommandOrControl + Shift + N'),
 					click: (menuItem, focusedWindow, keyEvt) => {
 						const newWindow = new BrowserWindow(BrowserWinOpt);
 						newWindow.windowType = 'main'; // 윈도우 타입 설정 (메인 윈도우)
@@ -42,7 +42,7 @@ export function setupMenu(mainWindow) {
 				},
 				{
 					label: '탭 닫기',
-					accelerator: 'CommandOrControl + W',
+					accelerator: getShortcut('closeTab', 'CommandOrControl + W'),
 					click: (menuItem, focusedWindow, keyEvt) => {
 						// BrowserWindow 생성시 windowType을 설정함
 						if (focusedWindow?.windowType === 'main') focusedWindow.webContents.send('close-current-tab');
@@ -52,7 +52,7 @@ export function setupMenu(mainWindow) {
 				{ type: 'separator' },
 				{
 					label: '종료',
-					accelerator: 'CommandOrControl + Q',
+					accelerator: getShortcut('exit', 'CommandOrControl + Q'),
 					click: (menuItem, focusedWindow, keyEvt) => {
 						if (focusedWindow) focusedWindow.close();
 					},
@@ -74,7 +74,7 @@ export function setupMenu(mainWindow) {
 				{ type: 'separator' },
 				{
 					label: '페이지 내 검색',
-					accelerator: 'CommandOrControl + F',
+					accelerator: getShortcut('search', 'CommandOrControl + F'),
 					click: (menuItem, focusedWindow, keyEvt) => {
 						if (focusedWindow) focusedWindow.webContents.send('show-page-search');
 					},
@@ -87,7 +87,7 @@ export function setupMenu(mainWindow) {
 				// { role: 'reload' },
 				{
 					label: '새로고침',
-					accelerator: 'CommandOrControl + R',
+					accelerator: getShortcut('reload', 'CommandOrControl + R'),
 					click: (menuItem, focusedWindow, keyEvt) => {
 						// BrowserWindow 생성시 windowType을 설정함
 						if (focusedWindow?.windowType === 'main') focusedWindow.webContents.send('refresh-tab');

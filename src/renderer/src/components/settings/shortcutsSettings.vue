@@ -24,12 +24,6 @@ export default {
 			},
 		};
 	},
-	async mounted() {
-		// 기존 단축키 값을 불러옴
-		for (const key in this.shortcuts) {
-			this.shortcuts[key].value = (await window.electronAPI.invoke('get-config-value', 'shortcuts', key)) || this.defaultShortcuts[key];
-		}
-	},
 	computed: {
 		defaultShortcuts() {
 			return {
@@ -39,9 +33,16 @@ export default {
 			};
 		},
 	},
+	async mounted() {
+		// 기존 단축키 값을 불러옴
+		for (const key in this.shortcuts) {
+			this.shortcuts[key].value = (await window.electronAPI.invoke('get-config-value', 'shortcuts', key)) || this.defaultShortcuts[key];
+		}
+	},
 	methods: {
 		async saveShortcut(key, value) {
 			await window.electronAPI.invoke('save-setting', `shortcuts.${key}`, value);
+			window.electronAPI.send('reload-menu'); // 단축키 변경 시 메뉴 갱신 요청
 		},
 		resetShortcut(key) {
 			this.shortcuts[key].value = this.defaultShortcuts[key];
