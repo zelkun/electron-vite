@@ -99,7 +99,7 @@ export function setupMenu(mainWindow) {
 				{
 					label: '웹뷰 개발자 도구',
 					role: 'toggleWebviewDevTools',
-					accelerator: 'CommandOrControl + F12',
+					accelerator: getShortcut('toggleWebviewDevTools', 'CommandOrControl + F12'),
 					click: (menuItem, focusedWindow, keyEvt) => {
 						if (focusedWindow) focusedWindow.webContents.send('toggle-webview-devtools');
 					},
@@ -108,14 +108,14 @@ export function setupMenu(mainWindow) {
 				{
 					// role: 'resetZoom',
 					label: '원래 크기로',
-					accelerator: 'CommandOrControl + 0',
+					accelerator: getShortcut('resetZoom', 'CommandOrControl + 0'),
 					click: (menuItem, focusedWindow, keyEvt) => {
 						if (focusedWindow) focusedWindow.webContents.send('zoomCtrl', 'reset');
 					},
 				},
 				{
 					label: '원래 크기로',
-					accelerator: 'CommandOrControl + num0',
+					accelerator: getShortcut('resetZoom1', 'CommandOrControl + num0'),
 					click: (menuItem, focusedWindow, keyEvt) => {
 						if (focusedWindow) focusedWindow.webContents.send('zoomCtrl', 'reset');
 					},
@@ -123,14 +123,14 @@ export function setupMenu(mainWindow) {
 				{
 					// role: 'zoomIn',
 					label: '확대',
-					accelerator: 'CommandOrControl + plus',
+					accelerator: getShortcut('zoomIn', 'CommandOrControl + plus'),
 					click: (menuItem, focusedWindow, keyEvt) => {
 						if (focusedWindow) focusedWindow.webContents.send('zoomCtrl', 'increase');
 					},
 				},
 				{
 					label: '확대',
-					accelerator: 'CommandOrControl + numadd',
+					accelerator: getShortcut('zoomIn1', 'CommandOrControl + numadd'),
 					click: (menuItem, focusedWindow, keyEvt) => {
 						if (focusedWindow) focusedWindow.webContents.send('zoomCtrl', 'increase');
 					},
@@ -138,7 +138,7 @@ export function setupMenu(mainWindow) {
 				{
 					label: '확대',
 					visible: false,
-					accelerator: 'CommandOrControl + =',
+					accelerator: getShortcut('zoomIn2', 'CommandOrControl + ='),
 					click: (menuItem, focusedWindow, keyEvt) => {
 						if (focusedWindow) focusedWindow.webContents.send('zoomCtrl', 'increase');
 					},
@@ -146,7 +146,7 @@ export function setupMenu(mainWindow) {
 				{
 					// role: 'zoomOut',
 					label: '축소',
-					accelerator: 'CommandOrControl + -',
+					accelerator: getShortcut('zoomOut', 'CommandOrControl + -'),
 					click: (menuItem, focusedWindow, keyEvt) => {
 						if (focusedWindow) focusedWindow.webContents.send('zoomCtrl', 'decrease');
 					},
@@ -155,7 +155,7 @@ export function setupMenu(mainWindow) {
 					// role: 'zoomOut',
 					label: '축소',
 					visible: false,
-					accelerator: 'CommandOrControl + numsub',
+					accelerator: getShortcut('zoomOut1', 'CommandOrControl + numsub'),
 					click: (menuItem, focusedWindow, keyEvt) => {
 						if (focusedWindow) focusedWindow.webContents.send('zoomCtrl', 'decrease');
 					},
@@ -169,7 +169,7 @@ export function setupMenu(mainWindow) {
 			submenu: [
 				{
 					label: '북마크 표시줄 보기',
-					accelerator: 'CommandOrControl + B',
+					accelerator: getShortcut('bookmarkView', 'CommandOrControl + B'),
 					type: 'checkbox',
 					checked: true,
 					click: (menuItem, focusedWindow, keyEvt) => {
@@ -178,7 +178,7 @@ export function setupMenu(mainWindow) {
 				},
 				{
 					label: '현재 페이지 북마크에 추가',
-					accelerator: 'CommandOrControl + D',
+					accelerator: getShortcut('bookmarkAdd', 'CommandOrControl + D'),
 					click: (menuItem, focusedWindow, keyEvt) => {
 						if (focusedWindow) focusedWindow.webContents.send('add-bookmark');
 					},

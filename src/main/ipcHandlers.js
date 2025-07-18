@@ -1,6 +1,7 @@
 // src/main/ipcHandlers.js
 import { BrowserWindow, ipcMain, clipboard, dialog } from 'electron';
 import { getConfigSection, saveConfigSection, getConfigValue, setConfigValue, defaultConfig, saveConfig, loadConfig, saveSession, loadSession } from './config';
+import { setupMenu } from './menu';
 import fs from 'fs';
 import log from 'electron-log/main';
 
@@ -91,6 +92,11 @@ export function setupIpcHandlers() {
 	ipcMain.handle('import-settings', (_, data) => {
 		const config = JSON.parse(data);
 		return saveConfig(config);
+	});
+
+	ipcMain.on('reload-menu', (evt, payload) => {
+		const currentWindow = BrowserWindow.fromWebContents(evt.sender);
+		setupMenu(currentWindow);
 	});
 
 	ipcMain.handle('save-setting', async (_, key, value) => {

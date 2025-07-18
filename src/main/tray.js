@@ -9,7 +9,7 @@ let tray = null;
 
 export function setupTray(mainWindow) {
 	// 트레이 아이콘 경로 설정
-	const iconPath = join(__dirname, '../../resources/icon.png');
+	const iconPath = join(__dirname, '../../resources/icon.ico');
 	const icon = nativeImage.createFromPath(iconPath);
 
 	const homePage = getConfigValue('settings', 'homePage') || 'about:blank';
