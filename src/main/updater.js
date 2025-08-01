@@ -87,7 +87,9 @@ export function setupUpdater() {
 			progressBar.close();
 		}
 
-		dialog.showErrorBox('업데이트 오류', '업데이트 중 오류가 발생했습니다: ' + err);
+		dialog.showErrorBox('업데이트 오류', '업데이트 중 오류가 발생했습니다: ');
+		console.error('업데이트 오류', err);
+		console.log(err.message);
 	});
 
 	// 업데이트 확인 함수

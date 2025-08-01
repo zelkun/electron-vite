@@ -21,7 +21,10 @@
 		"release": "kill_electron.bat && npm run build && electron-builder -p always",
 		"release:mac": "npm run build && electron-builder -p always"
 	},
-	"gitea": "http://releases.electron.vite:9000",
+	"gitea": {
+		"gitea-url": "http://releases.electron.vite:9000",
+		"release-domain": "releases.electron.vite"
+	},
 	"build": {
 		"productName": "electron-vite",
 		"asar": true,
