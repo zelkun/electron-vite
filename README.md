@@ -82,6 +82,12 @@ electron-vite
 ├─ .prettierrc.yaml
 ├─ autoit
 ├─ build
+│  ├─ entitlements.mac.plist
+│  ├─ hosts.bat
+│  ├─ hosts.sh
+│  ├─ icon.icns
+│  ├─ icon.ico
+│  └─ icon.png
 ├─ dev-app-update.yml
 ├─ electron-builder.yml
 ├─ electron.vite.config.mjs
@@ -95,7 +101,8 @@ electron-vite
 │  └─ script.js
 ├─ resources
 │  ├─ icon.ico
-│  └─ icon.png
+│  ├─ icon.png
+│  └─ icon.png.org
 ├─ src
 │  ├─ main
 │  │  ├─ commandLine.js
