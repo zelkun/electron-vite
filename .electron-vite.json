@@ -32,5 +32,11 @@
   "session": [],
   "hostsChecker": {
     "skipHostsCheck": "20250824"
-  }
+  },
+  "blockedUrls": [
+    "http://naver.com",
+    "https://naver.com",
+    "nid.naver.com",
+    "g2b.go.kr"
+  ]
 }

@@ -80,7 +80,7 @@ electron-vite
 ├─ .electron-vite.json
 ├─ .prettierignore
 ├─ .prettierrc.yaml
-├─ autoit
+├─ README.md
 ├─ build
 │  ├─ entitlements.mac.plist
 │  ├─ hosts.bat
@@ -95,7 +95,6 @@ electron-vite
 ├─ kill_electron.bat
 ├─ package-lock.json
 ├─ package.json
-├─ README.md
 ├─ ref
 │  ├─ promis.js
 │  └─ script.js
@@ -105,6 +104,7 @@ electron-vite
 │  └─ icon.png.org
 ├─ src
 │  ├─ main
+│  │  ├─ blocklistManager.js
 │  │  ├─ commandLine.js
 │  │  ├─ config.js
 │  │  ├─ hostsChecker.js
@@ -124,13 +124,13 @@ electron-vite
 │     └─ src
 │        ├─ App.vue
 │        ├─ assets
-│        │  ├─ css
-│        │  │  ├─ settings.css
-│        │  │  └─ styles.css
-│        │  └─ images
+│        │  └─ css
+│        │     ├─ settings.css
+│        │     └─ styles.css
 │        ├─ components
-│        │  └─ settings
+│        │  └─ Settings
 │        │     ├─ AppearanceSettings.vue
+│        │     ├─ BlockedUrlsSettings.vue
 │        │     ├─ GeneralSettings.vue
 │        │     ├─ Settings.vue
 │        │     └─ shortcutsSettings.vue

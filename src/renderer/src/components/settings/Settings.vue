@@ -24,9 +24,10 @@
 import GeneralSettings from './GeneralSettings.vue';
 import AppearanceSettings from './AppearanceSettings.vue';
 import ShortcutsSettings from './shortcutsSettings.vue'; // 추가
+import BlockedUrlsSettings from './BlockedUrlsSettings.vue'; // 추가
 
 export default {
-	components: { GeneralSettings, AppearanceSettings, ShortcutsSettings },
+	components: { GeneralSettings, AppearanceSettings, ShortcutsSettings, BlockedUrlsSettings },
 
 	// Settings.vue 데이터 수정
 	data() {
@@ -36,6 +37,7 @@ export default {
 				{ id: 'general', label: '일반', component: 'GeneralSettings' },
 				{ id: 'appearance', label: '모양', component: 'AppearanceSettings' },
 				{ id: 'shortcuts', label: '단축키', component: 'ShortcutsSettings' },
+				{ id: 'blockedUrl', label: '차단Url', component: 'BlockedUrlsSettings' },
 			],
 		};
 	},
