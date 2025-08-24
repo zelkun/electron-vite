@@ -130,7 +130,6 @@ electron-vite
 │        │  └─ images
 │        ├─ components
 │        │  └─ settings
-│        │     ├─ AdvancedSettings.vue
 │        │     ├─ AppearanceSettings.vue
 │        │     ├─ GeneralSettings.vue
 │        │     ├─ Settings.vue
@@ -399,3 +398,4 @@ jQuery 선택자
 [Git History]: https://marketplace.visualstudio.com/items?itemName=donjayamanne.githistory
 [gitignore]: https://marketplace.visualstudio.com/items?itemName=codezombiech.gitignore
 [Ignore files]: https://marketplace.visualstudio.com/items?itemName=ldez.ignore-files
+

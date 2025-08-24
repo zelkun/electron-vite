@@ -29,5 +29,8 @@
     "shortcuts.closeTab": "Ctrl+W",
     "shortcuts.search": "Ctrl+F"
   },
-  "session": []
+  "session": [],
+  "hostsChecker": {
+    "skipHostsCheck": "20250824"
+  }
 }
