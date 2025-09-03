@@ -2,6 +2,7 @@
 import { BrowserWindow, ipcMain, clipboard, dialog } from 'electron';
 import { getConfigSection, saveConfigSection, getConfigValue, setConfigValue, defaultConfig, saveConfig, loadConfig, saveSession, loadSession } from './config';
 import { setMainMenu } from './menu';
+import { getBlockedUrls, saveBlockedUrls, loadBlockedUrls } from './blocklistManager.js';
 import fs from 'fs';
 import log from 'electron-log/main';
 
@@ -131,6 +132,21 @@ export function setupIpcHandlers() {
 			}
 		}
 		return false;
+	});
+
+	ipcMain.handle('get-blocked-urls', () => {
+		console.log(`## get-blocked-urls`);
+		return getBlockedUrls();
+	});
+
+	ipcMain.handle('save-blocked-urls', async (_, urls) => {
+		console.log(`## save-blocked-urls`, urls);
+		const success = await saveBlockedUrls(urls);
+		if (success) {
+			// 변경된 blocklist 캐시 재로딩
+			loadBlockedUrls();
+		}
+		return success;
 	});
 
 	ipcMain.handle('save-session', (_, sessionData) => {

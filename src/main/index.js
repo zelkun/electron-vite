@@ -10,6 +10,7 @@ import { isDev } from './config';
 import { setupCommandLine /*, parseCommandLineArgs, hasSwitch, getSwitchValue*/ } from './commandLine';
 import { BrowserWinOpt, webviewOpt, popWindowOpt } from './windowOptions';
 import { saveSession } from './config';
+import { loadBlockedUrls, getBlockedUrls } from './blocklistManager.js';
 import log from 'electron-log/main';
 
 let mainWindow = null;
@@ -86,6 +87,7 @@ app.whenReady().then(() => {
 		setupTray(mainWindow); // 트레이 설정
 		setMainMenu(mainWindow); // 메뉴 설정
 		setupUpdater(); // 업데이터 설정
+		loadBlockedUrls(); // 팝업차단 목록
 
 		app.on('activate', function () {
 			if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -110,9 +112,11 @@ app.on('web-contents-created', (_, contents) => {
 		// shell.openExternal(handle.url); // 웹뷰가 아닌 일반 브라우저 창을 열 때의 설정
 
 		// 차단할 URL 목록
-		const blockedUrls = [];
+		const blockedUrls = getBlockedUrls();
 		const isBlocked = blockedUrls.some((url) => handle.url.includes(url));
 		if (isBlocked) {
+			// 차단된 팝업 알림을 줘야 할까?
+			log.debug(`##### ${handle.url} is blocked`);
 			return { action: 'deny' };
 		}
 
@@ -140,7 +144,7 @@ app.on('web-contents-created', (_, contents) => {
 	});
 
 	contents.on('will-attach-webview', (event, webPreferences, params) => {
-		// log.debug(`#### will-attach-webview`)
+		log.debug(`#### will-attach-webview`);
 
 		// webPreferences 설정복사
 		Object.assign(webPreferences, webviewOpt.webPreferences);

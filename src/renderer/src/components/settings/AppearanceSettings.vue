@@ -1,12 +1,15 @@
 <!-- src/renderer/src/components/settings/AppearanceSettings.vue -->
 <template>
-	<div class="setting-item">
-		<label>테마 모드</label>
-		<select v-model="theme" @change="saveTheme">
-			<option value="system">시스템 설정 따름</option>
-			<option value="light">라이트 모드</option>
-			<option value="dark">다크 모드</option>
-		</select>
+	<div class="settings-section">
+		<h2>테마 모드</h2>
+		<div class="setting-item">
+			<label>테마 모드</label>
+			<select v-model="theme" @change="saveTheme">
+				<option value="system">시스템 설정 따름</option>
+				<option value="light">라이트 모드</option>
+				<option value="dark">다크 모드</option>
+			</select>
+		</div>
 	</div>
 </template>
 
