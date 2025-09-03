@@ -2,7 +2,7 @@
 import { app, shell, BrowserWindow } from 'electron';
 import { electronApp, optimizer } from '@electron-toolkit/utils';
 import { join } from 'path';
-import { setupMenu } from './menu';
+import { setMainMenu, setPopupMenu } from './menu';
 import { setupTray } from './tray';
 import { setupUpdater } from './updater';
 import { setupIpcHandlers } from './ipcHandlers';
@@ -35,6 +35,9 @@ function createWindow() {
 		mainWindow.show();
 	});
 
+	/**
+	 * 여기 안타고 app.on 에서 타는듯
+	 */
 	mainWindow.webContents.setWindowOpenHandler((details) => {
 		shell.openExternal(details.url);
 		return { action: 'deny' };
@@ -81,7 +84,7 @@ app.whenReady().then(() => {
 
 		createWindow(); // 메인 윈도우 생성
 		setupTray(mainWindow); // 트레이 설정
-		setupMenu(mainWindow); // 메뉴 설정
+		setMainMenu(mainWindow); // 메뉴 설정
 		setupUpdater(); // 업데이터 설정
 
 		app.on('activate', function () {
@@ -110,14 +113,30 @@ app.on('web-contents-created', (_, contents) => {
 		const blockedUrls = [];
 		const isBlocked = blockedUrls.some((url) => handle.url.includes(url));
 		if (isBlocked) {
-			window.close(); // 차단된 URL인 경우 창을 닫음
 			return { action: 'deny' };
 		}
 
+		/*
+		// 팝업창 추가전 설정
 		return {
 			action: 'allow',
 			overrideBrowserWindowOptions: popWindowOpt,
 		};
+		*/
+
+		/** popup test */
+		const popup = new BrowserWindow(popWindowOpt);
+		// popup에만 적용되는 메뉴
+		setPopupMenu(popup);
+		popup.once('ready-to-show', () => {
+			popup.show(); // 이 콜백에서만 show!
+		});
+		popup.webContents.once('did-finish-load', () => {
+			popup.webContents.send('load-popup-url', handle.url);
+		});
+		popup.loadFile(join(__dirname, '../renderer/popup.html')); // 팝업화면
+
+		return { action: 'deny' };
 	});
 
 	contents.on('will-attach-webview', (event, webPreferences, params) => {

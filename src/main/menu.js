@@ -12,7 +12,7 @@ function fnIpcCall(channel, ...args) {
 	if (activeWindow) activeWindow.webContents.send(channel, ...args);
 }
 
-export function setupMenu(mainWindow) {
+export function setMainMenu(mainWindow) {
 	// 애플리케이션 메인 메뉴 설정
 	const template = [
 		{
@@ -400,4 +400,14 @@ export function setupMenu(mainWindow) {
 		const contextMenu = Menu.buildFromTemplate(menuItems);
 		contextMenu.popup({ window: currentWindow, x, y });
 	});
+}
+
+export function setPopupMenu(popupWindow) {
+	const menuTmpl = [
+		{
+			label: '팝업메뉴',
+			submenu: [{ label: '검색', click: () => popupWindow.webContents.send('focus-search') }, { type: 'separator' }, { role: 'reload' }],
+		},
+	];
+	popupWindow.setMenu(Menu.buildFromTemplate(menuTmpl));
 }

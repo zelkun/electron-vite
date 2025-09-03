@@ -24,6 +24,7 @@ export default defineConfig({
 		},
 	},
 	renderer: {
+		publicDir: resolve('src/renderer/public'), // 정적 자산 디렉토리 설정
 		resolve: {
 			alias: {
 				'@renderer': resolve('src/renderer/src'),
