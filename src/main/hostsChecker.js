@@ -91,7 +91,7 @@ async function hostsCheckAndUpdate(updateFunc) {
 				message: `hosts 파일에 도메인 ${domain}이(가) 없습니다. 수정하시겠습니까?`,
 				detail: '업데이트 서버에 접속하기 위해 hosts 파일 수정이 필요합니다.',
 				checkboxLabel: '오늘 그만보기',
-				checkboxChecked: false,
+				checkboxChecked: true, // 그만보기 체크
 			});
 
 			if (result.checkboxChecked) {

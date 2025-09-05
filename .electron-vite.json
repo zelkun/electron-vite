@@ -31,7 +31,7 @@
   },
   "session": [],
   "hostsChecker": {
-    "skipHostsCheck": "20250824"
+    "skipHostsCheck": "20250904"
   },
   "blockedUrls": [
     "http://naver.com",

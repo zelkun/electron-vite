@@ -40,5 +40,13 @@ export default defineConfig({
 				},
 			}),
 		],
+		build: {
+			rollupOptions: {
+				input: {
+					main: resolve('src/renderer/index.html'),
+					popup: resolve('src/renderer/popup.html'), // 팝업 추가
+				},
+			},
+		},
 	},
 });

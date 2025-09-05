@@ -116,7 +116,7 @@ app.on('web-contents-created', (_, contents) => {
 		const isBlocked = blockedUrls.some((url) => handle.url.includes(url));
 		if (isBlocked) {
 			// 차단된 팝업 알림을 줘야 할까?
-			log.debug(`##### ${handle.url} is blocked`);
+			log.debug(`##### blocked popup: ${handle.url}`);
 			return { action: 'deny' };
 		}
 
