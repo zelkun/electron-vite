@@ -494,6 +494,7 @@ export default {
 					this.setupWebviewEventListeners(webview, index);
 				}
 			});
+			document.title = '새 탭';
 		},
 		closeTab(index) {
 			// 탭을 닫기 전에 이벤트 리스너 정리
@@ -525,6 +526,7 @@ export default {
 				webview.setZoomFactor(this.tabs[index].zoomLevel / 100);
 				this.setNavigationButtonsState(webview);
 			}
+
 			// 윈도우 타이틀 변경: 활성 탭 타이틀 반영
 			const activeTitle = this.tabs[index].title || '새 탭';
 			document.title = activeTitle; // <title> 태그 변경
@@ -544,6 +546,12 @@ export default {
 		},
 		updateTitle(event, index) {
 			this.tabs[index].title = event.title === 'about:blank' ? '새 탭' : event.title;
+
+			if (this.currentTabIndex == index) {
+				// 윈도우 타이틀 변경: 활성 탭 타이틀 반영
+				const activeTitle = this.tabs[index].title || '새 탭';
+				document.title = activeTitle; // <title> 태그 변경
+			}
 		},
 
 		zoomCtrl(action) {
