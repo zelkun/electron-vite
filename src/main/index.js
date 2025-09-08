@@ -129,16 +129,17 @@ app.on('web-contents-created', (_, contents) => {
 		*/
 
 		/** popup test */
-		const popup = new BrowserWindow(popWindowOpt);
+		const popupWindow = new BrowserWindow(popWindowOpt);
 		// popup에만 적용되는 메뉴
-		setPopupMenu(popup);
-		popup.once('ready-to-show', () => {
-			popup.show(); // 이 콜백에서만 show!
+		setPopupMenu(popupWindow);
+		popupWindow.once('ready-to-show', () => {
+			popupWindow.show(); // 이 콜백에서만 show!
 		});
-		popup.webContents.once('did-finish-load', () => {
-			popup.webContents.send('load-popup-url', handle.url);
-		});
-		popup.loadFile(join(__dirname, '../renderer/popup.html')); // 팝업화면
+		// popupWindow.webContents.once('did-finish-load', () => {
+		// 	popupWindow.webContents.send('load-popup-url', handle.url);
+		// });
+		// popupWindow.loadFile(join(__dirname, '../renderer/popup.html')); // 팝업화면
+		popupWindow.loadURL(`file://${join(__dirname, '../renderer/popup.html')}?url=${encodeURIComponent(handle.url)}`);
 
 		return { action: 'deny' };
 	});

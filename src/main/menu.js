@@ -403,11 +403,60 @@ export function setMainMenu(mainWindow) {
 }
 
 export function setPopupMenu(popupWindow) {
-	const menuTmpl = [
+	const popupMenuTemplate = [
 		{
-			label: '팝업메뉴',
-			submenu: [{ label: '검색', click: () => popupWindow.webContents.send('focus-search') }, { type: 'separator' }, { role: 'reload' }],
+			label: '보기',
+			submenu: [
+				{
+					label: '새로고침',
+					accelerator: 'CommandOrControl + R',
+					click: (menuItem, focusedWindow, keyEvt) => {
+						if (focusedWindow) focusedWindow.webContents.reload();
+					},
+				},
+				{
+					label: '확대',
+					accelerator: 'CommandOrControl + Plus',
+					click: (menuItem, focusedWindow, keyEvt) => {
+						if (focusedWindow) {
+							const currentZoom = focusedWindow.webContents.getZoomLevel();
+							focusedWindow.webContents.setZoomLevel(currentZoom + 0.5);
+						}
+					},
+				},
+				{
+					label: '축소',
+					accelerator: 'CommandOrControl + -',
+					click: (menuItem, focusedWindow, keyEvt) => {
+						if (focusedWindow) {
+							const currentZoom = focusedWindow.webContents.getZoomLevel();
+							focusedWindow.webContents.setZoomLevel(currentZoom - 0.5);
+						}
+					},
+				},
+				{ type: 'separator' },
+				{
+					label: '페이지 내 검색',
+					accelerator: getShortcut('search', 'CommandOrControl + F'),
+					click: (menuItem, focusedWindow, keyEvt) => {
+						if (focusedWindow) focusedWindow.webContents.send('show-page-search');
+					},
+				},
+				{
+					label: '개발자 도구 토글',
+					accelerator: 'F12',
+					click: (menuItem, focusedWindow, keyEvt) => {
+						if (focusedWindow) {
+							if (focusedWindow.webContents.isDevToolsOpened()) {
+								focusedWindow.webContents.closeDevTools();
+							} else {
+								focusedWindow.webContents.openDevTools();
+							}
+						}
+					},
+				},
+			],
 		},
 	];
-	popupWindow.setMenu(Menu.buildFromTemplate(menuTmpl));
+	popupWindow.setMenu(Menu.buildFromTemplate(popupMenuTemplate));
 }

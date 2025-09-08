@@ -1,71 +1,38 @@
+<!-- src/renderer/popup.html -->
 <!doctype html>
 <html lang="ko">
 	<head>
 		<meta charset="UTF-8" />
-		<title>팝업 창</title>
+		<title>Popup Window</title>
 		<style>
+			html,
 			body,
-			html {
-				margin: 0;
-				height: 100%;
-			}
-			#searchBar {
-				height: 40px;
-				background: #eee;
-				padding: 8px;
-				display: flex;
-				align-items: center;
-			}
-			#searchInput {
-				flex: 1;
-				padding: 4px 8px;
-				font-size: 1rem;
-			}
-			#resetBtn {
-				margin-left: 8px;
-				padding: 4px 12px;
-			}
-			#popupWebView {
+			#popupWebview {
 				width: 100%;
-				height: calc(100% - 40px);
+				height: 100%;
+				margin: 0;
+				padding: 0;
+				overflow: hidden;
 			}
 		</style>
 	</head>
 	<body>
-		<div id="searchBar">
-			<input id="searchInput" type="text" placeholder="검색어 입력" />
-			<button id="resetBtn">초기화</button>
-		</div>
-		<webview id="popupWebView" allowpopups></webview>
-
+		<webview id="popupWebview" src="about:blank" style="width: 100%; height: 100%" webpreferences="nativeWindowOpen=true" allowpopups></webview>
 		<script>
-			const webview = document.getElementById('popupWebView');
-			const searchInput = document.getElementById('searchInput');
-			const resetBtn = document.getElementById('resetBtn');
+			const urlParams = new URLSearchParams(window.location.search);
+			const url = urlParams.get('url') || 'about:blank';
+			const webview = document.getElementById('popupWebview');
+			const onload = () => {
+				if (webview.getURL() === 'about:blank') webview.src = url;
+			};
 
-			// preload API 활용, 이벤트 수신 시 인자 제대로 전달됨
-			window.popupAPI.on('load-popup-url', (url) => {
-				webview.src = url;
-			});
+			webview.removeEventListener('dom-ready', onload);
+			webview.addEventListener('dom-ready', onload);
 
-			window.popupAPI.on('search-reset', () => {
-				searchInput.value = '';
-				// 추가 초기화 작업 여기에
-			});
-
-			searchInput.addEventListener('input', () => {
-				const query = searchInput.value;
-				// 웹뷰 내부 검색 기능 연동 시 필요한 코드 추가 가능
-			});
-
-			resetBtn.addEventListener('click', () => {
-				searchInput.value = '';
-				// 필요 시 IPC로 팝업 본문 초기화 명령 등 추가 가능
-			});
-
-			// 내부 콘텐츠 완전 로드 시 아래 이벤트 발생
-			webview.addEventListener('did-finish-load', () => {
-				window.popupAPI.send('popup-webview-loaded');
+			// IPC 통신: main에서 'show-page-search' 이벤트 수신 시 검색 UI를 띄우는 로직 구현(최소 단순 로직)
+			window.popupAPI.on('show-page-search', () => {
+				// 예: 검색 UI를 구현하거나 webview.findInPage() 호출 (별도 구현 권장)
+				alert('페이지 내 검색 기능을 구현하세요.');
 			});
 		</script>
 	</body>
