@@ -1,3 +1,5 @@
+# dev-app-update.yml
 provider: generic
 url: https://example.com/auto-updates
 updaterCacheDirName: electron-vite-updater
+

@@ -525,6 +525,9 @@ export default {
 				webview.setZoomFactor(this.tabs[index].zoomLevel / 100);
 				this.setNavigationButtonsState(webview);
 			}
+			// 윈도우 타이틀 변경: 활성 탭 타이틀 반영
+			const activeTitle = this.tabs[index].title || '새 탭';
+			document.title = activeTitle; // <title> 태그 변경
 		},
 		startLoading(index) {
 			this.tabs[index].loading = true;

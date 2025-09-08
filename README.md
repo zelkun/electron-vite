@@ -80,14 +80,7 @@ electron-vite
 ├─ .electron-vite.json
 ├─ .prettierignore
 ├─ .prettierrc.yaml
-├─ README.md
-├─ build
-│  ├─ entitlements.mac.plist
-│  ├─ hosts.bat
-│  ├─ hosts.sh
-│  ├─ icon.icns
-│  ├─ icon.ico
-│  └─ icon.png
+├─ autoit
 ├─ dev-app-update.yml
 ├─ electron-builder.yml
 ├─ electron.vite.config.mjs
@@ -95,6 +88,7 @@ electron-vite
 ├─ kill_electron.bat
 ├─ package-lock.json
 ├─ package.json
+├─ README.md
 ├─ ref
 │  ├─ promis.js
 │  └─ script.js
@@ -121,14 +115,17 @@ electron-vite
 │  │  └─ webviewPreload.js
 │  └─ renderer
 │     ├─ index.html
+│     ├─ popup.html
+│     ├─ public
 │     └─ src
 │        ├─ App.vue
 │        ├─ assets
-│        │  └─ css
-│        │     ├─ settings.css
-│        │     └─ styles.css
+│        │  ├─ css
+│        │  │  ├─ settings.css
+│        │  │  └─ styles.css
+│        │  └─ images
 │        ├─ components
-│        │  └─ Settings
+│        │  └─ settings
 │        │     ├─ AppearanceSettings.vue
 │        │     ├─ BlockedUrlsSettings.vue
 │        │     ├─ GeneralSettings.vue
@@ -398,4 +395,3 @@ jQuery 선택자
 [Git History]: https://marketplace.visualstudio.com/items?itemName=donjayamanne.githistory
 [gitignore]: https://marketplace.visualstudio.com/items?itemName=codezombiech.gitignore
 [Ignore files]: https://marketplace.visualstudio.com/items?itemName=ldez.ignore-files
-
