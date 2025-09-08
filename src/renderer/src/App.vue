@@ -372,7 +372,7 @@ export default {
 
 		async goHome() {
 			// 설정에서 홈페이지 URL 가져오기
-			this.homePage = (await window.electronAPI.invoke('get-config-value', 'settings', 'homePage ')) || 'about:blank';
+			this.homePage = (await window.electronAPI.invoke('get-config-value', 'settings', 'homePage')) || 'about:blank';
 			this.currentUrl = this.homePage;
 			this.tabs[this.currentTabIndex].url = this.currentUrl;
 			this.navigate();
