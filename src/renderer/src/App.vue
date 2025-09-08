@@ -19,7 +19,7 @@
 				<span class="tab-title">{{ tab.title || '새 탭' }}</span>
 				<button class="close-tab" @click.stop="closeTab(index)">×</button>
 			</div>
-			<button class="add-tab" @click="addNewTab">+</button>
+			<button class="add-tab" @click="addNewTab" @dragover.prevent @drop="onAddTabDrop">+</button>
 
 			<div v-if="!isMac" class="window-controls">
 				<button title="최소화" class="window-control minimize-btn" @click="windowCtrlBtnClick('minimize-window')">─</button>
@@ -760,6 +760,10 @@ export default {
 		dragStartBookmark(index, event) {
 			this.draggedBookmarkIndex = index;
 			event.dataTransfer.effectAllowed = 'move';
+
+			// URL 데이터 등록
+			const url = this.bookmarks[index].url;
+			event.dataTransfer.setData('text/plain', url);
 		},
 
 		dropBookmark(index, event) {
@@ -948,6 +952,14 @@ export default {
 		handleResize() {
 			// 창 크기 변경 시 필요한 업데이트 수행
 			// tabWidth computed 속성이 자동으로 재계산됨
+		},
+
+		onAddTabDrop(event) {
+			// 드래그된 데이터 타입 확인 ('text/plain' 등)
+			const url = event.dataTransfer.getData('text/plain');
+			if (url) {
+				this.addNewTab(url); // URL로 새 탭 생성
+			}
 		},
 	},
 };
