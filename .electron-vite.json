@@ -29,9 +29,8 @@
     "shortcuts.closeTab": "Ctrl+W",
     "shortcuts.search": "Ctrl+F"
   },
-  "session": [],
   "hostsChecker": {
-    "skipHostsCheck": "20250908"
+    "skipHostsCheck": "20250916"
   },
   "blockedUrls": [
     "http://naver.com",

@@ -9,7 +9,6 @@ import { setupIpcHandlers } from './ipcHandlers';
 import { isDev } from './config';
 import { setupCommandLine /*, parseCommandLineArgs, hasSwitch, getSwitchValue*/ } from './commandLine';
 import { BrowserWinOpt, webviewOpt, popWindowOpt } from './windowOptions';
-import { saveSession } from './config';
 import { loadBlockedUrls, getBlockedUrls } from './blocklistManager.js';
 import log from 'electron-log/main';
 

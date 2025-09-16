@@ -1,6 +1,6 @@
 // src/main/ipcHandlers.js
 import { BrowserWindow, ipcMain, clipboard, dialog } from 'electron';
-import { getConfigSection, saveConfigSection, getConfigValue, setConfigValue, defaultConfig, saveConfig, loadConfig, saveSession, loadSession } from './config';
+import { getConfigSection, saveConfigSection, getConfigValue, setConfigValue, defaultConfig, saveConfig, loadConfig } from './config';
 import { setMainMenu } from './menu';
 import { getBlockedUrls, saveBlockedUrls, loadBlockedUrls } from './blocklistManager.js';
 import fs from 'fs';
@@ -147,13 +147,5 @@ export function setupIpcHandlers() {
 			loadBlockedUrls();
 		}
 		return success;
-	});
-
-	ipcMain.handle('save-session', (_, sessionData) => {
-		return saveSession(sessionData);
-	});
-
-	ipcMain.handle('load-session', () => {
-		return loadSession();
 	});
 }

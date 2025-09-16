@@ -222,7 +222,6 @@ export default {
 	},
 	beforeUnmount() {
 		window.removeEventListener('resize', this.handleResize);
-		window.removeEventListener('beforeunload', this.saveSession);
 	},
 	async mounted() {
 		await this.loadSettings(); // 설정 로드
@@ -231,9 +230,8 @@ export default {
 		// 첫 번째 탭 생성
 		this.startupAction = (await window.electronAPI.invoke('get-config-value', 'settings', 'startupAction')) || 'newTab';
 		this.homePage = (await window.electronAPI.invoke('get-config-value', 'settings', 'homePage')) || 'about:blank';
-		const saveSession = await window.electronAPI.invoke('load-session');
 
-		console.log(`### startupAction: ${this.startupAction}, ${this.homePage}`, JSON.stringify(saveSession));
+		console.log(`### startupAction: ${this.startupAction}, ${this.homePage}`);
 
 		switch (this.startupAction) {
 			case 'newTab':
@@ -242,25 +240,7 @@ export default {
 			case 'homePage':
 				this.addNewTab(this.homePage);
 				break;
-			case 'lastSession':
-				if (saveSession && saveSession.tabs) {
-					this.tabs = saveSession.tabs;
-					this.currentTabIndex = saveSession.currentTabIndex;
-					this.$nextTick(() => {
-						this.tabs.forEach((tab, index) => {
-							const webview = this.getWebview(index);
-							if (webview) {
-								this.setupWebviewEventListeners(webview, index);
-								webview.setZoomFactor(tab.zoomLevel / 100);
-							}
-						});
-					});
-					return;
-				} else {
-					this.addNewTab();
-					this.showErrorNotification('세션 복원 실패: 세션 데이터가 없습니다.');
-				}
-				break;
+
 			default:
 				console.log('Invalid startup action:', this.startupAction);
 		}
@@ -345,7 +325,6 @@ export default {
 		this.setupEventHandler('navigatorCtrl', this.navigatorCtrl); // goBack, goForward, refresh
 
 		window.addEventListener('resize', this.handleResize); // 창 크기 변경 감지
-		window.addEventListener('beforeunload', this.saveSession); // 페이지 종료 시 세션 저장
 	},
 
 	methods: {
@@ -376,17 +355,6 @@ export default {
 			this.currentUrl = this.homePage;
 			this.tabs[this.currentTabIndex].url = this.currentUrl;
 			this.navigate();
-		},
-		saveSession() {
-			const sessionData = {
-				tabs: this.tabs.map((tab) => ({
-					url: tab.url,
-					title: tab.title,
-					zoomLevel: tab.zoomLevel,
-				})),
-				currentTabIndex: this.currentTabIndex,
-			};
-			window.electronAPI.send('save-session', sessionData);
 		},
 
 		// 웹뷰 네비게이션 버튼 클릭 메서드
