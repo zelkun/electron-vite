@@ -80,7 +80,7 @@ electron-vite
 ├─ .electron-vite.json
 ├─ .prettierignore
 ├─ .prettierrc.yaml
-├─ README.md
+├─ autoit
 ├─ build
 │  ├─ entitlements.mac.plist
 │  ├─ hosts.bat
@@ -95,6 +95,7 @@ electron-vite
 ├─ kill_electron.bat
 ├─ package-lock.json
 ├─ package.json
+├─ README.md
 ├─ ref
 │  ├─ promis.js
 │  └─ script.js
@@ -122,20 +123,25 @@ electron-vite
 │  └─ renderer
 │     ├─ index.html
 │     ├─ popup.html
+│     ├─ public
 │     └─ src
 │        ├─ App.vue
 │        ├─ assets
-│        │  └─ css
-│        │     ├─ settings.css
-│        │     └─ styles.css
+│        │  ├─ css
+│        │  │  ├─ settings.css
+│        │  │  └─ styles.css
+│        │  └─ images
 │        ├─ components
-│        │  └─ Settings
+│        │  ├─ common
+│        │  └─ settings
 │        │     ├─ AppearanceSettings.vue
 │        │     ├─ BlockedUrlsSettings.vue
 │        │     ├─ GeneralSettings.vue
 │        │     ├─ Settings.vue
 │        │     └─ shortcutsSettings.vue
-│        └─ main.js
+│        ├─ main.js
+│        ├─ Popup.js
+│        └─ Popup.vue
 └─ tools
    ├─ nsis-3.0.4.1.7z
    ├─ nsis-resources-3.4.1.7z
@@ -399,4 +405,3 @@ jQuery 선택자
 [Git History]: https://marketplace.visualstudio.com/items?itemName=donjayamanne.githistory
 [gitignore]: https://marketplace.visualstudio.com/items?itemName=codezombiech.gitignore
 [Ignore files]: https://marketplace.visualstudio.com/items?itemName=ldez.ignore-files
-
