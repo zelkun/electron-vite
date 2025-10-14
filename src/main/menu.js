@@ -405,6 +405,10 @@ export function setMainMenu(mainWindow) {
 export function setPopupMenu(popupWindow) {
 	const popupMenuTemplate = [
 		{
+			label: '파일',
+			submenu: [{ role: 'close' }],
+		},
+		{
 			label: '보기',
 			submenu: [
 				{
