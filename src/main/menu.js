@@ -30,7 +30,6 @@ export function setMainMenu(mainWindow) {
 					accelerator: getShortcut('newWindow', 'CommandOrControl + Shift + N'),
 					click: (menuItem, focusedWindow, keyEvt) => {
 						const newWindow = createBrowserWindow('main');
-						newWindow.windowType = 'main'; // 윈도우 타입 설정 (메인 윈도우)
 
 						if (isDev && process.env['ELECTRON_RENDERER_URL']) {
 							newWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);

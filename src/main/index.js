@@ -8,10 +8,12 @@ import { setupUpdater } from './updater';
 import { setupIpcHandlers } from './ipcHandlers';
 import { isDev } from './config';
 import { setupCommandLine } from './commandLine';
-import { createBrowserWindow, getAllWindowsCnt } from './BrowserWindowUtils.js';
+import { createBrowserWindow, getAllWindowsCnt, getFocusedWindow } from './BrowserWindowUtils.js';
 import { webviewOpt } from './windowOptions';
 import { loadBlockedUrls, getBlockedUrls } from './blocklistManager.js';
 import log from 'electron-log/main';
+import ProgressBar from 'electron-progressbar';
+import { existsSync } from 'fs';
 
 let mainWindow = null;
 
@@ -147,6 +149,64 @@ app.on('web-contents-created', (_, contents) => {
 	contents.on('console-message', (evt, level, message, line, sourceId) => {
 		const levels = ['verbose', 'info', 'warning', 'error'];
 		log.debug(`[${contents.getType()} ${levels[level]}:${line}:${sourceId}]: ${message}`);
+	});
+
+	contents.session.on('will-download', (evt, item, webContents) => {
+		log.debug(`#### will-download: ${item.getFilename()}`);
+		const focusedWindow = getFocusedWindow();
+		if (focusedWindow.windowType === 'popup' && focusedWindow.closable) focusedWindow.close();
+
+		// ProgressBar
+		const opt = {
+			title: 'Downloading...',
+			text: item.getFilename(),
+			detail: `0%`,
+			indeterminate: true, // true: 불확정, false: 확정 진행바
+			abortOnError: false, // Error 발생시 자동 중단 여부
+			closeOnComplete: true, // 완료시 자동 닫기 여부
+			//  0 ~ maxValue 사이의 값으로 진행 상태 표시
+			//  indeterminate가 true이면 의미 없음
+			value: 0,
+			maxValue: item.getTotalBytes(),
+			cancelable: true,
+			browserWindow: { modal: true, closable: true, webPreferences: { nodeIntegration: true } }, // ProgressBar가 브라우저 윈도우에 종속적이 되도록
+		};
+		const progressBar = new ProgressBar(opt);
+		progressBar.on(`completed`, () => {});
+		progressBar.on(`aborted`, () => {});
+		progressBar.on(`progress`, (val) => {
+			log.debug(`#### Download progress: ${val}%`);
+			progressBar.detail = `${Math.round((val / item.getTotalBytes()) * 100)}% of ${Math.round(item.getTotalBytes() / 1024)} KB`;
+		});
+
+		const fileNm = item.getFilename();
+		const fullPath = join(app.getPath('downloads'), fileNm);
+		log.debug(`##### Download to: ${fullPath}`);
+		if (!existsSync(fullPath)) item.setSavePath(fullPath);
+
+		item.on('updated', (evt, state) => {
+			if (state === 'interrupted') {
+				log.debug('#### Download is interrupted but can be resumed');
+			} else if (state === 'progressing') {
+				if (item.isPaused()) {
+					log.debug('#### Download is paused');
+				} else {
+					log.debug(`#### Received bytes: ${item.getReceivedBytes()}`);
+				}
+			}
+		});
+
+		item.once('done', (evt, state) => {
+			progressBar.setCompleted();
+			if (state === 'completed') {
+				log.debug('#### Download successfully');
+				shell.showItemInFolder(item.getSavePath());
+			} else if (state === 'cancelled') {
+				log.debug('#### Download cancelled');
+			} else if (state === 'interrupted') {
+				log.debug('#### Download interrupted');
+			}
+		});
 	});
 });
 
