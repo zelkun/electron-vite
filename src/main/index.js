@@ -1,5 +1,5 @@
 // src/main/index.js
-import { app, shell, BrowserWindow } from 'electron';
+import { app, shell } from 'electron';
 import { electronApp, optimizer } from '@electron-toolkit/utils';
 import { join } from 'path';
 import { setMainMenu, setPopupMenu } from './menu';
@@ -7,8 +7,9 @@ import { setupTray } from './tray';
 import { setupUpdater } from './updater';
 import { setupIpcHandlers } from './ipcHandlers';
 import { isDev } from './config';
-import { setupCommandLine /*, parseCommandLineArgs, hasSwitch, getSwitchValue*/ } from './commandLine';
-import { BrowserWinOpt, webviewOpt, popWindowOpt } from './windowOptions';
+import { setupCommandLine } from './commandLine';
+import { createBrowserWindow, getAllWindowsCnt } from './BrowserWindowUtils.js';
+import { webviewOpt } from './windowOptions';
 import { loadBlockedUrls, getBlockedUrls } from './blocklistManager.js';
 import log from 'electron-log/main';
 
@@ -17,8 +18,7 @@ let mainWindow = null;
 function createWindow() {
 	log.info(`## createWindow`);
 	// 메인 브라우저 윈도우 생성
-	mainWindow = new BrowserWindow(BrowserWinOpt);
-	mainWindow.windowType = 'main'; // 윈도우 타입 설정 (메인 윈도우)
+	mainWindow = createBrowserWindow('main');
 
 	/* CSP 설정 예시
 	session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
@@ -89,7 +89,7 @@ app.whenReady().then(() => {
 		loadBlockedUrls(); // 팝업차단 목록
 
 		app.on('activate', function () {
-			if (BrowserWindow.getAllWindows().length === 0) createWindow();
+			if (getAllWindowsCnt() === 0) createWindow();
 		});
 	}
 });
@@ -119,25 +119,14 @@ app.on('web-contents-created', (_, contents) => {
 			return { action: 'deny' };
 		}
 
-		/*
-		// 팝업창 추가전 설정
-		return {
-			action: 'allow',
-			overrideBrowserWindowOptions: popWindowOpt,
-		};
-		*/
-
 		/** popup test */
-		const popupWindow = new BrowserWindow(popWindowOpt);
+		const popupWindow = createBrowserWindow('popup');
+
 		// popup에만 적용되는 메뉴
 		setPopupMenu(popupWindow);
 		popupWindow.once('ready-to-show', () => {
 			popupWindow.show(); // 이 콜백에서만 show!
 		});
-		// popupWindow.webContents.once('did-finish-load', () => {
-		// 	popupWindow.webContents.send('load-popup-url', handle.url);
-		// });
-		// popupWindow.loadFile(join(__dirname, '../renderer/popup.html')); // 팝업화면
 		popupWindow.loadURL(`file://${join(__dirname, '../renderer/popup.html')}?url=${encodeURIComponent(handle.url)}`);
 
 		return { action: 'deny' };

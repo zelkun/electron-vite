@@ -1,14 +1,14 @@
 // src/main/menu.js
 /* eslint-disable no-unused-vars */
-import { Menu, ipcMain, BrowserWindow } from 'electron';
+import { Menu, ipcMain } from 'electron';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
-import { BrowserWinOpt, webviewOpt, popWindowOpt, preloadPaths } from './windowOptions';
+import { createBrowserWindow, getBrowserWindowFromSender, getFocusedWindow } from './BrowserWindowUtils';
 import { isDev, getShortcut } from './config';
 import log from 'electron-log/main';
 import { join } from 'path';
 
 function fnIpcCall(channel, ...args) {
-	const activeWindow = BrowserWindow.getFocusedWindow();
+	const activeWindow = getFocusedWindow();
 	if (activeWindow) activeWindow.webContents.send(channel, ...args);
 }
 
@@ -29,7 +29,7 @@ export function setMainMenu(mainWindow) {
 					label: '새 창',
 					accelerator: getShortcut('newWindow', 'CommandOrControl + Shift + N'),
 					click: (menuItem, focusedWindow, keyEvt) => {
-						const newWindow = new BrowserWindow(BrowserWinOpt);
+						const newWindow = createBrowserWindow('main');
 						newWindow.windowType = 'main'; // 윈도우 타입 설정 (메인 윈도우)
 
 						if (isDev && process.env['ELECTRON_RENDERER_URL']) {
@@ -206,7 +206,7 @@ export function setMainMenu(mainWindow) {
 		log.debug('{show-bookmark-context-menu} data', data);
 		const { x, y, bookmarkIndex } = data;
 		const sender = evt.sender;
-		const currentWindow = BrowserWindow.fromWebContents(sender);
+		const currentWindow = getBrowserWindowFromSender(sender);
 
 		const bookmarkContextMenu = Menu.buildFromTemplate([
 			{
@@ -237,7 +237,7 @@ export function setMainMenu(mainWindow) {
 		log.debug('{show-tab-context-menu} data', data);
 		const { x, y, tabIndex } = data;
 		const sender = evt.sender;
-		const currentWindow = BrowserWindow.fromWebContents(sender);
+		const currentWindow = getBrowserWindowFromSender(sender);
 
 		const menuItems = [
 			{
@@ -283,7 +283,7 @@ export function setMainMenu(mainWindow) {
 
 		const menuItems = [];
 		const sender = evt.sender;
-		const currentWindow = BrowserWindow.fromWebContents(sender);
+		const currentWindow = getBrowserWindowFromSender(sender);
 
 		// 링크가 있는 경우
 		if (linkURL) {

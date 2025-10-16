@@ -1,13 +1,14 @@
 // src/main/ipcHandlers.js
-import { BrowserWindow, ipcMain, clipboard, dialog } from 'electron';
+import { ipcMain, clipboard, dialog } from 'electron';
 import { getConfigSection, saveConfigSection, getConfigValue, setConfigValue, defaultConfig, saveConfig, loadConfig } from './config';
 import { setMainMenu } from './menu';
+import { getMainWindow, getBrowserWindowFromSender, getFocusedWindow } from './BrowserWindowUtils.js';
 import { getBlockedUrls, saveBlockedUrls, loadBlockedUrls } from './blocklistManager.js';
 import fs from 'fs';
 import log from 'electron-log/main';
 
 export function setupIpcHandlers() {
-	const mainWindow = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
+	const mainWindow = getMainWindow();
 
 	// 설정 관련 IPC 핸들러 설정
 	ipcMain.handle('get-config-section', (_, section) => {
@@ -71,7 +72,7 @@ export function setupIpcHandlers() {
 
 	// 창 제어 이벤트 핸들러
 	ipcMain.on('window-control-action', (evt, payload) => {
-		const currentWindow = BrowserWindow.fromWebContents(evt.sender);
+		const currentWindow = getBrowserWindowFromSender(evt.sender);
 		if (payload === 'close-window') currentWindow?.close();
 		if (payload === 'minimize-window') currentWindow?.minimize();
 		if (payload === 'maximize-window') {
@@ -96,7 +97,7 @@ export function setupIpcHandlers() {
 	});
 
 	ipcMain.on('reload-menu', (evt, payload) => {
-		const currentWindow = BrowserWindow.fromWebContents(evt.sender);
+		const currentWindow = getBrowserWindowFromSender(evt.sender);
 		setMainMenu(currentWindow);
 	});
 
@@ -111,7 +112,7 @@ export function setupIpcHandlers() {
 		}
 	});
 	ipcMain.handle('reset-settings', async () => {
-		const win = BrowserWindow.getFocusedWindow();
+		const win = getFocusedWindow();
 		const result = await dialog.showMessageBox(win, {
 			type: 'warning',
 			buttons: ['초기화', '취소'],

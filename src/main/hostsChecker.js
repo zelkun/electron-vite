@@ -1,8 +1,9 @@
 // src/main/hostsChecker.js
-import { dialog, BrowserWindow } from 'electron';
+import { dialog } from 'electron';
 import { exec } from 'child_process';
 import log from 'electron-log/main';
 import fs from 'fs';
+import { getFocusedWindow, getMainWindow } from './BrowserWindowUtils.js';
 import pathManager from './pathManager.js';
 import { setConfigValue, getConfigValue } from './config.js'; // 설정 업데이트 함수 가져오기
 
@@ -74,11 +75,11 @@ async function hostsCheckAndUpdate(updateFunc) {
 		}
 
 		if (skipHostsCheck) {
-			const focusedWindow = BrowserWindow.getFocusedWindow();
+			const focusedWindow = getFocusedWindow();
 			if (focusedWindow) {
 				mainWindow = focusedWindow;
 			} else {
-				mainWindow = BrowserWindow.getAllWindows()[0];
+				mainWindow = getMainWindow();
 			}
 
 			// 사용자에게 hosts 파일 수정 여부 확인

@@ -1,6 +1,7 @@
 // src/main/updater.js
 import { autoUpdater } from 'electron-updater';
-import { dialog, BrowserWindow } from 'electron';
+import { dialog } from 'electron';
+import { getMainWindow } from './BrowserWindowUtils.js';
 import log from 'electron-log/main';
 import ProgressBar from 'electron-progressbar';
 import { hostsCheckAndUpdate } from './hostsChecker.js';
@@ -12,7 +13,7 @@ export function setupUpdater() {
 	log.transports.file.level = 'info';
 	autoUpdater.logger = log;
 
-	const mainWindow = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
+	const mainWindow = getMainWindow(); // 메인 윈도우 참조 가져오기
 
 	// 업데이트 이벤트 처리
 	autoUpdater.on('checking-for-update', () => {
