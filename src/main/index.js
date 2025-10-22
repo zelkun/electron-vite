@@ -153,8 +153,11 @@ app.on('web-contents-created', (_, contents) => {
 
 	contents.session.on('will-download', (evt, item, webContents) => {
 		log.debug(`#### will-download: ${item.getFilename()}`);
-		const focusedWindow = getFocusedWindow();
-		if (focusedWindow.windowType === 'popup' && focusedWindow.closable) focusedWindow.close();
+		const downloadWindow = webContents.getOwnerBrowserWindow();
+		log.debug(`##### downloadWindow type: ${downloadWindow.windowType}`);
+		log.debug(`##### downloadWindow title: ${downloadWindow.getTitle()}`);
+		log.debug(`##### downloadWindow url: ${downloadWindow.webContents.getURL()}, item.url: ${item.getURL()}`);
+		if (downloadWindow.windowType === 'popup' && downloadWindow.closable && decodeURIComponent(downloadWindow.webContents.getURL().split('?url=')[1]) === item.getURL()) downloadWindow.close();
 
 		// ProgressBar
 		const opt = {

@@ -86,6 +86,16 @@ export function setupIpcHandlers() {
 	});
 
 	/**
+	 * POPUP 관련 IPC 핸들러
+	 */
+	/* eslint-disable no-unused-vars */
+	ipcMain.on(`popup-close`, (evt, payload) => {
+		const popupWindow = getBrowserWindowFromSender(evt.sender);
+		if (popupWindow?.windowType === 'popup') popupWindow?.close();
+		else log.warn('popup-close: Not a popup window');
+	});
+
+	/**
 	 * settings 관련 IPC 핸들러
 	 */
 	ipcMain.handle('export-settings', () => {
