@@ -1,7 +1,7 @@
 // src/preload/popPreload.js
 import { ipcRenderer, contextBridge } from 'electron';
 
-console.log('pop preload script loaded successfully!');
+console.log(`pop preload script loaded successfully! ${window.location.href}`);
 
 contextBridge.exposeInMainWorld('popupAPI', {
 	// 단방향 메시지 전송

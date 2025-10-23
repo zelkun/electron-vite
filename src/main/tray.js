@@ -2,12 +2,14 @@
 import { Tray, Menu, nativeImage, app } from 'electron';
 import { join } from 'path';
 import log from 'electron-log/main';
+import { getMainWindow } from './BrowserWindowUtils.js';
 
 import { getConfigValue } from './config';
 
 let tray = null;
 
-export function setupTray(mainWindow) {
+export function setupTray() {
+	const mainWindow = getMainWindow();
 	// 트레이 아이콘 경로 설정
 	const iconPath = join(__dirname, '../../resources/icon.ico');
 	const icon = nativeImage.createFromPath(iconPath);

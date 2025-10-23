@@ -12,7 +12,7 @@ function fnIpcCall(channel, ...args) {
 	if (activeWindow) activeWindow.webContents.send(channel, ...args);
 }
 
-export function setMainMenu(mainWindow) {
+export function setMainMenu() {
 	// 애플리케이션 메인 메뉴 설정
 	const template = [
 		{

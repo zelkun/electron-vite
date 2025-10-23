@@ -21,7 +21,7 @@
     "searchBar": false,
     "showBookmarkBar": true,
     "theme": "system",
-    "homePage": "https://naver.com",
+    "homePage": "https://www.g2b.go.kr/ehelpdesk",
     "startupAction": "homePage",
     "acceptCookies": false,
     "saveHistory": false,
@@ -30,12 +30,11 @@
     "shortcuts.search": "Ctrl+F"
   },
   "hostsChecker": {
-    "skipHostsCheck": "20250916"
+    "skipHostsCheck": "20251023"
   },
   "blockedUrls": [
     "http://naver.com",
     "https://naver.com",
-    "nid.naver.com",
-    "g2b.go.kr"
+    "nid.naver.com"
   ]
 }

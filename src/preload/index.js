@@ -1,8 +1,7 @@
 // src/preload/index.js
 import { contextBridge, ipcRenderer } from 'electron';
 
-console.log(`preload script loaded successfully!`);
-// alert('preload script loaded successfully!')
+console.log(`preload script loaded successfully! ${window.location.href}`);
 
 // 메인 윈도우에서 사용할 API 노출 - 직접 호출 방식으로 간소화
 contextBridge.exposeInMainWorld('electronAPI', {

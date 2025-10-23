@@ -1,8 +1,7 @@
 // src/preload/webviewPreload.js
 import { ipcRenderer, contextBridge } from 'electron';
 
-console.log('Webview preload script loaded successfully!');
-// alert('webview preload script loaded successfully!')
+console.log(`Webview preload script loaded successfully! ${window.location.href}`);
 
 // webview에서 사용할 API 노출
 contextBridge.exposeInMainWorld('webviewAPI', {
