@@ -184,8 +184,9 @@ export default {
 	data() {
 		return {
 			isMac: window.electronAPI?.platform === 'darwin' || false,
-			homePage: 'about:blank',
-			startupAction: 'newTab',
+			blankUrl: 'about:blank',
+			homePage: this.blankUrl,
+			startupAction: 'newTab', // 'newTab' 또는 'homePage'
 			showSettings: false,
 			tabs: [],
 			currentTabIndex: 0,
@@ -229,21 +230,12 @@ export default {
 
 		// 첫 번째 탭 생성
 		this.startupAction = (await window.electronAPI.invoke('get-config-value', 'settings', 'startupAction')) || 'newTab';
-		this.homePage = (await window.electronAPI.invoke('get-config-value', 'settings', 'homePage')) || 'about:blank';
+		this.homePage = (await window.electronAPI.invoke('get-config-value', 'settings', 'homePage')) || this.blankUrl;
 
 		console.log(`### startupAction: ${this.startupAction}, ${this.homePage}`);
 
-		switch (this.startupAction) {
-			case 'newTab':
-				this.addNewTab();
-				break;
-			case 'homePage':
-				this.addNewTab(this.homePage);
-				break;
-
-			default:
-				console.log('Invalid startup action:', this.startupAction);
-		}
+		// 시작 동작 처리
+		this.addNewTab();
 
 		// Zoom 관련 이벤트 리스너
 		this.setupEventHandler('zoomCtrl', this.zoomCtrl); // reset, increase, decrease
@@ -345,13 +337,13 @@ export default {
 		// 탭의 웹뷰 상태 업데이트
 		setNavigationButtonsState(webview) {
 			if (!webview) return;
-			this.canGoBack = webview.getURL() != '' && webview.getURL() != 'about:blank' && webview.canGoBack();
+			this.canGoBack = webview.getURL() != '' && webview.getURL() != this.blankUrl && webview.canGoBack();
 			this.canGoForward = webview.canGoForward();
 		},
 
 		async goHome() {
 			// 설정에서 홈페이지 URL 가져오기
-			this.homePage = (await window.electronAPI.invoke('get-config-value', 'settings', 'homePage')) || 'about:blank';
+			this.homePage = (await window.electronAPI.invoke('get-config-value', 'settings', 'homePage')) || this.blankUrl;
 			this.currentUrl = this.homePage;
 			this.tabs[this.currentTabIndex].url = this.currentUrl;
 			this.navigate();
@@ -430,7 +422,7 @@ export default {
 
 		navigate() {
 			let url = this.currentUrl;
-			if (url && !url.startsWith('http://') && !url.startsWith('https://') && url !== 'about:blank') {
+			if (url && !url.startsWith('http://') && !url.startsWith('https://') && url !== this.blankUrl) {
 				url = 'https://' + url;
 			}
 			this.tabs[this.currentTabIndex].url = url;
@@ -440,9 +432,10 @@ export default {
 			}
 		},
 
-		addNewTab(url = 'about:blank') {
+		addNewTab(url = this.blankUrl) {
 			console.log(`# addNewTab: url ${typeof url}`);
-			if (typeof url !== 'string') url = 'about:blank';
+			if (typeof url !== 'string') url = this.blankUrl;
+			if (url === this.blankUrl && this.startupAction === 'homePage') url = this.homePage;
 
 			this.tabs.push({
 				url: url,
@@ -476,7 +469,7 @@ export default {
 					this.currentTabIndex = Math.max(0, this.currentTabIndex - 1);
 				}
 				this.currentUrl = this.tabs[this.currentTabIndex].url;
-				if (this.currentUrl === 'about:blank') {
+				if (this.currentUrl === this.blankUrl) {
 					this.currentUrl = '';
 				}
 			}
@@ -484,7 +477,7 @@ export default {
 		switchTab(index) {
 			this.currentTabIndex = index;
 			this.currentUrl = this.tabs[index].url;
-			if (this.currentUrl === 'about:blank') {
+			if (this.currentUrl === this.blankUrl) {
 				this.currentUrl = '';
 			}
 
@@ -508,12 +501,12 @@ export default {
 		},
 		updateUrl(event, index) {
 			if (index === this.currentTabIndex) {
-				this.currentUrl = event.url === 'about:blank' ? '' : event.url;
+				this.currentUrl = event.url === this.blankUrl ? '' : event.url;
 			}
 			this.tabs[index].url = event.url;
 		},
 		updateTitle(event, index) {
-			this.tabs[index].title = event.title === 'about:blank' ? '새 탭' : event.title;
+			this.tabs[index].title = event.title === this.blankUrl ? '새 탭' : event.title;
 
 			if (this.currentTabIndex == index) {
 				// 윈도우 타이틀 변경: 활성 탭 타이틀 반영
@@ -635,7 +628,7 @@ export default {
 
 		async addBookmark() {
 			// 현재 URL이 비어있거나 about:blank인 경우 추가하지 않음
-			// if (!this.currentUrl || this.currentUrl === 'about:blank') return;
+			// if (!this.currentUrl || this.currentUrl === this.blankUrl) return;
 
 			// 북마크 바가 숨겨져 있으면 표시
 			if (!this.showBookmarkBar) {
@@ -696,8 +689,8 @@ export default {
 			if (!this.editingBookmark.title.trim()) this.editingBookmark.title = '제목 없음';
 
 			if (!this.editingBookmark.url.trim()) {
-				this.editingBookmark.url = 'about:blank';
-			} else if (!this.editingBookmark.url.startsWith('http://') && !this.editingBookmark.url.startsWith('https://') && this.editingBookmark.url !== 'about:blank') {
+				this.editingBookmark.url = this.blankUrl;
+			} else if (!this.editingBookmark.url.startsWith('http://') && !this.editingBookmark.url.startsWith('https://') && this.editingBookmark.url !== this.blankUrl) {
 				this.editingBookmark.url = 'https://' + this.editingBookmark.url;
 			}
 

@@ -101,6 +101,8 @@ function fnContentsListener() {
 				} else {
 					log.debug(`#### Received bytes: ${item.getReceivedBytes()}`);
 				}
+				const percnet = (item.getReceivedBytes() / item.getTotalBytes()) * 100;
+				progressBar.value = percnet;
 			}
 		});
 
