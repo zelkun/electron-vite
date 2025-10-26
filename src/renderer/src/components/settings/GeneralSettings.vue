@@ -37,9 +37,11 @@ export default {
 	methods: {
 		async savestartupAction() {
 			await window.electronAPI.invoke('save-setting', 'startupAction', this.startupAction);
+			this.$emit('update-setting', { key: 'startupAction', value: this.startupAction });
 		},
 		async saveHomePage() {
 			await window.electronAPI.invoke('save-setting', 'homePage', this.homePage);
+			this.$emit('update-setting', { key: 'homePage', value: this.homePage });
 		},
 	},
 };

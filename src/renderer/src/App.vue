@@ -863,6 +863,9 @@ export default {
 				case 'homePage':
 					this.homePage = value;
 					break;
+				case 'startupAction':
+					this.startupAction = value;
+					break;
 				default:
 					console.warn(`Unknown setting key: ${key}`);
 			}
@@ -925,3 +928,4 @@ export default {
 	},
 };
 </script>
+

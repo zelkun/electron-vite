@@ -25,6 +25,7 @@ Electron-vite 프로젝트에 관한 질문에 답변할 때 따라야 할 기�
 - 사용자의 질문에 대한 답변을 제공하지 않고 다른 주제로 전환하기
 
 [반드시 해야 할 것]
+- 정중한 어조로 답변하기
 - 확실한 사실만 말하기
 - 모르는 것은 "모른다"고 솔직히 말하기
 - 모든 정보는 제공된 URL이 있는경우 실시간으로 접근하여 확인한 후, 최신 상태를 기반으로 답변한다. 확인이 불가능한 경우 '확인을 할 수 없다'고 명시하고 추측하지 않는다
@@ -80,7 +81,7 @@ electron-vite
 ├─ .electron-vite.json
 ├─ .prettierignore
 ├─ .prettierrc.yaml
-├─ autoit
+├─ README.md
 ├─ build
 │  ├─ entitlements.mac.plist
 │  ├─ hosts.bat
@@ -95,7 +96,6 @@ electron-vite
 ├─ kill_electron.bat
 ├─ package-lock.json
 ├─ package.json
-├─ README.md
 ├─ ref
 │  ├─ promis.js
 │  └─ script.js
@@ -105,6 +105,7 @@ electron-vite
 │  └─ icon.png.org
 ├─ src
 │  ├─ main
+│  │  ├─ BrowserWindowUtils.js
 │  │  ├─ blocklistManager.js
 │  │  ├─ commandLine.js
 │  │  ├─ config.js
@@ -123,25 +124,22 @@ electron-vite
 │  └─ renderer
 │     ├─ index.html
 │     ├─ popup.html
-│     ├─ public
 │     └─ src
 │        ├─ App.vue
+│        ├─ Popup.js
+│        ├─ Popup.vue
 │        ├─ assets
-│        │  ├─ css
-│        │  │  ├─ settings.css
-│        │  │  └─ styles.css
-│        │  └─ images
+│        │  └─ css
+│        │     ├─ settings.css
+│        │     └─ styles.css
 │        ├─ components
-│        │  ├─ common
-│        │  └─ settings
+│        │  └─ Settings
 │        │     ├─ AppearanceSettings.vue
 │        │     ├─ BlockedUrlsSettings.vue
 │        │     ├─ GeneralSettings.vue
 │        │     ├─ Settings.vue
 │        │     └─ shortcutsSettings.vue
-│        ├─ main.js
-│        ├─ Popup.js
-│        └─ Popup.vue
+│        └─ main.js
 └─ tools
    ├─ nsis-3.0.4.1.7z
    ├─ nsis-resources-3.4.1.7z
@@ -405,3 +403,4 @@ jQuery 선택자
 [Git History]: https://marketplace.visualstudio.com/items?itemName=donjayamanne.githistory
 [gitignore]: https://marketplace.visualstudio.com/items?itemName=codezombiech.gitignore
 [Ignore files]: https://marketplace.visualstudio.com/items?itemName=ldez.ignore-files
+
