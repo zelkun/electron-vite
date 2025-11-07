@@ -122,24 +122,22 @@
 			</div>
 		</div>
 
-		<!-- 페이지 검색 UI -->
-		<div v-if="showSearch" class="search-bar">
-			<div class="search-input-container">
-				<input id="search-input" ref="searchInput" v-model="searchText" type="text" placeholder="페이지 내 검색" class="search-input" @keyup.enter="findInPage" @keyup.esc="closeSearch" />
-				<div v-if="searchResults.matches > 0" class="search-counter">{{ searchResults.activeMatchOrdinal }}/{{ searchResults.matches }}</div>
-			</div>
-			<div class="search-buttons">
-				<button class="search-btn" title="이전" @click="findPrevious">
-					<span class="nav-icon">▲</span>
-				</button>
-				<button class="search-btn" title="다음" @click="findNext">
-					<span class="nav-icon">▼</span>
-				</button>
-				<button class="search-btn close-btn" title="닫기" @click="closeSearch">
-					<span>×</span>
-				</button>
-			</div>
-		</div>
+		<!-- SearchInPage 컴포넌트로 분리된 페이지 검색 UI -->
+		<SearchInPage
+			ref="searchComponent"
+			:visible="showSearch"
+			:searchText="tabs[currentTabIndex]?.search?.text || ''"
+			:searchResults="tabs[currentTabIndex]?.search?.results"
+			@update:searchText="
+				(v) => {
+					if (tabs[currentTabIndex]) tabs[currentTabIndex].search.text = v;
+				}
+			"
+			@find="findInPage"
+			@find-next="findNext"
+			@find-previous="findPrevious"
+			@close="closeSearch"
+		/>
 
 		<!-- 웹뷰 영역 -->
 		<div class="webview-container">
@@ -176,10 +174,12 @@
 
 <script>
 import Settings from './components/Settings/Settings.vue';
+import SearchInPage from './components/common/SearchInPage.vue';
 
 export default {
 	components: {
 		Settings,
+		SearchInPage,
 	},
 	data() {
 		return {
@@ -203,8 +203,6 @@ export default {
 			isNewBookmark: false,
 			draggedBookmarkIndex: null,
 			showSearch: false,
-			searchText: '',
-			searchResults: { activeMatchOrdinal: 0, matches: 0 },
 			foundInPageListener: null,
 		};
 	},
@@ -443,6 +441,11 @@ export default {
 				loading: false,
 				color: this.getRandomColor(),
 				zoomLevel: 100,
+				search: {
+					text: '',
+					results: { activeMatchOrdinal: 0, matches: 0 },
+					foundInPageListener: null,
+				},
 			});
 			this.currentTabIndex = this.tabs.length - 1;
 			this.currentUrl = url;
@@ -785,61 +788,70 @@ export default {
 			this.navigate();
 		},
 
-		// 검색 관련 메서드
+		// 검색 관련 메서드 (App에서 webview 제어)
 		showPageSearch() {
 			this.showSearch = true;
 			this.$nextTick(() => {
-				if (this.$refs.searchInput) {
-					this.$refs.searchInput.focus();
+				if (this.$refs.searchComponent?.$refs.searchInput) {
+					this.$refs.searchComponent.$refs.searchInput.focus();
 				}
 			});
 		},
 		closeSearch() {
 			this.showSearch = false;
-			this.searchText = '';
-			this.searchResults = { activeMatchOrdinal: 0, matches: 0 };
+			const currentTab = this.tabs[this.currentTabIndex];
+			if (!currentTab) return;
+
+			currentTab.search.text = '';
+			currentTab.search.results = { activeMatchOrdinal: 0, matches: 0 };
 
 			const webview = this.getWebview();
 			if (webview) {
 				webview.stopFindInPage('clearSelection');
-
-				// 이벤트 리스너 제거
-				if (this.foundInPageListener) {
-					webview.removeEventListener('found-in-page', this.foundInPageListener);
-					this.foundInPageListener = null;
+				if (currentTab.search.foundInPageListener) {
+					webview.removeEventListener('found-in-page', currentTab.search.foundInPageListener);
+					currentTab.search.foundInPageListener = null;
 				}
 			}
 		},
 		findInPage() {
-			if (!this.searchText) return;
+			const currentTab = this.tabs[this.currentTabIndex];
+			if (!currentTab || !currentTab.search.text) return;
+
 			const webview = this.getWebview();
 			if (webview) {
-				// 이전에 등록된 이벤트 리스너가 있다면 제거
-				if (this.foundInPageListener) webview.removeEventListener('found-in-page', this.foundInPageListener);
+				if (currentTab.search.foundInPageListener) {
+					webview.removeEventListener('found-in-page', currentTab.search.foundInPageListener);
+				}
 
-				// 새 이벤트 리스너 생성 및 저장
-				this.foundInPageListener = (e) => {
-					this.searchResults = {
+				currentTab.search.foundInPageListener = (e) => {
+					currentTab.search.results = {
 						activeMatchOrdinal: e.result.activeMatchOrdinal,
 						matches: e.result.matches,
 					};
 				};
-				webview.addEventListener('found-in-page', this.foundInPageListener);
-				webview._foundInPageListener = this.foundInPageListener;
-
-				webview.findInPage(this.searchText);
+				webview.addEventListener('found-in-page', currentTab.search.foundInPageListener);
+				webview.findInPage(currentTab.search.text);
 			}
 		},
 		findNext() {
-			if (!this.searchText) return;
+			const currentTab = this.tabs[this.currentTabIndex];
+			if (!currentTab || !currentTab.search.text) return;
+
 			const webview = this.getWebview();
-			if (webview) webview.findInPage(this.searchText, { forward: true, findNext: true });
+			if (webview) {
+				webview.findInPage(currentTab.search.text, { forward: true, findNext: true });
+			}
 		},
 
 		findPrevious() {
-			if (!this.searchText) return;
+			const currentTab = this.tabs[this.currentTabIndex];
+			if (!currentTab || !currentTab.search.text) return;
+
 			const webview = this.getWebview();
-			if (webview) webview.findInPage(this.searchText, { forward: false, findNext: true });
+			if (webview) {
+				webview.findInPage(currentTab.search.text, { forward: false, findNext: true });
+			}
 		},
 
 		openSettings() {

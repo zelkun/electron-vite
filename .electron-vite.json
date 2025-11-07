@@ -20,8 +20,8 @@
   "settings": {
     "searchBar": false,
     "showBookmarkBar": true,
-    "theme": "system",
-    "homePage": "https://www.g2b.go.kr/ehelpdesk",
+    "theme": "dark",
+    "homePage": "https://www.g2b.go.kr/",
     "startupAction": "homePage",
     "acceptCookies": false,
     "saveHistory": false,
@@ -30,7 +30,7 @@
     "shortcuts.search": "Ctrl+F"
   },
   "hostsChecker": {
-    "skipHostsCheck": "20251023"
+    "skipHostsCheck": "20251107"
   },
   "blockedUrls": [
     "http://naver.com",

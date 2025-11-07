@@ -1,6 +1,19 @@
 <!-- src/renderer/src/popup.vue -->
 <template>
 	<div class="popup-container" style="width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden">
+		<!-- SearchInPage 컴포넌트 추가 -->
+		<SearchInPage
+			ref="searchComponent"
+			:visible="showSearch"
+			:searchText="searchText"
+			:searchResults="searchResults"
+			@update:searchText="(v) => (searchText = v)"
+			@find="findInPage"
+			@find-next="findNext"
+			@find-previous="findPrevious"
+			@close="closeSearch"
+		/>
+
 		<webview
 			id="popupWebview"
 			:src="currentUrl"
@@ -14,9 +27,11 @@
 </template>
 
 <script>
+import SearchInPage from './components/common/SearchInPage.vue';
+
 export default {
 	name: 'Popup',
-	components: {},
+	components: { SearchInPage },
 	props: {},
 	emits: [],
 	setup() {},
@@ -24,6 +39,11 @@ export default {
 		return {
 			blankUrl: 'about:blank',
 			currentUrl: this.blankUrl,
+			// 검색 관련 상태 추가
+			showSearch: false,
+			searchText: '',
+			searchResults: { activeMatchOrdinal: 0, matches: 0 },
+			foundInPageListener: null,
 		};
 	},
 	computed: {},
@@ -34,10 +54,7 @@ export default {
 
 		// IPC 이벤트 수신 처리
 		if (window.popupAPI) {
-			window.popupAPI.on('show-page-search', () => {
-				// 페이지 내 검색 UI 구현 권장 부분, 현재는 기본 알림창 사용
-				alert('페이지 내 검색 기능을 구현하세요.');
-			});
+			window.popupAPI.on('show-page-search', this.showPageSearch);
 		}
 	},
 	unmounted() {},
@@ -69,6 +86,71 @@ export default {
 			// document.title = newTitle;
 			document.title = this.currentUrl;
 		},
+
+		// 검색 관련 메서드 추가
+		showPageSearch() {
+			this.showSearch = true;
+			this.$nextTick(() => {
+				if (this.$refs.searchComponent?.$refs.searchInput) {
+					this.$refs.searchComponent.$refs.searchInput.focus();
+				}
+			});
+		},
+
+		closeSearch() {
+			this.showSearch = false;
+			this.searchText = '';
+			this.searchResults = { activeMatchOrdinal: 0, matches: 0 };
+
+			const webview = document.querySelector('#popupWebview');
+			if (webview) {
+				webview.stopFindInPage('clearSelection');
+				if (this.foundInPageListener) {
+					webview.removeEventListener('found-in-page', this.foundInPageListener);
+					this.foundInPageListener = null;
+				}
+			}
+		},
+
+		findInPage() {
+			if (!this.searchText) return;
+			const webview = document.querySelector('#popupWebview');
+			if (webview) {
+				if (this.foundInPageListener) {
+					webview.removeEventListener('found-in-page', this.foundInPageListener);
+				}
+
+				this.foundInPageListener = (e) => {
+					this.searchResults = {
+						activeMatchOrdinal: e.result.activeMatchOrdinal,
+						matches: e.result.matches,
+					};
+				};
+				webview.addEventListener('found-in-page', this.foundInPageListener);
+				webview.findInPage(this.searchText);
+			}
+		},
+
+		findNext() {
+			if (!this.searchText) return;
+			const webview = document.querySelector('#popupWebview');
+			if (webview) {
+				webview.findInPage(this.searchText, { forward: true, findNext: true });
+			}
+		},
+
+		findPrevious() {
+			if (!this.searchText) return;
+			const webview = document.querySelector('#popupWebview');
+			if (webview) {
+				webview.findInPage(this.searchText, { forward: false, findNext: true });
+			}
+		},
 	},
 };
 </script>
+<style scoped>
+.search-bar {
+	top: 0px;
+}
+</style>
