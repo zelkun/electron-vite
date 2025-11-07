@@ -15,6 +15,7 @@ import log from 'electron-log/main';
 import ProgressBar from 'electron-progressbar';
 import { existsSync } from 'fs';
 
+setupCommandLine(); // 보안관련 설정 해제
 let mainWindow = null;
 
 function createWindow() {
@@ -122,8 +123,6 @@ function fnContentsListener() {
 
 // 앱이 준비되면 윈도우 생성
 app.whenReady().then(() => {
-	setupCommandLine(); // 보안관련 설정 해제
-
 	const gotTheLock = app.requestSingleInstanceLock();
 	if (!gotTheLock) {
 		log.info('Another instance is running. Exiting this instance.');
