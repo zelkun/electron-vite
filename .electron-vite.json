@@ -30,7 +30,7 @@
     "shortcuts.search": "Ctrl+F"
   },
   "hostsChecker": {
-    "skipHostsCheck": "20251107"
+    "skipHostsCheck": "20251112"
   },
   "blockedUrls": [
     "http://naver.com",

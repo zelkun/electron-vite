@@ -38,6 +38,8 @@ function createWindow() {
 		mainWindow.show();
 	});
 
+	console.log(`process.env['ELECTRON_RENDERER_URL']: ${process.env['ELECTRON_RENDERER_URL']}`);
+
 	// HMR for renderer base on electron-vite cli
 	if (isDev && process.env['ELECTRON_RENDERER_URL']) {
 		mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
@@ -192,7 +194,12 @@ app.on('web-contents-created', (_, contents) => {
 		popupWindow.once('ready-to-show', () => {
 			popupWindow.show(); // 이 콜백에서만 show!
 		});
-		popupWindow.loadURL(`file://${join(__dirname, '../renderer/popup.html')}?url=${encodeURIComponent(handle.url)}`);
+
+		if (isDev && process.env['ELECTRON_RENDERER_URL']) {
+			popupWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/popup.html?url=${encodeURIComponent(handle.url)}`);
+		} else {
+			popupWindow.loadURL(`file://${join(__dirname, '../renderer/popup.html')}?url=${encodeURIComponent(handle.url)}`);
+		}
 
 		return { action: 'deny' };
 	});
