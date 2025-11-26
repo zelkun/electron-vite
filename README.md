@@ -299,7 +299,24 @@ ipcMain.removeHandler(channel)
 
 # JAVASCRIPT
 
+내부 Script 조회용
+
+```JAVASCRIPT
+// 전역 함수명 + 소스
+const allFuncs = Object.getOwnPropertyNames(window)
+  .filter(name => typeof window[name] === 'function')
+  .map(name => ({name: name, source: window[name].toString()}));
+
+console.log(allFuncs);
+
+// 모든 inline script 태그 내 소스
+const scriptsText = Array.from(document.scripts).map(s => s.textContent || s.innerText);
+
+console.log(scriptsText);
+
 ```
+
+```JAVASCRIPT
 querySelector/querySelectorAll 메서드 사용
 
 기본 선택자
@@ -403,4 +420,3 @@ jQuery 선택자
 [Git History]: https://marketplace.visualstudio.com/items?itemName=donjayamanne.githistory
 [gitignore]: https://marketplace.visualstudio.com/items?itemName=codezombiech.gitignore
 [Ignore files]: https://marketplace.visualstudio.com/items?itemName=ldez.ignore-files
-
