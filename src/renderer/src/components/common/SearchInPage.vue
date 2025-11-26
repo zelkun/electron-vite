@@ -1,3 +1,4 @@
+<!-- src/renderer/src/components/common/SearchInPage.vue -->
 <template>
 	<div v-if="visible" class="search-bar">
 		<div class="search-input-container">
