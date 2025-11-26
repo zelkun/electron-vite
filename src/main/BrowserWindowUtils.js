@@ -7,7 +7,11 @@ export const createBrowserWindow = (windowType = 'main') => {
 	let options = null;
 	if (windowType === 'main') options = BrowserWinOpt;
 	else if (windowType === 'webview') options = webviewOpt;
-	else if (windowType === 'popup') options = popWindowOpt;
+	else if (windowType === 'popup') {
+		options = popWindowOpt;
+		// options.parent = getFocusedWindow(); // 팝업창의 부모 윈도우 설정, 메인을 가려서 고민중
+		// options.modal = false; // 모달 설정, 메인 사용을 못함
+	}
 
 	const mainWindow = new BrowserWindow(options);
 	mainWindow.windowType = windowType;
