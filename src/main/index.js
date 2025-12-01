@@ -121,6 +121,15 @@ function fnContentsListener() {
 			}
 		});
 	});
+
+	/**
+	 * window 팝업 처리
+	 */
+	contents.setWindowOpenHandler((handle) => {
+		log.debug(`#### ${contents.getType()} setWindowOpenHandler url: ${handle.url}`);
+
+		return getPopupWindow(handle);
+	});
 }
 
 // 앱이 준비되면 윈도우 생성
@@ -170,38 +179,12 @@ app.on('web-contents-created', (_, contents) => {
 		});
 	});
 
+	/**
+	 * webview popup 처리
+	 */
 	contents.setWindowOpenHandler((handle) => {
-		log.debug(`#### setWindowOpenHandler url: ${handle.url}`);
-
-		// shell.openExternal(handle.url); // 웹뷰가 아닌 일반 브라우저 창을 열 때의 설정
-
-		// 빈 URL 또는 about:blank는 허용
-		if (handle.url === 'about:blank' || handle.url.trim() === '') return { action: 'allow' };
-
-		// 차단할 URL 목록
-		const blockedUrls = getBlockedUrls();
-		const isBlocked = blockedUrls.some((url) => handle.url.includes(url));
-		if (isBlocked) {
-			// 차단된 팝업 알림을 줘야 할까?
-			log.debug(`##### blocked popup: ${handle.url}`);
-			return { action: 'deny' };
-		}
-
-		const popupWindow = createBrowserWindow('popup');
-
-		// popup에만 적용되는 메뉴
-		setPopupMenu(popupWindow);
-		popupWindow.once('ready-to-show', () => {
-			popupWindow.show(); // 이 콜백에서만 show!
-		});
-
-		if (isDev && process.env['ELECTRON_RENDERER_URL']) {
-			popupWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/popup.html?url=${encodeURIComponent(handle.url)}`);
-		} else {
-			popupWindow.loadURL(`file://${join(__dirname, '../renderer/popup.html')}?url=${encodeURIComponent(handle.url)}`);
-		}
-
-		return { action: 'deny' };
+		log.debug(`#### ${contents.getType()} setWindowOpenHandler url: ${handle.url}`);
+		return getPopupWindow(handle);
 	});
 
 	contents.on('will-attach-webview', (event, webPreferences, params) => {
@@ -232,3 +215,43 @@ app.on('window-all-closed', () => {
 app.on('will-quit', (evt) => {
 	log.debug('## will-quit');
 });
+
+/**
+ * popup 창 처리
+ * webview, mainWindow 공통
+ *
+ * @param {*} handle
+ * @returns
+ */
+
+function getPopupWindow(handle) {
+	// shell.openExternal(handle.url); // 웹뷰가 아닌 일반 브라우저 창을 열 때의 설정
+
+	// 빈 URL 또는 about:blank는 허용
+	if (handle.url === 'about:blank' || handle.url.trim() === '') return { action: 'allow' };
+
+	// 차단할 URL 목록
+	const blockedUrls = getBlockedUrls();
+	const isBlocked = blockedUrls.some((url) => handle.url.includes(url));
+	if (isBlocked) {
+		// 차단된 팝업 알림을 줘야 할까?
+		log.debug(`##### blocked popup: ${handle.url}`);
+		return { action: 'deny' };
+	}
+
+	const popupWindow = createBrowserWindow('popup');
+
+	// popup에만 적용되는 메뉴
+	setPopupMenu(popupWindow);
+	popupWindow.once('ready-to-show', () => {
+		popupWindow.show(); // 이 콜백에서만 show!
+	});
+
+	if (isDev && process.env['ELECTRON_RENDERER_URL']) {
+		popupWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/popup.html?url=${encodeURIComponent(handle.url)}`);
+	} else {
+		popupWindow.loadURL(`file://${join(__dirname, '../renderer/popup.html')}?url=${encodeURIComponent(handle.url)}`);
+	}
+
+	return { action: 'deny' };
+}
