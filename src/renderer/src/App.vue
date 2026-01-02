@@ -294,7 +294,9 @@ export default {
 			} else {
 				const webview = this.getWebview(index);
 				if (webview) {
-					webview.reload();
+					// 캐시 무시 새로고침 지원 시
+					if (webview.reloadIgnoringCache) webview.reloadIgnoringCache();
+					else if (webview.reload) webview.reload();
 				}
 			}
 		});
@@ -940,4 +942,3 @@ export default {
 	},
 };
 </script>
-
