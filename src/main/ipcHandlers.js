@@ -1,11 +1,14 @@
 // src/main/ipcHandlers.js
-import { BrowserWindow, ipcMain, clipboard, dialog } from 'electron';
-import { getConfigSection, saveConfigSection, getConfigValue, setConfigValue } from './config';
+import { ipcMain, clipboard, dialog } from 'electron';
+import { getConfigSection, saveConfigSection, getConfigValue, setConfigValue, defaultConfig, saveConfig, loadConfig } from './config';
+import { setMainMenu } from './menu';
+import { getMainWindow, getBrowserWindowFromSender, getFocusedWindow } from './BrowserWindowUtils.js';
+import { getBlockedUrls, saveBlockedUrls, loadBlockedUrls } from './blocklistManager.js';
 import fs from 'fs';
 import log from 'electron-log/main';
 
 export function setupIpcHandlers() {
-	const mainWindow = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
+	const mainWindow = getMainWindow();
 
 	// 설정 관련 IPC 핸들러 설정
 	ipcMain.handle('get-config-section', (_, section) => {
@@ -69,7 +72,7 @@ export function setupIpcHandlers() {
 
 	// 창 제어 이벤트 핸들러
 	ipcMain.on('window-control-action', (evt, payload) => {
-		const currentWindow = BrowserWindow.fromWebContents(evt.sender);
+		const currentWindow = getBrowserWindowFromSender(evt.sender);
 		if (payload === 'close-window') currentWindow?.close();
 		if (payload === 'minimize-window') currentWindow?.minimize();
 		if (payload === 'maximize-window') {
@@ -80,5 +83,80 @@ export function setupIpcHandlers() {
 			if (currentWindow?.isFullScreen()) currentWindow?.setFullScreen(false);
 			else currentWindow?.setFullScreen(true);
 		}
+	});
+
+	/**
+	 * POPUP 관련 IPC 핸들러
+	 */
+	/* eslint-disable no-unused-vars */
+	ipcMain.on(`popup-close`, (evt, payload) => {
+		const popupWindow = getBrowserWindowFromSender(evt.sender);
+		if (popupWindow?.windowType === 'popup') popupWindow?.close();
+		else log.warn('popup-close: Not a popup window');
+	});
+
+	/**
+	 * settings 관련 IPC 핸들러
+	 */
+	ipcMain.handle('export-settings', () => {
+		return JSON.stringify(loadConfig());
+	});
+	ipcMain.handle('import-settings', (_, data) => {
+		const config = JSON.parse(data);
+		return saveConfig(config);
+	});
+
+	ipcMain.on('reload-menu', (evt, payload) => {
+		const currentWindow = getBrowserWindowFromSender(evt.sender);
+		setMainMenu(currentWindow);
+	});
+
+	ipcMain.handle('save-setting', async (_, key, value) => {
+		try {
+			const success = await setConfigValue('settings', key, value);
+			if (!success) throw new Error('설정 저장 실패');
+			return { status: 'success' };
+		} catch (error) {
+			log.error('설정 저장 오류:', error);
+			return { status: 'error', message: error.message };
+		}
+	});
+	ipcMain.handle('reset-settings', async () => {
+		const win = getFocusedWindow();
+		const result = await dialog.showMessageBox(win, {
+			type: 'warning',
+			buttons: ['초기화', '취소'],
+			title: '설정 초기화',
+			detail: '※ 북마크는 유지됩니다.',
+		});
+
+		if (result.response === 0) {
+			try {
+				const currentConfig = loadConfig();
+				return saveConfigSection('settings', {
+					...defaultConfig.settings,
+					bookmarks: currentConfig.bookmarks || [],
+				});
+			} catch (error) {
+				log.error('설정 초기화 실패:', error);
+				return false;
+			}
+		}
+		return false;
+	});
+
+	ipcMain.handle('get-blocked-urls', () => {
+		console.log(`## get-blocked-urls`);
+		return getBlockedUrls();
+	});
+
+	ipcMain.handle('save-blocked-urls', async (_, urls) => {
+		console.log(`## save-blocked-urls`, urls);
+		const success = await saveBlockedUrls(urls);
+		if (success) {
+			// 변경된 blocklist 캐시 재로딩
+			loadBlockedUrls();
+		}
+		return success;
 	});
 }

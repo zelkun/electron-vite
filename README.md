@@ -7,11 +7,12 @@ perplexity.ai 가 만드는 웹브라우져 프로젝트
 ## AI 지시사항
 
 ```TEXT
-이 규칙들은 electron-vite 프로젝트에 관한 질문에 답변할 때 네가 따라야 할 기본 지침이다.
+Electron-vite 프로젝트에 관한 질문에 답변할 때 따라야 할 기본 지침입니다.
+너는 Electron과 vue, vite 개발에 능숙한 전문가야
 
 [절대 하지 말아야 할 것]
 - 거짓 정보 제공하기
-- 증거 없이 추측하기
+- 어떠한 경우에도 증거가 없는 추측을 하지 않으며, 불확실한 정보는 제공하지 않는다
 - 질문에 답하지 않고 회피하기
 - 이미 말한 내용 반복하기
 - 동일한 정보를 반복하여 제공하기
@@ -24,9 +25,12 @@ perplexity.ai 가 만드는 웹브라우져 프로젝트
 - 사용자의 질문에 대한 답변을 제공하지 않고 다른 주제로 전환하기
 
 [반드시 해야 할 것]
+- 정중한 어조로 답변하기
 - 확실한 사실만 말하기
 - 모르는 것은 "모른다"고 솔직히 말하기
-- 추측할 때는 "이것은 추측입니다"라고 명시하기
+- 모든 정보는 제공된 URL이 있는경우 실시간으로 접근하여 확인한 후, 최신 상태를 기반으로 답변한다. 확인이 불가능한 경우 '확인을 할 수 없다'고 명시하고 추측하지 않는다
+- 제공된 URL이 있는경우, URL 접근이 안돼는경우 확인할 수 없다고 명시하기
+- 추측해서 답변한경우 축측했다고 명시한다
 - 질문에 정확히 답변하기
 - 새로운 정보만 제공하기
 - 최신 정보로 확인 후 답변하기
@@ -38,13 +42,21 @@ perplexity.ai 가 만드는 웹브라우져 프로젝트
 - 맥락에 맞는 관련 정보만 선별하여 제공하기
 - 사용자의 질문 의도에 따라 답변 깊이와 범위 조절하기
 - 대화 상태를 지속적으로 추적하여 맥락 유지하기
-- 위 지시사항에 답변제약이 있는경우 즉시 알리기
+- 위 지시사항에 답변제약이 있는 경우 즉시 알리기
 - 사용자 질의를 이해했는지 확인하기 위해 모든 답변에는 질의 요약 후 답변
-- 답변시 현재 하고있는 작업의 변경사항을 고려해서 답변할것
-- 수정사항은 현재 하고있는 작업을 기준으로 답변할 것
-- 변경사항은 파일위치 혹은 파일명을 언급해서 찾기 쉽게할 것
+- 답변 시 사용한 데이터 소스(예: URL, 커밋 해시)를 명확히 밝히고, 소스가 잘못되었을 경우 즉시 사용자에게 알린다
+- 사용자가 제공한 데이터는 최신 정보로 간주하고 우선 반영한 후 추가 확인을 진행한다
+- 초기 답변이 잘못되었음을 발견하면 오류 원인을 구체적으로 설명하고 수정된 정보를 즉시 제공한다
+- 현재에도 해당정보가 유효한지 확인
+- 정보출처를 명확하게 명시하기
+[코드 및 파일 관련]
+- 파일 전체 경로 표기 할것 (예: `src/main/config.js`)
 - 코드 변경시 기존/변경/추가 를 명시 할것
+- 변경사항은 변경유형을 구분하고 적용 위치(함수/메서드 혹은 라인 번호)를 명확하게 언급할것
+- 답변 시 현재 하고있는 작업의 변경사항을 고려해서 답변할것
+- 수정사항은 현재 하고있는 작업을 기준으로 답변할 것
 - 제공된 소스가 있는 경우 개선요청은 해당 소스를 기준으로 제공할 것
+- 소스코드는 복사해서 바로 적용할 수 있도록 작성한다.
 
 [효과적인 챗봇 지시 방법]
 - 구체적으로 지시하기: "회사에서 어제 100개만 발주해야 할 물티슈를 실수로 1천개 주문했는데, 부장님께 제출할 경위서를 써 줘"와 같이 상세한 맥락 제공하기
@@ -58,6 +70,7 @@ perplexity.ai 가 만드는 웹브라우져 프로젝트
 
 [언어 요구사항]
 - 모든 답변은 한국어로 작성하기
+
 ```
 
 ## [프로젝트 구조 및 아키텍처]
@@ -68,10 +81,11 @@ electron-vite
 ├─ .electron-vite.json
 ├─ .prettierignore
 ├─ .prettierrc.yaml
-├─ autoit
+├─ README.md
 ├─ build
 │  ├─ entitlements.mac.plist
 │  ├─ hosts.bat
+│  ├─ hosts.sh
 │  ├─ icon.icns
 │  ├─ icon.ico
 │  └─ icon.png
@@ -82,7 +96,6 @@ electron-vite
 ├─ kill_electron.bat
 ├─ package-lock.json
 ├─ package.json
-├─ README.md
 ├─ ref
 │  ├─ promis.js
 │  └─ script.js
@@ -92,6 +105,8 @@ electron-vite
 │  └─ icon.png.org
 ├─ src
 │  ├─ main
+│  │  ├─ BrowserWindowUtils.js
+│  │  ├─ blocklistManager.js
 │  │  ├─ commandLine.js
 │  │  ├─ config.js
 │  │  ├─ hostsChecker.js
@@ -108,13 +123,22 @@ electron-vite
 │  │  └─ webviewPreload.js
 │  └─ renderer
 │     ├─ index.html
+│     ├─ popup.html
 │     └─ src
 │        ├─ App.vue
+│        ├─ Popup.js
+│        ├─ Popup.vue
 │        ├─ assets
-│        │  ├─ css
-│        │  │  └─ styles.css
-│        │  └─ images
+│        │  └─ css
+│        │     ├─ settings.css
+│        │     └─ styles.css
 │        ├─ components
+│        │  └─ Settings
+│        │     ├─ AppearanceSettings.vue
+│        │     ├─ BlockedUrlsSettings.vue
+│        │     ├─ GeneralSettings.vue
+│        │     ├─ Settings.vue
+│        │     └─ shortcutsSettings.vue
 │        └─ main.js
 └─ tools
    ├─ nsis-3.0.4.1.7z
@@ -275,7 +299,24 @@ ipcMain.removeHandler(channel)
 
 # JAVASCRIPT
 
+내부 Script 조회용
+
+```JAVASCRIPT
+// 전역 함수명 + 소스
+const allFuncs = Object.getOwnPropertyNames(window)
+  .filter(name => typeof window[name] === 'function')
+  .map(name => ({name: name, source: window[name].toString()}));
+
+console.log(allFuncs);
+
+// 모든 inline script 태그 내 소스
+const scriptsText = Array.from(document.scripts).map(s => s.textContent || s.innerText);
+
+console.log(scriptsText);
+
 ```
+
+```JAVASCRIPT
 querySelector/querySelectorAll 메서드 사용
 
 기본 선택자
@@ -325,3 +366,57 @@ jQuery 선택자
 [ipc_ko]: https://tinydew4.github.io/electron-ko/docs/api/ipc-main/
 [ipc_exam]: https://www.electronjs.org/docs/latest/tutorial/ipc
 [Optional_chaining]: https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Operators/Optional_chaining
+
+# Extends
+
+[Auto Close Tag]: https://marketplace.visualstudio.com/items?itemName=formulahendry.auto-close-tag
+[Auto Rename Tag]: https://marketplace.visualstudio.com/items?itemName=formulahendry.auto-rename-tag
+[Bracket Select]: https://marketplace.visualstudio.com/items?itemName=chunsen.bracket-select
+[Material Icon Theme]: https://marketplace.visualstudio.com/items?itemName=PKief.material-icon-theme
+[Unique Lines]: https://marketplace.visualstudio.com/items?itemName=bibhasdn.unique-lines
+[Paste JSON as Code]: https://marketplace.visualstudio.com/items?itemName=quicktype.quicktype
+[XML Tools]: https://marketplace.visualstudio.com/items?itemName=DotJoshJohnson.xml
+[Project Manager]: https://marketplace.visualstudio.com/items?itemName=alefragnani.project-manager
+[Auto Reload]: https://marketplace.visualstudio.com/items?itemName=sebastian-lay.auto-reload
+[Auto Scroll]: https://marketplace.visualstudio.com/items?itemName=LamborGhinious.auto-scroll
+[Live Server]: https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer
+[Indentation Level Movement2]: https://marketplace.visualstudio.com/items?itemName=MikiFos.indentation-level-movement2
+[indent-rainbow]: https://marketplace.visualstudio.com/items?itemName=oderwat.indent-rainbow
+[file-size]: https://marketplace.visualstudio.com/items?itemName=zh9528.file-size
+[Bracket Peek]: https://marketplace.visualstudio.com/items?itemName=jomeinaster.bracket-peek
+[Bookmarks]: https://marketplace.visualstudio.com/items?itemName=alefragnani.Bookmarks
+[Better Align]: https://marketplace.visualstudio.com/items?itemName=Chouzz.vscode-better-align
+
+## DOC
+
+[Markdown All in One]: https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one
+[vscode-hwp]: https://marketplace.visualstudio.com/items?itemName=pusnow.hwp
+[vscode-pdf]: https://marketplace.visualstudio.com/items?itemName=tomoki1207.pdf
+[Polacode(fixed edition)]: https://marketplace.visualstudio.com/items?itemName=mrrefactoring.polacode-fixed-edition
+[Excel to Markdown table]: https://marketplace.visualstudio.com/items?itemName=csholmq.excel-to-markdown-table
+[Paste Image]: https://marketplace.visualstudio.com/items?itemName=mushan.vscode-paste-image
+[Markdown Paste]: https://marketplace.visualstudio.com/items?itemName=telesoho.vscode-markdown-paste-image
+[Office Viewer]: https://marketplace.visualstudio.com/items?itemName=cweijan.vscode-office
+[Edit CSV]: https://marketplace.visualstudio.com/items?itemName=janisdd.vscode-edit-csv
+[Rainbow CSV]: https://marketplace.visualstudio.com/items?itemName=mechatroner.rainbow-csv
+
+## dev
+
+[project-tree]: https://marketplace.visualstudio.com/items?itemName=zhucy.project-tree
+[JavaScript (ES6) code snippets]: https://marketplace.visualstudio.com/items?itemName=xabikos.JavaScriptSnippets
+[console.log snippets - clg]: https://marketplace.visualstudio.com/items?itemName=alexkev.clg
+[Error Lens]: https://marketplace.visualstudio.com/items?itemName=usernamehw.errorlens
+[inline Parameters for VSCode]: https://marketplace.visualstudio.com/items?itemName=liamhammett.inline-parameters
+[inline Parameters Extended for VSCode]: https://marketplace.visualstudio.com/items?itemName=RobertOstermann.inline-parameters-extended
+[ESLint]: https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint
+[Prettier]: https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode
+[Vue]: https://marketplace.visualstudio.com/items?itemName=Vue.volar
+[Electron Snippets]: https://marketplace.visualstudio.com/items?itemName=antoniormrzz.electron-snippets
+
+## Git
+
+[GitLens]: https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens
+[Git Graph]: https://marketplace.visualstudio.com/items?itemName=mhutchie.git-graph
+[Git History]: https://marketplace.visualstudio.com/items?itemName=donjayamanne.githistory
+[gitignore]: https://marketplace.visualstudio.com/items?itemName=codezombiech.gitignore
+[Ignore files]: https://marketplace.visualstudio.com/items?itemName=ldez.ignore-files

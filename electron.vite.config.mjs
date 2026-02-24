@@ -7,12 +7,8 @@ export default defineConfig({
 	main: {
 		plugins: [externalizeDepsPlugin()],
 	},
-	/*
 	preload: {
-		plugins: [externalizeDepsPlugin()],
-	},
-	*/
-	preload: {
+		// plugins: [externalizeDepsPlugin()],
 		build: {
 			rollupOptions: {
 				input: {
@@ -24,6 +20,7 @@ export default defineConfig({
 		},
 	},
 	renderer: {
+		publicDir: resolve('src/renderer/public'), // 정적 자산 디렉토리 설정
 		resolve: {
 			alias: {
 				'@renderer': resolve('src/renderer/src'),
@@ -39,5 +36,13 @@ export default defineConfig({
 				},
 			}),
 		],
+		build: {
+			rollupOptions: {
+				input: {
+					main: resolve('src/renderer/index.html'),
+					popup: resolve('src/renderer/popup.html'), // 팝업 추가
+				},
+			},
+		},
 	},
 });

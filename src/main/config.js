@@ -19,30 +19,46 @@ export const isDev = process.argv.includes('dev') || process.env.NODE_ENV === 'd
 const configPath = join(isDev ? app.getAppPath() : os.homedir(), '.electron-vite.json'); // 설정 파일 경로
 
 // 기본 설정
-const defaultConfig = {
+export const defaultConfig = {
 	bookmarks: [],
 	settings: {
-		defaultHomePage: 'about:blank',
+		homePage: 'about:blank',
+		startupAction: 'newTab',
 		showBookmarkBar: true,
 		theme: 'light',
 	},
 };
 
+let configCache = null;
+
 // 설정 로드
 export function loadConfig() {
+	if (configCache) {
+		return configCache; // 캐시된 설정 반환
+	}
 	try {
 		if (fs.existsSync(configPath)) {
 			const data = fs.readFileSync(configPath, 'utf8');
-			return JSON.parse(data);
+			try {
+				configCache = JSON.parse(data);
+				log.info('Config loaded successfully');
+				return configCache;
+			} catch (parseError) {
+				log.error('JSON 파싱 오류:', parseError.message);
+				//dialog.showErrorBox('설정 파일 오류', 'JSON 형식이 잘못되었습니다.');
+			}
 		}
 	} catch (error) {
-		log.error('설정 파일 로드 오류:', error);
+		log.error('설정 파일 읽기 오류:', error);
 	}
-	return { ...defaultConfig };
+	log.info('기본 설정 사용');
+	configCache = { ...defaultConfig }; // 기본 설정 반환
+	return configCache;
 }
 
 // 설정 저장
 export function saveConfig(config) {
+	configCache = config; // 캐시 업데이트
 	try {
 		fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
 		return true;
@@ -50,6 +66,12 @@ export function saveConfig(config) {
 		log.error('설정 파일 저장 오류:', error);
 		return false;
 	}
+}
+
+// 설정 캐시 초기화
+export function reloadConfig() {
+	configCache = null; // 캐시 초기화
+	return loadConfig(); // 설정 다시 로드
 }
 
 // 특정 설정 섹션 가져오기
@@ -79,4 +101,8 @@ export function setConfigValue(section, key, value) {
 	}
 	config[section][key] = value;
 	return saveConfig(config);
+}
+
+export function getShortcut(key, defaultValue) {
+	return getConfigValue('shortcuts', key) || defaultValue;
 }

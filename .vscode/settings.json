@@ -2,6 +2,6 @@
 	"editor.formatOnSave": true,
 	"prettier.requireConfig": true,
 	"editor.defaultFormatter": "esbenp.prettier-vscode",
-	"auto-scroll.enabled": true
+	"auto-scroll.enabled": false
 }
 

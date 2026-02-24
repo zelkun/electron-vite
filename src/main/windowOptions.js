@@ -64,6 +64,7 @@ export const BrowserWinOpt = {
 	...defualtOpt,
 	webPreferences: {
 		preload: preloadPath,
+		additionalArguments: ['--main'],
 		...defualtOpt.webPreferences,
 	},
 };
@@ -71,15 +72,17 @@ export const BrowserWinOpt = {
 export const webviewOpt = {
 	...defualtOpt,
 	webPreferences: {
-		...defualtOpt.webPreferences,
 		preload: webviewPreloadPath,
+		additionalArguments: ['--webview'],
+		...defualtOpt.webPreferences,
 	},
 };
 
 export const popWindowOpt = {
 	...defualtOpt,
 	webPreferences: {
-		...defualtOpt.webPreferences,
 		preload: popPreloadPath,
+		additionalArguments: ['--popup'],
+		...defualtOpt.webPreferences,
 	},
 };

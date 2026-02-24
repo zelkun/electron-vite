@@ -1,41 +1,93 @@
+/* src/renderer/src/assets/css/style.css */
+:root {
+	--bg-color: #fff;
+	--text-color: #000;
+	--border-color: #e0e0e0;
+	--tab-bg: #e0e2e4;
+	--tab-active-bg: #fff;
+	--tab-title-color: #5f6368;
+	--tab-title-active: #202124;
+	--toolbar-bg: #f8f8f8;
+	--toolbar-border: #ddd;
+	--action-hover: #e0e0e0;
+	--bookmark-bar-bg: #f8f8f8;
+	--bookmark-link-color: #555;
+	--bookmark-link-hover: #e0e0e0;
+	--modal-bg: #fff;
+	--modal-header: #333;
+	--modal-border: #eee;
+	--search-bar-bg: #fff;
+	--search-bar-border: #ddd;
+	--status-bar-bg: #f8f8f8;
+	--status-bar-color: #666;
+}
+
+[data-theme='dark'] {
+	--bg-color: #202124;
+	--text-color: #f8fafc;
+	--border-color: #5f6368;
+	--tab-bg: #2a2d31;
+	--tab-active-bg: #292b2f;
+	--tab-title-color: #f1f3f4;
+	--tab-title-active: #fff;
+	--toolbar-bg: #222327;
+	--toolbar-border: #44464a;
+	--action-hover: rgba(255, 255, 255, 0.08);
+	--bookmark-bar-bg: #232428;
+	--bookmark-link-color: #f8fafc;
+	--bookmark-link-hover: #33353a;
+	--modal-bg: #232428;
+	--modal-header: #fff;
+	--modal-border: #44464a;
+	--search-bar-bg: #232428;
+	--search-bar-border: #44464a;
+	--status-bar-bg: #232428;
+	--status-bar-color: #f1f3f4;
+}
+
 html,
 body {
 	height: 100%;
 	overflow: hidden;
 	margin: 0;
 	padding: 0;
+	background: var(--bg-color);
+	color: var(--text-color);
 }
 
 .browser-container {
 	display: flex;
 	flex-direction: column;
 	height: 100vh;
-	background-color: #f0f0f0;
+	background-color: var(--bg-color);
 	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 	overflow: hidden;
+	color: var(--text-color);
 }
 
 .browser-tabs {
 	display: flex;
-	background-color: #4285f4; /* 구글 파란색으로 변경 */
+	background-color: #4285f4;
 	padding: 0 1px;
 	height: 40px;
 	flex-wrap: nowrap;
 	overflow-x: auto;
-	scrollbar-width: none; /* Firefox */
-	-ms-overflow-style: none; /* IE and Edge */
-	-webkit-app-region: drag; /* 드래그 가능하도록 설정 */
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+	-webkit-app-region: drag;
 	width: 100%;
 }
+.browser-tabs.mac {
+	padding-left: 70px; /* macOS 좌측 버튼 영역만큼 여백 확보 */
+}
 
-/* 탭 자체와 추가 버튼은 드래그 불가능하게 설정 (클릭 가능하도록) */
 .tab,
 .add-tab {
 	-webkit-app-region: no-drag;
 }
 
 .browser-tabs::-webkit-scrollbar {
-	display: none; /* Chrome, Safari, Opera */
+	display: none;
 }
 
 .tab {
@@ -44,27 +96,30 @@ body {
 	padding: 0 15px;
 	min-width: 10px;
 	max-width: 150px;
-	background-color: #e0e2e4; /* 비활성 탭 배경색을 탭 영역과 비슷한 색으로 변경 */
+	background-color: var(--tab-bg);
 	margin: 5px 2px 0;
 	border-radius: 8px 8px 0 0;
 	cursor: pointer;
-	border: 1px solid #ddd;
+	border: 1px solid var(--border-color);
 	border-bottom: none;
 	position: relative;
 	overflow: hidden;
 	white-space: nowrap;
 	text-overflow: ellipsis;
 	height: 35px;
-	flex: 0 1 auto; /* flex-grow: 0, flex-shrink: 1, flex-basis: auto */
-	opacity: 0.8; /* 비활성 탭은 약간 투명하게 */
+	flex: 0 1 auto;
+	opacity: 0.8;
+	transition:
+		background 0.2s,
+		color 0.2s;
 }
 
 .tab.active {
-	background-color: #fff; /* 활성 탭은 흰색 배경 유지 */
+	background-color: var(--tab-active-bg);
 	z-index: 1;
 	font-weight: 500;
-	opacity: 1; /* 활성 탭은 완전 불투명 */
-	box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05); /* 활성 탭에 약간의 그림자 추가 */
+	opacity: 1;
+	box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .tab-title {
@@ -73,11 +128,11 @@ body {
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	font-size: 13px;
-	color: #5f6368; /* 비활성 탭 텍스트 색상 */
+	color: var(--tab-title-color);
 }
 
 .tab.active .tab-title {
-	color: #202124; /* 활성 탭 텍스트 색상 진하게 */
+	color: var(--tab-title-active);
 }
 
 .close-tab {
@@ -88,10 +143,12 @@ body {
 	cursor: pointer;
 	padding: 0 5px;
 	border-radius: 50%;
+	color: var(--tab-title-color);
+	transition: background 0.2s;
 }
 
 .close-tab:hover {
-	background-color: rgba(0, 0, 0, 0.1);
+	background-color: var(--action-hover);
 }
 
 .add-tab {
@@ -109,8 +166,8 @@ body {
 	display: flex;
 	align-items: center;
 	padding: 8px;
-	background-color: #f8f8f8;
-	border-bottom: 1px solid #ddd;
+	background-color: var(--toolbar-bg);
+	border-bottom: 1px solid var(--toolbar-border);
 	flex-shrink: 0;
 }
 
@@ -129,13 +186,16 @@ body {
 	padding: 6px 10px;
 	margin: 0 2px;
 	cursor: pointer;
-	color: #555;
+	color: var(--text-color);
+	transition:
+		background 0.2s,
+		color 0.2s;
 }
 
 .nav-btn:hover,
 .action-btn:hover,
 .zoom-btn:hover {
-	background-color: #e0e0e0;
+	background-color: var(--action-hover);
 }
 
 .nav-btn:disabled {
@@ -144,7 +204,7 @@ body {
 }
 
 .action-btn.active {
-	background-color: #e0e0e0;
+	background-color: var(--action-hover);
 	color: #4285f4;
 }
 
@@ -158,16 +218,27 @@ body {
 .url-input {
 	flex: 1;
 	padding: 8px 12px;
-	border: 1px solid #ddd;
+	border: 1px solid var(--border-color);
 	border-radius: 20px;
 	font-size: 14px;
 	outline: none;
 	min-width: 0;
+	background: var(--bg-color);
+	color: var(--text-color);
+	transition:
+		background 0.2s,
+		color 0.2s,
+		border-color 0.2s;
 }
 
 .url-input:focus {
 	border-color: #4285f4;
 	box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+}
+
+::placeholder {
+	color: rgba(248, 250, 252, 0.7);
+	opacity: 1;
 }
 
 .go-btn {
@@ -186,169 +257,10 @@ body {
 	flex-shrink: 0;
 }
 
-/* 북마크 바 스타일 */
 .bookmark-bar {
 	display: flex;
-	background-color: #f8f8f8;
-	border-bottom: 1px solid #ddd;
-	padding: 6px 8px;
-	overflow-x: auto;
-	scrollbar-width: none;
-	-ms-overflow-style: none;
-}
-
-.bookmark-bar::-webkit-scrollbar {
-	display: none;
-}
-
-.bookmark-items {
-	display: flex;
-	flex-wrap: nowrap;
-	width: 100%;
-}
-
-.bookmark-item {
-	margin: 0 5px;
-	white-space: nowrap;
-	flex-shrink: 0;
-}
-
-.bookmark-view {
-	display: flex;
-	align-items: center;
-}
-
-.bookmark-link {
-	display: flex;
-	align-items: center;
-	padding: 6px 10px;
-	background-color: transparent;
-	border: none;
-	border-radius: 4px;
-	cursor: pointer;
-	color: #555;
-	font-size: 13px;
-	max-width: 200px;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-.bookmark-link:hover {
-	background-color: #e0e0e0;
-}
-
-.bookmark-favicon {
-	margin-right: 5px;
-	font-size: 14px;
-}
-
-.bookmark-title {
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-.bookmark-edit-btn {
-	background: none;
-	border: none;
-	font-size: 14px;
-	cursor: pointer;
-	padding: 4px;
-	border-radius: 50%;
-	visibility: hidden;
-}
-
-.bookmark-item:hover .bookmark-edit-btn {
-	visibility: visible;
-}
-
-.bookmark-edit {
-	display: flex;
-	flex-direction: column;
-	background-color: white;
-	border: 1px solid #ddd;
-	border-radius: 4px;
-	padding: 10px;
-	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-	position: absolute;
-	z-index: 10;
-	width: 300px;
-}
-
-.bookmark-input {
-	margin-bottom: 8px;
-	padding: 8px;
-	border: 1px solid #ddd;
-	border-radius: 4px;
-	font-size: 13px;
-}
-
-.bookmark-edit-actions {
-	display: flex;
-	justify-content: space-between;
-}
-
-.bookmark-btn {
-	padding: 6px 12px;
-	border: none;
-	border-radius: 4px;
-	cursor: pointer;
-	font-size: 13px;
-}
-
-.save-btn {
-	background-color: #4285f4;
-	color: white;
-}
-
-.cancel-btn {
-	background-color: #f0f0f0;
-	color: #555;
-}
-
-.delete-btn {
-	background-color: #ea4335;
-	color: white;
-}
-
-.webview-container {
-	flex: 1;
-	background-color: #fff;
-	overflow: hidden;
-}
-
-.webview {
-	width: 100%;
-	height: 100%;
-	border: none;
-}
-
-.status-bar {
-	display: flex;
-	justify-content: space-between;
-	padding: 5px 10px;
-	background-color: #f8f8f8;
-	border-top: 1px solid #ddd;
-	font-size: 12px;
-	color: #666;
-	flex-shrink: 0;
-}
-
-.loading-status {
-	display: flex;
-	align-items: center;
-}
-
-.zoom-controls {
-	display: flex;
-	align-items: center;
-	gap: 5px;
-}
-
-/* 북마크 바 스타일 수정 */
-.bookmark-bar {
-	display: flex;
-	background-color: #f8f8f8;
-	border-bottom: 1px solid #ddd;
+	background-color: var(--bookmark-bar-bg);
+	border-bottom: 1px solid var(--border-color);
 	padding: 6px 8px;
 	overflow-x: auto;
 	scrollbar-width: none;
@@ -374,7 +286,7 @@ body {
 .bookmark-empty {
 	display: flex;
 	align-items: center;
-	color: #666;
+	color: var(--status-bar-color);
 	font-size: 13px;
 	padding: 0 10px;
 }
@@ -398,15 +310,18 @@ body {
 	border: none;
 	border-radius: 4px;
 	cursor: pointer;
-	color: #555;
+	color: var(--bookmark-link-color);
 	font-size: 13px;
 	max-width: 200px;
 	overflow: hidden;
 	text-overflow: ellipsis;
+	transition:
+		background 0.2s,
+		color 0.2s;
 }
 
 .bookmark-link:hover {
-	background-color: #e0e0e0;
+	background-color: var(--bookmark-link-hover);
 }
 
 .bookmark-favicon {
@@ -419,7 +334,107 @@ body {
 	text-overflow: ellipsis;
 }
 
-/* 북마크 모달 스타일 */
+.bookmark-edit-btn {
+	background: none;
+	border: none;
+	font-size: 14px;
+	cursor: pointer;
+	padding: 4px;
+	border-radius: 50%;
+	visibility: hidden;
+	color: var(--text-color);
+}
+
+.bookmark-item:hover .bookmark-edit-btn {
+	visibility: visible;
+}
+
+.bookmark-edit {
+	display: flex;
+	flex-direction: column;
+	background-color: var(--modal-bg);
+	border: 1px solid var(--border-color);
+	border-radius: 4px;
+	padding: 10px;
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+	position: absolute;
+	z-index: 10;
+	width: 300px;
+}
+
+.bookmark-input {
+	margin-bottom: 8px;
+	padding: 8px;
+	border: 1px solid var(--border-color);
+	border-radius: 4px;
+	font-size: 13px;
+	background: var(--bg-color);
+	color: var(--text-color);
+}
+
+.bookmark-edit-actions {
+	display: flex;
+	justify-content: space-between;
+}
+
+.bookmark-btn {
+	padding: 6px 12px;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 13px;
+}
+
+.save-btn {
+	background-color: #4285f4;
+	color: white;
+}
+
+.cancel-btn {
+	background-color: var(--action-hover);
+	color: var(--text-color);
+}
+
+.delete-btn {
+	background-color: #ea4335;
+	color: white;
+}
+
+.webview-container {
+	flex: 1;
+	background-color: var(--bg-color);
+	overflow: hidden;
+}
+
+.webview {
+	width: 100%;
+	height: 100%;
+	border: none;
+	background: var(--bg-color);
+}
+
+.status-bar {
+	display: flex;
+	justify-content: space-between;
+	padding: 5px 10px;
+	background-color: var(--status-bar-bg);
+	border-top: 1px solid var(--border-color);
+	font-size: 12px;
+	color: var(--status-bar-color);
+	flex-shrink: 0;
+}
+
+.loading-status {
+	display: flex;
+	align-items: center;
+}
+
+.zoom-controls {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+}
+
 .bookmark-modal {
 	position: fixed;
 	top: 0;
@@ -434,7 +449,7 @@ body {
 }
 
 .bookmark-modal-content {
-	background-color: white;
+	background-color: var(--modal-bg);
 	border-radius: 8px;
 	width: 400px;
 	max-width: 90%;
@@ -447,13 +462,13 @@ body {
 	justify-content: space-between;
 	align-items: center;
 	padding: 16px;
-	border-bottom: 1px solid #eee;
+	border-bottom: 1px solid var(--modal-border);
 }
 
 .bookmark-modal-header h3 {
 	margin: 0;
 	font-size: 18px;
-	color: #333;
+	color: var(--modal-header);
 }
 
 .modal-close-btn {
@@ -461,7 +476,7 @@ body {
 	border: none;
 	font-size: 20px;
 	cursor: pointer;
-	color: #666;
+	color: var(--status-bar-color);
 }
 
 .bookmark-modal-body {
@@ -476,16 +491,18 @@ body {
 	display: block;
 	margin-bottom: 8px;
 	font-size: 14px;
-	color: #555;
+	color: var(--text-color);
 }
 
 .bookmark-input {
 	width: 100%;
 	padding: 8px 12px;
-	border: 1px solid #ddd;
+	border: 1px solid var(--border-color);
 	border-radius: 4px;
 	font-size: 14px;
 	box-sizing: border-box;
+	background: var(--bg-color);
+	color: var(--text-color);
 }
 
 .bookmark-input:focus {
@@ -498,7 +515,7 @@ body {
 	display: flex;
 	justify-content: space-between;
 	padding: 16px;
-	border-top: 1px solid #eee;
+	border-top: 1px solid var(--modal-border);
 }
 
 .modal-actions {
@@ -520,8 +537,8 @@ body {
 }
 
 .cancel-btn {
-	background-color: #f0f0f0;
-	color: #555;
+	background-color: var(--action-hover);
+	color: var(--text-color);
 }
 
 .delete-btn {
@@ -529,19 +546,18 @@ body {
 	color: white;
 }
 
-/* 페이지 검색 UI 스타일 */
 .search-bar {
 	position: absolute;
-	top: 90px; /* 주소창 아래 위치하도록 조정 */
+	top: 90px;
 	right: 10px;
 	display: flex;
 	align-items: center;
-	background-color: white;
+	background-color: var(--search-bar-bg);
 	border-radius: 8px;
 	padding: 4px;
 	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
 	z-index: 100;
-	border: 1px solid #ddd;
+	border: 1px solid var(--search-bar-border);
 }
 
 .search-input-container {
@@ -558,10 +574,11 @@ body {
 	width: 220px;
 	outline: none;
 	background-color: #f1f3f4;
+	color: var(--text-color);
 }
 
 .search-input:focus {
-	background-color: white;
+	background-color: var(--bg-color);
 	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) inset;
 }
 
@@ -569,7 +586,7 @@ body {
 	position: absolute;
 	right: 10px;
 	font-size: 12px;
-	color: #5f6368;
+	color: var(--tab-title-color);
 	pointer-events: none;
 }
 
@@ -589,7 +606,7 @@ body {
 	border: none;
 	border-radius: 50%;
 	cursor: pointer;
-	color: #5f6368;
+	color: var(--tab-title-color);
 	font-size: 14px;
 	transition: background-color 0.2s;
 }
@@ -608,12 +625,12 @@ body {
 }
 
 .close-btn:hover {
-	background-color: #f1f3f4;
+	background-color: #e81123;
 }
 
 .window-controls {
 	display: flex;
-	margin-left: auto; /* 오른쪽 정렬 */
+	margin-left: auto;
 	-webkit-app-region: no-drag;
 }
 
@@ -639,33 +656,30 @@ body {
 	background-color: rgba(255, 255, 255, 0.1);
 }
 
-.close-btn:hover {
-	background-color: #e81123;
-}
-
-/* 검색 영역 스타일 */
 .search-area {
 	display: flex;
-	background-color: #f8f8f8;
-	border-bottom: 1px solid #ddd;
+	background-color: var(--toolbar-bg);
+	border-bottom: 1px solid var(--border-color);
 	padding: 3px;
 }
+
 .search-area-input {
 	flex: 1;
 	padding: 8px 12px;
-	border: 1px solid #ddd;
+	border: 1px solid var(--border-color);
 	border-radius: 20px;
 	font-size: 14px;
 	outline: none;
 	min-width: 0;
 	width: 150px;
 	background-color: #f1f3f4;
+	color: var(--text-color);
 }
 
 .search-area-input:focus {
 	border-color: #4285f4;
 	box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
-	background-color: white;
+	background-color: var(--bg-color);
 }
 
 .search-area-button {

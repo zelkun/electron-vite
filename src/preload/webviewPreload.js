@@ -1,8 +1,7 @@
 // src/preload/webviewPreload.js
 import { ipcRenderer, contextBridge } from 'electron';
 
-console.log('Webview preload script loaded successfully!');
-// alert('webview preload script loaded successfully!')
+console.log(`Webview preload script loaded successfully! ${window.location.href}`);
 
 // webview에서 사용할 API 노출
 contextBridge.exposeInMainWorld('webviewAPI', {
@@ -43,11 +42,6 @@ contextBridge.exposeInMainWorld('webviewAPI', {
 		return () => {
 			ipcRenderer.removeListener(channel, subscription);
 		};
-	},
-
-	// 호스트에 직접 메시지 전송 (렌더러 프로세스에서 사용, Promise 반환)
-	invokeToHost: (channel, ...args) => {
-		return ipcRenderer.invokeToHost(channel, ...args);
 	},
 });
 

@@ -1,25 +1,27 @@
 // src/main/index.js
-import { app, shell, BrowserWindow } from 'electron';
+import { app, shell } from 'electron';
 import { electronApp, optimizer } from '@electron-toolkit/utils';
 import { join } from 'path';
-import { setupMenu } from './menu';
+import { setMainMenu, setPopupMenu } from './menu';
 import { setupTray } from './tray';
 import { setupUpdater } from './updater';
 import { setupIpcHandlers } from './ipcHandlers';
 import { isDev } from './config';
-import { setupCommandLine /*, parseCommandLineArgs, hasSwitch, getSwitchValue*/ } from './commandLine';
-import { BrowserWinOpt, webviewOpt, popWindowOpt } from './windowOptions';
+import { setupCommandLine } from './commandLine';
+import { createBrowserWindow, getAllWindowsCnt, getFocusedWindow, getMainWindow } from './BrowserWindowUtils.js';
+import { webviewOpt } from './windowOptions';
+import { loadBlockedUrls, getBlockedUrls } from './blocklistManager.js';
 import log from 'electron-log/main';
+import ProgressBar from 'electron-progressbar';
+import { existsSync } from 'fs';
 
 setupCommandLine(); // 보안관련 설정 해제
-
 let mainWindow = null;
 
 function createWindow() {
 	log.info(`## createWindow`);
 	// 메인 브라우저 윈도우 생성
-	mainWindow = new BrowserWindow(BrowserWinOpt);
-	mainWindow.windowType = 'main'; // 윈도우 타입 설정 (메인 윈도우)
+	mainWindow = createBrowserWindow('main');
 
 	/* CSP 설정 예시
 	session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
@@ -32,14 +34,11 @@ function createWindow() {
 	})
 	*/
 
-	mainWindow.on('ready-to-show', () => {
+	mainWindow.once('ready-to-show', () => {
 		mainWindow.show();
 	});
 
-	mainWindow.webContents.setWindowOpenHandler((details) => {
-		shell.openExternal(details.url);
-		return { action: 'deny' };
-	});
+	console.log(`process.env['ELECTRON_RENDERER_URL']: ${process.env['ELECTRON_RENDERER_URL']}`);
 
 	// HMR for renderer base on electron-vite cli
 	if (isDev && process.env['ELECTRON_RENDERER_URL']) {
@@ -55,57 +54,141 @@ function createWindow() {
 	});
 }
 
+function fnContentsListener() {
+	const mainWindow = getMainWindow();
+	const contents = mainWindow.webContents;
+
+	contents.session.removeAllListeners('will-download');
+	contents.session.on('will-download', (evt, item, webContents) => {
+		log.debug(`#### will-download: ${item.getFilename()}`);
+		const downloadWindow = webContents.getOwnerBrowserWindow();
+		log.debug(`##### downloadWindow type: ${downloadWindow.windowType}`);
+		log.debug(`##### downloadWindow title: ${downloadWindow.getTitle()}`);
+		log.debug(`##### downloadWindow url: ${downloadWindow.webContents.getURL()}, item.url: ${item.getURL()}`);
+		if (downloadWindow.windowType === 'popup' && downloadWindow.closable && decodeURIComponent(downloadWindow.webContents.getURL().split('?url=')[1]) === item.getURL()) downloadWindow.close();
+
+		// ProgressBar
+		const opt = {
+			title: 'Downloading...',
+			text: item.getFilename(),
+			detail: `0%`,
+			indeterminate: true, // true: 불확정, false: 확정 진행바
+			abortOnError: false, // Error 발생시 자동 중단 여부
+			closeOnComplete: true, // 완료시 자동 닫기 여부
+			//  0 ~ maxValue 사이의 값으로 진행 상태 표시
+			//  indeterminate가 true이면 의미 없음
+			value: 0,
+			maxValue: item.getTotalBytes(),
+			cancelable: true,
+			browserWindow: { modal: true, closable: true, webPreferences: { nodeIntegration: true } }, // ProgressBar가 브라우저 윈도우에 종속적이 되도록
+		};
+		const progressBar = new ProgressBar(opt);
+		progressBar.on(`completed`, () => {});
+		progressBar.on(`aborted`, () => {});
+		progressBar.on(`progress`, (val) => {
+			log.debug(`#### Download progress: ${val}%`);
+			progressBar.detail = `${Math.round((val / item.getTotalBytes()) * 100)}% of ${Math.round(item.getTotalBytes() / 1024)} KB`;
+		});
+
+		const fileNm = item.getFilename();
+		const fullPath = join(app.getPath('downloads'), fileNm);
+		log.debug(`##### Download to: ${fullPath}`);
+		if (!existsSync(fullPath)) item.setSavePath(fullPath);
+
+		item.on('updated', (evt, state) => {
+			if (state === 'interrupted') {
+				log.debug('#### Download is interrupted but can be resumed');
+			} else if (state === 'progressing') {
+				if (item.isPaused()) {
+					log.debug('#### Download is paused');
+				} else {
+					log.debug(`#### Received bytes: ${item.getReceivedBytes()}`);
+				}
+				const percnet = (item.getReceivedBytes() / item.getTotalBytes()) * 100;
+				progressBar.value = percnet;
+			}
+		});
+
+		item.once('done', (evt, state) => {
+			progressBar.setCompleted();
+			if (state === 'completed') {
+				log.debug('#### Download successfully');
+				shell.showItemInFolder(item.getSavePath());
+			} else if (state === 'cancelled') {
+				log.debug('#### Download cancelled');
+			} else if (state === 'interrupted') {
+				log.debug('#### Download interrupted');
+			}
+		});
+	});
+
+	/**
+	 * window 팝업 처리
+	 */
+	contents.setWindowOpenHandler((handle) => {
+		log.debug(`#### ${contents.getType()} setWindowOpenHandler url: ${handle.url}`);
+
+		return getPopupWindow(handle);
+	});
+}
+
 // 앱이 준비되면 윈도우 생성
 app.whenReady().then(() => {
-	electronApp.setAppUserModelId('com.electron-vite');
+	const gotTheLock = app.requestSingleInstanceLock();
+	if (!gotTheLock) {
+		log.info('Another instance is running. Exiting this instance.');
+		app.quit();
+	} else {
+		app.on('second-instance', (event, commandLine, workingDirectory) => {
+			log.info('Second instance detected. Focusing the main window.');
+			if (mainWindow) {
+				if (mainWindow.isMinimized()) mainWindow.restore();
+				mainWindow.focus();
+			}
+		});
 
-	// 최적화 설정
-	app.on('browser-window-created', (_, window) => {
-		optimizer.watchWindowShortcuts(window);
-	});
+		// 이중실행 방지를 위해 위치 이동
+		electronApp.setAppUserModelId('com.electron-vite');
 
-	createWindow(); // 메인 윈도우 생성
-	setupTray(mainWindow); // 트레이 설정
-	setupMenu(mainWindow); // 메뉴 설정
-	setupUpdater(); // 업데이터 설정
+		// 최적화 설정
+		app.on('browser-window-created', (_, window) => {
+			optimizer.watchWindowShortcuts(window);
+		});
 
-	app.on('activate', function () {
-		if (BrowserWindow.getAllWindows().length === 0) createWindow();
-	});
+		createWindow(); // 메인 윈도우 생성
+		setupTray(); // 트레이 설정
+		setMainMenu(); // 메뉴 설정
+		setupUpdater(); // 업데이터 설정
+		loadBlockedUrls(); // 팝업차단 목록
+		fnContentsListener(); // 웹컨텐츠 리스너 설정
+
+		app.on('activate', () => {
+			if (getAllWindowsCnt() === 0) createWindow();
+		});
+	}
 });
 
 // 웹뷰 생성 시 preload 스크립트 설정
 app.on('web-contents-created', (_, contents) => {
 	log.debug(`## Web contents created`, contents.getType());
 
-	contents.on('did-create-window', (window, details) => {
+	contents.on('did-create-window', (childWindow, details) => {
 		// log.debug(`#### did-create-window url: ${details.url}\nframeName: ${JSON.stringify(details.frameName, '\t', 4)}\n, options: ${JSON.stringify(details.options, '\t', 4)}\n, referrer: ${JSON.stringify(details.referrer, '\t', 4)}\n, postBody: ${JSON.stringify(details.postBody, '\t', 4)}\n, disposition: ${details.disposition}`,);
-		window.webContents.on('ready-to-show', () => {
-			window.show();
+		childWindow.webContents.once('ready-to-show', () => {
+			childWindow.show();
 		});
 	});
 
+	/**
+	 * webview popup 처리
+	 */
 	contents.setWindowOpenHandler((handle) => {
-		log.debug(`#### setWindowOpenHandler url: ${handle.url}`);
-
-		// shell.openExternal(handle.url); // 웹뷰가 아닌 일반 브라우저 창을 열 때의 설정
-
-		// 차단할 URL 목록
-		const blockedUrls = [];
-		const isBlocked = blockedUrls.some((url) => handle.url.includes(url));
-		if (isBlocked) {
-			window.close(); // 차단된 URL인 경우 창을 닫음
-			return { action: 'deny' };
-		}
-
-		return {
-			action: 'allow',
-			overrideBrowserWindowOptions: popWindowOpt,
-		};
+		log.debug(`#### ${contents.getType()} setWindowOpenHandler url: ${handle.url}`);
+		return getPopupWindow(handle);
 	});
 
 	contents.on('will-attach-webview', (event, webPreferences, params) => {
-		// log.debug(`#### will-attach-webview`)
+		log.debug(`#### will-attach-webview`);
 
 		// webPreferences 설정복사
 		Object.assign(webPreferences, webviewOpt.webPreferences);
@@ -124,6 +207,51 @@ app.on('web-contents-created', (_, contents) => {
 
 // 모든 윈도우가 닫히면 앱 종료 (macOS 제외)
 app.on('window-all-closed', () => {
+	log.debug('## window-all-closed');
 	// if (process.platform !== 'darwin')
 	app.quit();
 });
+
+app.on('will-quit', (evt) => {
+	log.debug('## will-quit');
+});
+
+/**
+ * popup 창 처리
+ * webview, mainWindow 공통
+ *
+ * @param {*} handle
+ * @returns
+ */
+
+function getPopupWindow(handle) {
+	// shell.openExternal(handle.url); // 웹뷰가 아닌 일반 브라우저 창을 열 때의 설정
+
+	// 빈 URL 또는 about:blank는 허용
+	if (handle.url === 'about:blank' || handle.url.trim() === '') return { action: 'allow' };
+
+	// 차단할 URL 목록
+	const blockedUrls = getBlockedUrls();
+	const isBlocked = blockedUrls.some((url) => handle.url.includes(url));
+	if (isBlocked) {
+		// 차단된 팝업 알림을 줘야 할까?
+		log.debug(`##### blocked popup: ${handle.url}`);
+		return { action: 'deny' };
+	}
+
+	const popupWindow = createBrowserWindow('popup');
+
+	// popup에만 적용되는 메뉴
+	setPopupMenu(popupWindow);
+	popupWindow.once('ready-to-show', () => {
+		popupWindow.show(); // 이 콜백에서만 show!
+	});
+
+	if (isDev && process.env['ELECTRON_RENDERER_URL']) {
+		popupWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/popup.html?url=${encodeURIComponent(handle.url)}`);
+	} else {
+		popupWindow.loadURL(`file://${join(__dirname, '../renderer/popup.html')}?url=${encodeURIComponent(handle.url)}`);
+	}
+
+	return { action: 'deny' };
+}

@@ -1,3 +1,4 @@
+// .prettierignore
 out
 dist
 pnpm-lock.yaml

@@ -1,18 +1,18 @@
 // src/main/menu.js
 /* eslint-disable no-unused-vars */
-import { Menu, ipcMain, BrowserWindow } from 'electron';
+import { Menu, ipcMain } from 'electron';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
-import { BrowserWinOpt, webviewOpt, popWindowOpt, preloadPaths } from './windowOptions';
-import { isDev } from './config';
+import { createBrowserWindow, getBrowserWindowFromSender, getFocusedWindow } from './BrowserWindowUtils';
+import { isDev, getShortcut } from './config';
 import log from 'electron-log/main';
 import { join } from 'path';
 
 function fnIpcCall(channel, ...args) {
-	const activeWindow = BrowserWindow.getFocusedWindow();
+	const activeWindow = getFocusedWindow();
 	if (activeWindow) activeWindow.webContents.send(channel, ...args);
 }
 
-export function setupMenu(mainWindow) {
+export function setMainMenu() {
 	// 애플리케이션 메인 메뉴 설정
 	const template = [
 		{
@@ -20,17 +20,16 @@ export function setupMenu(mainWindow) {
 			submenu: [
 				{
 					label: '새 탭',
-					accelerator: 'CommandOrControl + T',
+					accelerator: getShortcut('newTab', 'CommandOrControl + T'),
 					click: (menuItem, focusedWindow, keyEvt) => {
 						if (focusedWindow) focusedWindow.webContents.send('create-new-tab');
 					},
 				},
 				{
 					label: '새 창',
-					accelerator: 'CommandOrControl + Shift + N',
+					accelerator: getShortcut('newWindow', 'CommandOrControl + Shift + N'),
 					click: (menuItem, focusedWindow, keyEvt) => {
-						const newWindow = new BrowserWindow(BrowserWinOpt);
-						newWindow.windowType = 'main'; // 윈도우 타입 설정 (메인 윈도우)
+						const newWindow = createBrowserWindow('main');
 
 						if (isDev && process.env['ELECTRON_RENDERER_URL']) {
 							newWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
@@ -42,7 +41,7 @@ export function setupMenu(mainWindow) {
 				},
 				{
 					label: '탭 닫기',
-					accelerator: 'CommandOrControl + W',
+					accelerator: getShortcut('closeTab', 'CommandOrControl + W'),
 					click: (menuItem, focusedWindow, keyEvt) => {
 						// BrowserWindow 생성시 windowType을 설정함
 						if (focusedWindow?.windowType === 'main') focusedWindow.webContents.send('close-current-tab');
@@ -52,7 +51,7 @@ export function setupMenu(mainWindow) {
 				{ type: 'separator' },
 				{
 					label: '종료',
-					accelerator: 'CommandOrControl + Q',
+					accelerator: getShortcut('exit', 'CommandOrControl + Q'),
 					click: (menuItem, focusedWindow, keyEvt) => {
 						if (focusedWindow) focusedWindow.close();
 					},
@@ -74,7 +73,7 @@ export function setupMenu(mainWindow) {
 				{ type: 'separator' },
 				{
 					label: '페이지 내 검색',
-					accelerator: 'CommandOrControl + F',
+					accelerator: getShortcut('search', 'CommandOrControl + F'),
 					click: (menuItem, focusedWindow, keyEvt) => {
 						if (focusedWindow) focusedWindow.webContents.send('show-page-search');
 					},
@@ -87,7 +86,7 @@ export function setupMenu(mainWindow) {
 				// { role: 'reload' },
 				{
 					label: '새로고침',
-					accelerator: 'CommandOrControl + R',
+					accelerator: getShortcut('reload', 'CommandOrControl + R'),
 					click: (menuItem, focusedWindow, keyEvt) => {
 						// BrowserWindow 생성시 windowType을 설정함
 						if (focusedWindow?.windowType === 'main') focusedWindow.webContents.send('refresh-tab');
@@ -99,7 +98,7 @@ export function setupMenu(mainWindow) {
 				{
 					label: '웹뷰 개발자 도구',
 					role: 'toggleWebviewDevTools',
-					accelerator: 'CommandOrControl + F12',
+					accelerator: getShortcut('toggleWebviewDevTools', 'CommandOrControl + F12'),
 					click: (menuItem, focusedWindow, keyEvt) => {
 						if (focusedWindow) focusedWindow.webContents.send('toggle-webview-devtools');
 					},
@@ -108,14 +107,14 @@ export function setupMenu(mainWindow) {
 				{
 					// role: 'resetZoom',
 					label: '원래 크기로',
-					accelerator: 'CommandOrControl + 0',
+					accelerator: getShortcut('resetZoom', 'CommandOrControl + 0'),
 					click: (menuItem, focusedWindow, keyEvt) => {
 						if (focusedWindow) focusedWindow.webContents.send('zoomCtrl', 'reset');
 					},
 				},
 				{
 					label: '원래 크기로',
-					accelerator: 'CommandOrControl + num0',
+					accelerator: getShortcut('resetZoom1', 'CommandOrControl + num0'),
 					click: (menuItem, focusedWindow, keyEvt) => {
 						if (focusedWindow) focusedWindow.webContents.send('zoomCtrl', 'reset');
 					},
@@ -123,14 +122,14 @@ export function setupMenu(mainWindow) {
 				{
 					// role: 'zoomIn',
 					label: '확대',
-					accelerator: 'CommandOrControl + plus',
+					accelerator: getShortcut('zoomIn', 'CommandOrControl + plus'),
 					click: (menuItem, focusedWindow, keyEvt) => {
 						if (focusedWindow) focusedWindow.webContents.send('zoomCtrl', 'increase');
 					},
 				},
 				{
 					label: '확대',
-					accelerator: 'CommandOrControl + numadd',
+					accelerator: getShortcut('zoomIn1', 'CommandOrControl + numadd'),
 					click: (menuItem, focusedWindow, keyEvt) => {
 						if (focusedWindow) focusedWindow.webContents.send('zoomCtrl', 'increase');
 					},
@@ -138,7 +137,7 @@ export function setupMenu(mainWindow) {
 				{
 					label: '확대',
 					visible: false,
-					accelerator: 'CommandOrControl + =',
+					accelerator: getShortcut('zoomIn2', 'CommandOrControl + ='),
 					click: (menuItem, focusedWindow, keyEvt) => {
 						if (focusedWindow) focusedWindow.webContents.send('zoomCtrl', 'increase');
 					},
@@ -146,7 +145,7 @@ export function setupMenu(mainWindow) {
 				{
 					// role: 'zoomOut',
 					label: '축소',
-					accelerator: 'CommandOrControl + -',
+					accelerator: getShortcut('zoomOut', 'CommandOrControl + -'),
 					click: (menuItem, focusedWindow, keyEvt) => {
 						if (focusedWindow) focusedWindow.webContents.send('zoomCtrl', 'decrease');
 					},
@@ -155,7 +154,7 @@ export function setupMenu(mainWindow) {
 					// role: 'zoomOut',
 					label: '축소',
 					visible: false,
-					accelerator: 'CommandOrControl + numsub',
+					accelerator: getShortcut('zoomOut1', 'CommandOrControl + numsub'),
 					click: (menuItem, focusedWindow, keyEvt) => {
 						if (focusedWindow) focusedWindow.webContents.send('zoomCtrl', 'decrease');
 					},
@@ -169,7 +168,7 @@ export function setupMenu(mainWindow) {
 			submenu: [
 				{
 					label: '북마크 표시줄 보기',
-					accelerator: 'CommandOrControl + B',
+					accelerator: getShortcut('bookmarkView', 'CommandOrControl + B'),
 					type: 'checkbox',
 					checked: true,
 					click: (menuItem, focusedWindow, keyEvt) => {
@@ -178,7 +177,7 @@ export function setupMenu(mainWindow) {
 				},
 				{
 					label: '현재 페이지 북마크에 추가',
-					accelerator: 'CommandOrControl + D',
+					accelerator: getShortcut('bookmarkAdd', 'CommandOrControl + D'),
 					click: (menuItem, focusedWindow, keyEvt) => {
 						if (focusedWindow) focusedWindow.webContents.send('add-bookmark');
 					},
@@ -206,7 +205,7 @@ export function setupMenu(mainWindow) {
 		log.debug('{show-bookmark-context-menu} data', data);
 		const { x, y, bookmarkIndex } = data;
 		const sender = evt.sender;
-		const currentWindow = BrowserWindow.fromWebContents(sender);
+		const currentWindow = getBrowserWindowFromSender(sender);
 
 		const bookmarkContextMenu = Menu.buildFromTemplate([
 			{
@@ -237,7 +236,7 @@ export function setupMenu(mainWindow) {
 		log.debug('{show-tab-context-menu} data', data);
 		const { x, y, tabIndex } = data;
 		const sender = evt.sender;
-		const currentWindow = BrowserWindow.fromWebContents(sender);
+		const currentWindow = getBrowserWindowFromSender(sender);
 
 		const menuItems = [
 			{
@@ -283,7 +282,7 @@ export function setupMenu(mainWindow) {
 
 		const menuItems = [];
 		const sender = evt.sender;
-		const currentWindow = BrowserWindow.fromWebContents(sender);
+		const currentWindow = getBrowserWindowFromSender(sender);
 
 		// 링크가 있는 경우
 		if (linkURL) {
@@ -400,4 +399,67 @@ export function setupMenu(mainWindow) {
 		const contextMenu = Menu.buildFromTemplate(menuItems);
 		contextMenu.popup({ window: currentWindow, x, y });
 	});
+}
+
+export function setPopupMenu(popupWindow) {
+	const popupMenuTemplate = [
+		{
+			label: '파일',
+			submenu: [{ role: 'close' }],
+		},
+		{
+			label: '보기',
+			submenu: [
+				{
+					label: '새로고침',
+					accelerator: 'CommandOrControl + R',
+					click: (menuItem, focusedWindow, keyEvt) => {
+						if (focusedWindow) focusedWindow.webContents.reload();
+					},
+				},
+				{
+					label: '확대',
+					accelerator: 'CommandOrControl + Plus',
+					click: (menuItem, focusedWindow, keyEvt) => {
+						if (focusedWindow) {
+							const currentZoom = focusedWindow.webContents.getZoomLevel();
+							focusedWindow.webContents.setZoomLevel(currentZoom + 0.5);
+						}
+					},
+				},
+				{
+					label: '축소',
+					accelerator: 'CommandOrControl + -',
+					click: (menuItem, focusedWindow, keyEvt) => {
+						if (focusedWindow) {
+							const currentZoom = focusedWindow.webContents.getZoomLevel();
+							focusedWindow.webContents.setZoomLevel(currentZoom - 0.5);
+						}
+					},
+				},
+				{ type: 'separator' },
+				{
+					label: '페이지 내 검색',
+					accelerator: getShortcut('search', 'CommandOrControl + F'),
+					click: (menuItem, focusedWindow, keyEvt) => {
+						if (focusedWindow) focusedWindow.webContents.send('show-page-search');
+					},
+				},
+				{
+					label: '개발자 도구 토글',
+					accelerator: 'F12',
+					click: (menuItem, focusedWindow, keyEvt) => {
+						if (focusedWindow) {
+							if (focusedWindow.webContents.isDevToolsOpened()) {
+								focusedWindow.webContents.closeDevTools();
+							} else {
+								focusedWindow.webContents.openDevTools();
+							}
+						}
+					},
+				},
+			],
+		},
+	];
+	popupWindow.setMenu(Menu.buildFromTemplate(popupMenuTemplate));
 }

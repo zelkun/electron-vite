@@ -1,8 +1,9 @@
 <!-- src/renderer/src/App.vue -->
 <template>
+	<Settings v-if="showSettings" @close="showSettings = false" @update-setting="updateSetting" />
 	<div class="browser-container">
 		<!-- 탭 영역 -->
-		<div class="browser-tabs">
+		<div :class="['browser-tabs', { mac: isMac }]">
 			<div
 				v-for="(tab, index) in tabs"
 				:key="index"
@@ -18,9 +19,9 @@
 				<span class="tab-title">{{ tab.title || '새 탭' }}</span>
 				<button class="close-tab" @click.stop="closeTab(index)">×</button>
 			</div>
-			<button class="add-tab" @click="addNewTab">+</button>
+			<button class="add-tab" @click="addNewTab" @dragover.prevent @drop="onAddTabDrop">+</button>
 
-			<div class="window-controls">
+			<div v-if="!isMac" class="window-controls">
 				<button title="최소화" class="window-control minimize-btn" @click="windowCtrlBtnClick('minimize-window')">─</button>
 				<button title="최대화" class="window-control maximize-btn" @click="windowCtrlBtnClick('maximize-window')">□</button>
 				<button title="닫기" class="window-control close-btn" @click="windowCtrlBtnClick('close-window')">×</button>
@@ -45,7 +46,7 @@
 				<button class="action-btn search-icon" title="검색" :class="{ active: showSearchArea }" @click="toggleSearchArea">🔍</button>
 				<button class="action-btn" @click="addBookmark">🔖</button>
 				<button class="action-btn" :class="{ active: showBookmarkBar }" @click="toggleBookmarkBar">📚</button>
-				<button class="action-btn" @click="showSettings">⚙️</button>
+				<button class="action-btn" @click="openSettings">⚙️</button>
 				<button class="action-btn" @click="showMenu">⋮</button>
 			</div>
 		</div>
@@ -121,24 +122,22 @@
 			</div>
 		</div>
 
-		<!-- 페이지 검색 UI -->
-		<div v-if="showSearch" class="search-bar">
-			<div class="search-input-container">
-				<input id="search-input" ref="searchInput" v-model="searchText" type="text" placeholder="페이지 내 검색" class="search-input" @keyup.enter="findInPage" @keyup.esc="closeSearch" />
-				<div v-if="searchResults.matches > 0" class="search-counter">{{ searchResults.activeMatchOrdinal }}/{{ searchResults.matches }}</div>
-			</div>
-			<div class="search-buttons">
-				<button class="search-btn" title="이전" @click="findPrevious">
-					<span class="nav-icon">▲</span>
-				</button>
-				<button class="search-btn" title="다음" @click="findNext">
-					<span class="nav-icon">▼</span>
-				</button>
-				<button class="search-btn close-btn" title="닫기" @click="closeSearch">
-					<span>×</span>
-				</button>
-			</div>
-		</div>
+		<!-- SearchInPage 컴포넌트로 분리된 페이지 검색 UI -->
+		<SearchInPage
+			ref="searchComponent"
+			:visible="showSearch"
+			:searchText="tabs[currentTabIndex]?.search?.text || ''"
+			:searchResults="tabs[currentTabIndex]?.search?.results"
+			@update:searchText="
+				(v) => {
+					if (tabs[currentTabIndex]) tabs[currentTabIndex].search.text = v;
+				}
+			"
+			@find="findInPage"
+			@find-next="findNext"
+			@find-previous="findPrevious"
+			@close="closeSearch"
+		/>
 
 		<!-- 웹뷰 영역 -->
 		<div class="webview-container">
@@ -174,9 +173,21 @@
 </template>
 
 <script>
+import Settings from './components/Settings/Settings.vue';
+import SearchInPage from './components/common/SearchInPage.vue';
+
 export default {
+	components: {
+		Settings,
+		SearchInPage,
+	},
 	data() {
 		return {
+			isMac: window.electronAPI?.platform === 'darwin' || false,
+			blankUrl: 'about:blank',
+			homePage: this.blankUrl,
+			startupAction: 'newTab', // 'newTab' 또는 'homePage'
+			showSettings: false,
 			tabs: [],
 			currentTabIndex: 0,
 			currentUrl: '',
@@ -192,8 +203,6 @@ export default {
 			isNewBookmark: false,
 			draggedBookmarkIndex: null,
 			showSearch: false,
-			searchText: '',
-			searchResults: { activeMatchOrdinal: 0, matches: 0 },
 			foundInPageListener: null,
 		};
 	},
@@ -204,7 +213,7 @@ export default {
 		},
 		tabWidth() {
 			// 브라우저 너비에서 추가 버튼과 종료 버튼 너비를 제외한 공간
-			const availableWidth = window.innerWidth - 100;
+			const availableWidth = window.innerWidth - 140;
 			// 최소 60px, 최대 150px 사이에서 탭 너비 계산 (기존 100px, 200px에서 축소)
 			const calculatedWidth = Math.min(150, Math.max(60, availableWidth / this.tabs.length));
 			return `${calculatedWidth}px`;
@@ -215,16 +224,19 @@ export default {
 	},
 	async mounted() {
 		await this.loadSettings(); // 설정 로드
-
 		await this.loadBookmarks(); // 북마크 로드
 
 		// 첫 번째 탭 생성
-		const homePage = (await window.electronAPI.invoke('get-config-value', 'settings', 'defaultHomePage')) || 'about:blank';
-		this.addNewTab(homePage);
+		this.startupAction = (await window.electronAPI.invoke('get-config-value', 'settings', 'startupAction')) || 'newTab';
+		this.homePage = (await window.electronAPI.invoke('get-config-value', 'settings', 'homePage')) || this.blankUrl;
+
+		console.log(`### startupAction: ${this.startupAction}, ${this.homePage}`);
+
+		// 시작 동작 처리
+		this.addNewTab();
 
 		// Zoom 관련 이벤트 리스너
 		this.setupEventHandler('zoomCtrl', this.zoomCtrl); // reset, increase, decrease
-
 		this.setupEventHandler('add-bookmark', this.addBookmark);
 		this.setupEventHandler('toggle-bookmark-bar', this.toggleBookmarkBar);
 
@@ -282,7 +294,9 @@ export default {
 			} else {
 				const webview = this.getWebview(index);
 				if (webview) {
-					webview.reload();
+					// 캐시 무시 새로고침 지원 시
+					if (webview.reloadIgnoringCache) webview.reloadIgnoringCache();
+					else if (webview.reload) webview.reload();
 				}
 			}
 		});
@@ -302,8 +316,7 @@ export default {
 		this.setupEventHandler('search-text', this.searchGoogle);
 		this.setupEventHandler('navigatorCtrl', this.navigatorCtrl); // goBack, goForward, refresh
 
-		// 창 크기 변경 감지
-		window.addEventListener('resize', this.handleResize);
+		window.addEventListener('resize', this.handleResize); // 창 크기 변경 감지
 	},
 
 	methods: {
@@ -313,7 +326,6 @@ export default {
 			console.error(message);
 			// 실제 구현에서는 토스트 메시지나 모달 등으로 사용자에게 알림
 		},
-
 		getWebview(index) {
 			return document.querySelector(`#webview-${index !== undefined ? index : this.currentTabIndex}`);
 		},
@@ -325,19 +337,16 @@ export default {
 		// 탭의 웹뷰 상태 업데이트
 		setNavigationButtonsState(webview) {
 			if (!webview) return;
-			this.canGoBack = webview.getURL() != '' && webview.getURL() != 'about:blank' && webview.canGoBack();
+			this.canGoBack = webview.getURL() != '' && webview.getURL() != this.blankUrl && webview.canGoBack();
 			this.canGoForward = webview.canGoForward();
 		},
 
 		async goHome() {
 			// 설정에서 홈페이지 URL 가져오기
-			const homePage = (await window.electronAPI.invoke('get-config-value', 'settings', 'defaultHomePage')) || 'about:blank';
-			this.currentUrl = homePage;
-			this.tabs[this.currentTabIndex].url = homePage;
-			const webview = this.getWebview();
-			if (webview) {
-				webview.src = homePage;
-			}
+			this.homePage = (await window.electronAPI.invoke('get-config-value', 'settings', 'homePage')) || this.blankUrl;
+			this.currentUrl = this.homePage;
+			this.tabs[this.currentTabIndex].url = this.currentUrl;
+			this.navigate();
 		},
 
 		// 웹뷰 네비게이션 버튼 클릭 메서드
@@ -413,7 +422,7 @@ export default {
 
 		navigate() {
 			let url = this.currentUrl;
-			if (url && !url.startsWith('http://') && !url.startsWith('https://') && url !== 'about:blank') {
+			if (url && !url.startsWith('http://') && !url.startsWith('https://') && url !== this.blankUrl) {
 				url = 'https://' + url;
 			}
 			this.tabs[this.currentTabIndex].url = url;
@@ -423,9 +432,10 @@ export default {
 			}
 		},
 
-		addNewTab(url = 'about:blank') {
-			console.log(`url ${typeof url}`);
-			if (typeof url !== 'string') url = 'about:blank';
+		addNewTab(url = this.blankUrl) {
+			console.log(`# addNewTab: url ${typeof url}`);
+			if (typeof url !== 'string') url = this.blankUrl;
+			if (url === this.blankUrl && this.startupAction === 'homePage') url = this.homePage;
 
 			this.tabs.push({
 				url: url,
@@ -433,6 +443,11 @@ export default {
 				loading: false,
 				color: this.getRandomColor(),
 				zoomLevel: 100,
+				search: {
+					text: '',
+					results: { activeMatchOrdinal: 0, matches: 0 },
+					foundInPageListener: null,
+				},
 			});
 			this.currentTabIndex = this.tabs.length - 1;
 			this.currentUrl = url;
@@ -445,6 +460,7 @@ export default {
 					this.setupWebviewEventListeners(webview, index);
 				}
 			});
+			document.title = '새 탭';
 		},
 		closeTab(index) {
 			// 탭을 닫기 전에 이벤트 리스너 정리
@@ -458,7 +474,7 @@ export default {
 					this.currentTabIndex = Math.max(0, this.currentTabIndex - 1);
 				}
 				this.currentUrl = this.tabs[this.currentTabIndex].url;
-				if (this.currentUrl === 'about:blank') {
+				if (this.currentUrl === this.blankUrl) {
 					this.currentUrl = '';
 				}
 			}
@@ -466,7 +482,7 @@ export default {
 		switchTab(index) {
 			this.currentTabIndex = index;
 			this.currentUrl = this.tabs[index].url;
-			if (this.currentUrl === 'about:blank') {
+			if (this.currentUrl === this.blankUrl) {
 				this.currentUrl = '';
 			}
 
@@ -476,6 +492,10 @@ export default {
 				webview.setZoomFactor(this.tabs[index].zoomLevel / 100);
 				this.setNavigationButtonsState(webview);
 			}
+
+			// 윈도우 타이틀 변경: 활성 탭 타이틀 반영
+			const activeTitle = this.tabs[index].title || '새 탭';
+			document.title = activeTitle; // <title> 태그 변경
 		},
 		startLoading(index) {
 			this.tabs[index].loading = true;
@@ -486,12 +506,18 @@ export default {
 		},
 		updateUrl(event, index) {
 			if (index === this.currentTabIndex) {
-				this.currentUrl = event.url === 'about:blank' ? '' : event.url;
+				this.currentUrl = event.url === this.blankUrl ? '' : event.url;
 			}
 			this.tabs[index].url = event.url;
 		},
 		updateTitle(event, index) {
-			this.tabs[index].title = event.title === 'about:blank' ? '새 탭' : event.title;
+			this.tabs[index].title = event.title === this.blankUrl ? '새 탭' : event.title;
+
+			if (this.currentTabIndex == index) {
+				// 윈도우 타이틀 변경: 활성 탭 타이틀 반영
+				const activeTitle = this.tabs[index].title || '새 탭';
+				document.title = activeTitle; // <title> 태그 변경
+			}
 		},
 
 		zoomCtrl(action) {
@@ -607,7 +633,7 @@ export default {
 
 		async addBookmark() {
 			// 현재 URL이 비어있거나 about:blank인 경우 추가하지 않음
-			// if (!this.currentUrl || this.currentUrl === 'about:blank') return;
+			// if (!this.currentUrl || this.currentUrl === this.blankUrl) return;
 
 			// 북마크 바가 숨겨져 있으면 표시
 			if (!this.showBookmarkBar) {
@@ -668,8 +694,8 @@ export default {
 			if (!this.editingBookmark.title.trim()) this.editingBookmark.title = '제목 없음';
 
 			if (!this.editingBookmark.url.trim()) {
-				this.editingBookmark.url = 'about:blank';
-			} else if (!this.editingBookmark.url.startsWith('http://') && !this.editingBookmark.url.startsWith('https://') && this.editingBookmark.url !== 'about:blank') {
+				this.editingBookmark.url = this.blankUrl;
+			} else if (!this.editingBookmark.url.startsWith('http://') && !this.editingBookmark.url.startsWith('https://') && this.editingBookmark.url !== this.blankUrl) {
 				this.editingBookmark.url = 'https://' + this.editingBookmark.url;
 			}
 
@@ -700,6 +726,10 @@ export default {
 		dragStartBookmark(index, event) {
 			this.draggedBookmarkIndex = index;
 			event.dataTransfer.effectAllowed = 'move';
+
+			// URL 데이터 등록
+			const url = this.bookmarks[index].url;
+			event.dataTransfer.setData('text/plain', url);
 		},
 
 		dropBookmark(index, event) {
@@ -760,65 +790,99 @@ export default {
 			this.navigate();
 		},
 
-		// 검색 관련 메서드
+		// 검색 관련 메서드 (App에서 webview 제어)
 		showPageSearch() {
 			this.showSearch = true;
 			this.$nextTick(() => {
-				if (this.$refs.searchInput) {
-					this.$refs.searchInput.focus();
+				if (this.$refs.searchComponent?.$refs.searchInput) {
+					this.$refs.searchComponent.$refs.searchInput.focus();
 				}
 			});
 		},
 		closeSearch() {
 			this.showSearch = false;
-			this.searchText = '';
-			this.searchResults = { activeMatchOrdinal: 0, matches: 0 };
+			const currentTab = this.tabs[this.currentTabIndex];
+			if (!currentTab) return;
+
+			currentTab.search.text = '';
+			currentTab.search.results = { activeMatchOrdinal: 0, matches: 0 };
 
 			const webview = this.getWebview();
 			if (webview) {
 				webview.stopFindInPage('clearSelection');
-
-				// 이벤트 리스너 제거
-				if (this.foundInPageListener) {
-					webview.removeEventListener('found-in-page', this.foundInPageListener);
-					this.foundInPageListener = null;
+				if (currentTab.search.foundInPageListener) {
+					webview.removeEventListener('found-in-page', currentTab.search.foundInPageListener);
+					currentTab.search.foundInPageListener = null;
 				}
 			}
 		},
 		findInPage() {
-			if (!this.searchText) return;
+			const currentTab = this.tabs[this.currentTabIndex];
+			if (!currentTab || !currentTab.search.text) return;
+
 			const webview = this.getWebview();
 			if (webview) {
-				// 이전에 등록된 이벤트 리스너가 있다면 제거
-				if (this.foundInPageListener) webview.removeEventListener('found-in-page', this.foundInPageListener);
+				if (currentTab.search.foundInPageListener) {
+					webview.removeEventListener('found-in-page', currentTab.search.foundInPageListener);
+				}
 
-				// 새 이벤트 리스너 생성 및 저장
-				this.foundInPageListener = (e) => {
-					this.searchResults = {
+				currentTab.search.foundInPageListener = (e) => {
+					currentTab.search.results = {
 						activeMatchOrdinal: e.result.activeMatchOrdinal,
 						matches: e.result.matches,
 					};
 				};
-				webview.addEventListener('found-in-page', this.foundInPageListener);
-				webview._foundInPageListener = this.foundInPageListener;
-
-				webview.findInPage(this.searchText);
+				webview.addEventListener('found-in-page', currentTab.search.foundInPageListener);
+				webview.findInPage(currentTab.search.text);
 			}
 		},
 		findNext() {
-			if (!this.searchText) return;
+			const currentTab = this.tabs[this.currentTabIndex];
+			if (!currentTab || !currentTab.search.text) return;
+
 			const webview = this.getWebview();
-			if (webview) webview.findInPage(this.searchText, { forward: true, findNext: true });
+			if (webview) {
+				webview.findInPage(currentTab.search.text, { forward: true, findNext: true });
+			}
 		},
 
 		findPrevious() {
-			if (!this.searchText) return;
+			const currentTab = this.tabs[this.currentTabIndex];
+			if (!currentTab || !currentTab.search.text) return;
+
 			const webview = this.getWebview();
-			if (webview) webview.findInPage(this.searchText, { forward: false, findNext: true });
+			if (webview) {
+				webview.findInPage(currentTab.search.text, { forward: false, findNext: true });
+			}
 		},
 
-		showSettings() {
-			console.log('설정 메뉴 표시');
+		openSettings() {
+			this.showSettings = !this.showSettings;
+			console.log('설정 메뉴 표시', this.showSettings);
+		},
+		async updateSetting({ key, value }) {
+			console.log('설정 업데이트:', key, value);
+			await window.electronAPI.invoke('save-setting', key, value);
+			this.applySetting(key, value);
+		},
+		applySetting(key, value) {
+			// 메서드명 수정
+			switch (key) {
+				case 'showBookmarkBar':
+					this.showBookmarkBar = value;
+					break;
+				case 'theme':
+					document.documentElement.setAttribute('data-theme', value);
+					break;
+				case 'homePage':
+					this.homePage = value;
+					break;
+				case 'startupAction':
+					this.startupAction = value;
+					break;
+				default:
+					console.warn(`Unknown setting key: ${key}`);
+			}
 		},
 
 		showMenu() {
@@ -832,6 +896,10 @@ export default {
 				if (settings) {
 					// 북마크 바 설정 적용
 					this.showBookmarkBar = settings.showBookmarkBar || false;
+
+					// 테마 설정 강화
+					const theme = settings.theme || 'light';
+					document.documentElement.setAttribute('data-theme', theme);
 
 					// 필요한 경우 추가 설정 적용
 					// this.otherSetting = settings.otherSetting || defaultValue;
@@ -862,6 +930,14 @@ export default {
 		handleResize() {
 			// 창 크기 변경 시 필요한 업데이트 수행
 			// tabWidth computed 속성이 자동으로 재계산됨
+		},
+
+		onAddTabDrop(event) {
+			// 드래그된 데이터 타입 확인 ('text/plain' 등)
+			const url = event.dataTransfer.getData('text/plain');
+			if (url) {
+				this.addNewTab(url); // URL로 새 탭 생성
+			}
 		},
 	},
 };
